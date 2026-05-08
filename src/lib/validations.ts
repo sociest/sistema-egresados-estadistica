@@ -7,56 +7,60 @@ export const loginSchema = z.object({
   password: z.string().min(1, "Contraseña requerida"),
 });
 
-// ── Egresado — Bloque 0: incluye campo tipo y campos condicionales ─────────────
+// Helper para validar formato de semestre "I/2020" o "II/2020"
+const semestreRegex = /^(I|II)\/\d{4}$/;
+const semestreSchema = z
+  .string()
+  .regex(semestreRegex, "Formato inválido. Usa I/AAAA o II/AAAA")
+  .optional()
+  .nullable();
+
+// ── Egresado ──────────────────────────────────────────────────────────────────
 export const egresadoSchema = z.object({
-  // ── Tipo (Bloque 0) ────────────────────────────────────────────────────────
   tipo: z.enum(["Titulado", "Egresado"]).default("Titulado"),
 
-  // RF-02: Datos personales
-  nombres:           z.string().min(2, "Requerido").max(100),
-  apellidos:         z.string().min(2, "Requerido").max(100),
-  apellidoPaterno:   z.string().max(100).optional().nullable(),
-  apellidoMaterno:   z.string().max(100).optional().nullable(),
-  ci:                z.string().min(4, "CI inválido").max(20),
-  nacionalidad:      z.string().max(80).optional().nullable(),
-  genero:            z.enum(["Masculino", "Femenino", "Otro", "Prefiero no decir"]).optional().nullable(),
+  // Datos personales — sin apellidos general, sin dirección
+  nombres:         z.string().min(2, "Requerido").max(100),
+  apellidoPaterno: z.string().max(100).optional().nullable(),
+  apellidoMaterno: z.string().max(100).optional().nullable(),
+  ci:              z.string().min(4, "CI inválido").max(20),
+  nacionalidad:    z.string().max(80).optional().nullable(),
+  genero:          z.enum(["Masculino", "Femenino", "Otro", "Prefiero no decir"]).optional().nullable(),
   correoElectronico: z.string().email("Correo inválido").max(150).optional().nullable(),
-  celular:           z.string().max(20).optional().nullable(),
-  direccion:         z.string().max(200).optional().nullable(),
-  tituloAcademico:   z.string().max(150).optional().nullable(),
-  fechaNacimiento:   z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Fecha inválida"),
+  celular:         z.string().max(20).optional().nullable(),
+  // tituloAcademico eliminado — es calculado
+  fechaNacimiento: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Fecha inválida"),
 
-  // Redes sociales (Bloque 0 — compartidos)
+  // Redes y especialización
   facebook:            z.string().max(200).optional().nullable(),
   linkedin:            z.string().max(200).optional().nullable(),
   areaEspecializacion: z.string().max(150).optional().nullable(),
   observaciones:       z.string().optional().nullable(),
   estadoLaboral:       z.enum(["Empleado", "Desempleado", "Independiente"]).optional().nullable(),
-  // Bloque 3
-  ciudadResidencia:    z.string().max(100).optional().nullable(),
-  regionResidencia:    z.string().max(100).optional().nullable(),
-  fallecido:           z.boolean().optional().default(false),
 
-  // Plan de estudios
-  planEstudiosNombre: z.string().max(50).optional().nullable(),
+  // Residencia unificada
+  lugarResidencia: z.string().max(200).optional().nullable(),
 
-  // RF-03: Datos académicos
-  anioIngreso:    z.number().int().min(1998).max(new Date().getFullYear()).optional().nullable(),
-  anioEgreso:     z.number().int().min(1998).max(new Date().getFullYear() + 1).optional().nullable(),
-  anioTitulacion: z.number().int().min(1998).max(new Date().getFullYear() + 1).optional().nullable(),
+  // Fallecido (solo admin)
+  fallecido: z.boolean().optional().default(false),
 
-  // RF-03: Promedio de egreso
-  promedio: z.number().min(0).max(100).optional().nullable(),
-
-  // RF-03: Modalidad
+  // Datos académicos — sin planEstudiosNombre
+  // Semestres en formato "I/2020" o "II/2020"
+  semestreIngreso: semestreSchema,
+  semestreEgreso:  semestreSchema,
+  anioIngreso:     z.number().int().min(1998).max(new Date().getFullYear()).optional().nullable(),
+  anioEgreso:      z.number().int().min(1998).max(new Date().getFullYear() + 1).optional().nullable(),
+  anioTitulacion:  z.number().int().min(1998).max(new Date().getFullYear() + 1).optional().nullable(),
+  promedio:        z.number().min(0).max(100).optional().nullable(),
   modalidadTitulacion: z.enum([
-    "Tesis", "Proyecto de grado", "Trabajo dirigido", "Excelencia",
+    "Tesis", "Proyecto de grado", "Trabajo dirigido", "Examen de grado", "Otro",
   ]).optional().nullable(),
 
-  // Bloque 0 — campos exclusivos de Egresado (sin título)
-  inicioProceso:       z.boolean().optional().nullable(),
-  motivoNoTitulacion:  z.string().max(500).optional().nullable(),
-  planeaTitularse:     z.boolean().optional().nullable(),
+  // Campos exclusivos de Egresado
+  inicioProceso:      z.boolean().optional().nullable(),
+  motivoNoTitulacion: z.string().max(500).optional().nullable(),
+  // Cambiado de boolean a tres opciones
+  planeaTitularse: z.enum(["Si", "No", "No sabe"]).optional().nullable(),
 })
 .refine(
   d => {
@@ -74,25 +78,25 @@ export const egresadoSchema = z.object({
 )
 .refine(
   d => {
-    // Si es Titulado, debe tener año de titulación
     if (d.tipo === "Titulado" && !d.anioTitulacion) return false;
     return true;
   },
   { message: "Un titulado debe tener año de titulación", path: ["anioTitulacion"] }
 );
 
-// ── Historial laboral (RF-06) ─────────────────────────────────────────────────
+// ── Historial laboral ─────────────────────────────────────────────────────────
 export const historialSchema = z.object({
   idEgresado:         z.number().int().positive(),
   empresa:            z.string().min(2, "Requerido").max(150),
   cargo:              z.string().min(2, "Requerido").max(100),
   area:               z.string().max(100).optional().nullable(),
   tipoContrato:       z.enum(["Indefinido", "Fijo", "Por obra", "Consultor", "Pasante", "Otro"]).optional().nullable(),
-  ciudad:             z.string().max(100).optional().nullable(),
-  sector:             z.enum(["Publico", "Privado", "Independiente", "ONG", "Otro"]).optional().nullable(),
-  fechaInicio:        z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Fecha inválida"),
-  fechaFin:           z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Fecha inválida").optional().nullable(),
-  actualmenteTrabaja: z.boolean().default(false),
+  // Renombrado
+  ciudadRegionTrabajo: z.string().max(150).optional().nullable(),
+  sectorTrabajo:       z.enum(["Publico", "Privado", "Independiente", "ONG", "Otro"]).optional().nullable(),
+  fechaInicio:         z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Fecha inválida"),
+  fechaFin:            z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Fecha inválida").optional().nullable(),
+  actualmenteTrabaja:  z.boolean().default(false),
 }).refine(
   d => {
     if (d.actualmenteTrabaja || !d.fechaFin) return true;
@@ -101,7 +105,7 @@ export const historialSchema = z.object({
   { message: "La fecha fin debe ser posterior a la de inicio", path: ["fechaFin"] }
 );
 
-// ── Postgrado (RF-08) ─────────────────────────────────────────────────────────
+// ── Postgrado ─────────────────────────────────────────────────────────────────
 export const postgradoSchema = z.object({
   idEgresado:  z.number().int().positive(),
   tipo:        z.enum(["Diplomado", "Especialidad", "Maestria", "Doctorado", "Postdoctorado", "Otro"]),
@@ -120,12 +124,12 @@ export const postgradoSchema = z.object({
 
 // ── Usuario ───────────────────────────────────────────────────────────────────
 export const usuarioSchema = z.object({
-  correo:            z.string().email("Correo inválido").max(150),
+  correo:   z.string().email("Correo inválido").max(150),
   password: z.string()
-  .min(8, "Mínimo 8 caracteres")
-  .regex(/[A-Z]/, "Debe contener al menos una mayúscula")
-  .regex(/[a-z]/, "Debe contener al menos una minúscula")
-  .regex(/[0-9]/, "Debe contener al menos un número"),
+    .min(8, "Mínimo 8 caracteres")
+    .regex(/[A-Z]/, "Debe contener al menos una mayúscula")
+    .regex(/[a-z]/, "Debe contener al menos una minúscula")
+    .regex(/[0-9]/, "Debe contener al menos un número"),
   confirmarPassword: z.string(),
   rol:               z.enum(["admin", "egresado"]),
   estado:            z.enum(["activo", "inactivo", "bloqueado"]),
@@ -160,14 +164,11 @@ export const contactoSchema = z.object({
   tipo:  z.enum(["correo", "celular"]),
   valor: z.string().min(1, "Requerido"),
 }).refine(d => {
-  if (d.tipo === "correo") return z.string().email().safeParse(d.valor).success;
+  if (d.tipo === "correo")  return z.string().email().safeParse(d.valor).success;
   if (d.tipo === "celular") return /^[0-9]{7,15}$/.test(d.valor);
   return false;
 }, { message: "Valor inválido para el tipo seleccionado", path: ["valor"] });
 
-export type ContactoInput = z.infer<typeof contactoSchema>;
-
-// ── Noticias ──────────────────────────────────────────────────────────────────
 export const noticiaSchema = z.object({
   titulo:    z.string().min(3, "Mínimo 3 caracteres").max(200),
   cuerpo:    z.string().min(10, "Mínimo 10 caracteres"),
@@ -177,7 +178,11 @@ export const noticiaSchema = z.object({
   publicado: z.boolean().default(false),
 });
 
-export type NoticiaInput = z.infer<typeof noticiaSchema>;
+export const sugerenciaSchema = z.object({
+  tipo:      z.string().min(1).max(100),
+  mensaje:   z.string().min(10, "Mínimo 10 caracteres").max(2000),
+  esAnonima: z.boolean().default(false),
+});
 
 // ── Tipos exportados ──────────────────────────────────────────────────────────
 export type LoginInput         = z.infer<typeof loginSchema>;
@@ -187,3 +192,6 @@ export type PostgradoInput     = z.infer<typeof postgradoSchema>;
 export type UsuarioInput       = z.infer<typeof usuarioSchema>;
 export type UsuarioEditInput   = z.infer<typeof usuarioEditSchema>;
 export type NuevaPasswordInput = z.infer<typeof nuevaPasswordSchema>;
+export type ContactoInput      = z.infer<typeof contactoSchema>;
+export type NoticiaInput       = z.infer<typeof noticiaSchema>;
+export type SugerenciaInput    = z.infer<typeof sugerenciaSchema>;
