@@ -26,9 +26,10 @@ export async function GET(req: NextRequest) {
 
     const conds: any[] = [];
     if (busqueda) conds.push(or(
-      ilike(egresado.nombres,   `%${busqueda}%`),
-      ilike(egresado.apellidos, `%${busqueda}%`),
-      ilike(egresado.ci,        `%${busqueda}%`),
+      ilike(egresado.nombres,         `%${busqueda}%`),
+      ilike(egresado.apellidoPaterno, `%${busqueda}%`),
+      ilike(egresado.apellidoMaterno, `%${busqueda}%`),
+      ilike(egresado.ci,              `%${busqueda}%`),
     ));
     if (anio)   conds.push(sql`${egresado.anioEgreso} = ${parseInt(anio)}`);
     if (genero) conds.push(sql`${egresado.genero} = ${genero}`);
@@ -50,7 +51,6 @@ export async function GET(req: NextRequest) {
     const rows = await db.select({
       id:                  egresado.id,
       nombres:             egresado.nombres,
-      apellidos:           egresado.apellidos,
       apellidoPaterno:     egresado.apellidoPaterno,
       apellidoMaterno:     egresado.apellidoMaterno,
       ci:                  egresado.ci,
@@ -101,15 +101,12 @@ export async function POST(req: NextRequest) {
     }
 
     const resultado = await db.transaction(async (tx) => {
-      const apellidos = [d.apellidoPaterno, d.apellidoMaterno]
-        .filter(Boolean).join(" ") || d.apellidos;
 
       const [nuevoEgresado] = await tx.insert(egresado).values({
         // Bloque 0
         tipo:                 d.tipo,
         // Datos personales
         nombres:              d.nombres,
-        apellidos,
         apellidoPaterno:      d.apellidoPaterno     ?? null,
         apellidoMaterno:      d.apellidoMaterno     ?? null,
         ci:                   d.ci,

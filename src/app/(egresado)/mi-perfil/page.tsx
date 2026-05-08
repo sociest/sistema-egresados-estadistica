@@ -86,12 +86,11 @@ export default async function MiPerfilPage() {
             className="w-14 h-14 rounded-2xl flex items-center justify-center text-xl font-bold shrink-0"
             style={{ background: "var(--turquesa-light)", color: "var(--turquesa-dark)", fontFamily: "'Source Serif 4', serif" }}
           >
-            {(eg.apellidoPaterno ?? eg.apellidos)[0]}{eg.nombres[0]}
+            {(eg.apellidoPaterno ?? eg.nombres)[0]}{eg.nombres[0]}
           </div>
           <div>
             <h1 className="text-2xl font-bold" style={{ color: "var(--azul-pizarra)", fontFamily: "'Source Serif 4', serif" }}>
-              {eg.apellidoPaterno ?? eg.apellidos}
-              {eg.apellidoMaterno ? ` ${eg.apellidoMaterno}` : ""}, {eg.nombres}
+              {[eg.apellidoPaterno, eg.apellidoMaterno].filter(Boolean).join(" ") || eg.nombres}, {eg.nombres}
             </h1>
             {tituloCalculado && (
               <p className="text-sm mt-0.5" style={{ color: "var(--gris-grafito)" }}>{tituloCalculado}</p>

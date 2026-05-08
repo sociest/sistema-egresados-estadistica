@@ -24,7 +24,8 @@ async function getEgresados(sp: SP) {
 
   if (sp.busqueda) conds.push(or(
     ilike(egresado.nombres,   `%${sp.busqueda}%`),
-    ilike(egresado.apellidos, `%${sp.busqueda}%`),
+    ilike(egresado.apellidoPaterno, `%${sp.busqueda}%`),
+    ilike(egresado.apellidoMaterno, `%${sp.busqueda}%`),
   ));
   if (sp.sector)
     conds.push(sql`EXISTS(
@@ -51,7 +52,6 @@ async function getEgresados(sp: SP) {
   const egresados = await db.select({
     id:                  egresado.id,
     nombres:             egresado.nombres,
-    apellidos:           egresado.apellidos,
     apellidoPaterno:     egresado.apellidoPaterno,
     apellidoMaterno:     egresado.apellidoMaterno,
     anioTitulacion:      egresado.anioTitulacion,

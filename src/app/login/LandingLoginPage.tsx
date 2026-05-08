@@ -161,7 +161,6 @@ function LoginModal({ onClose }: { onClose: () => void }) {
 interface EgresadoData {
   id:                 number;
   nombres:            string;
-  apellidos:          string;
   apellidoPaterno:    string | null;
   apellidoMaterno:    string | null;
   tituloAcademico:    string | null;
@@ -170,10 +169,10 @@ interface EgresadoData {
 }
 
 function EgresadoCard({ eg }: { eg: EgresadoData }) {
-  const initials = `${(eg.apellidoPaterno ?? eg.apellidos)[0]}${eg.nombres[0]}`;
-  const nombre   = eg.apellidoPaterno
-    ? `${eg.apellidoPaterno}${eg.apellidoMaterno ? ` ${eg.apellidoMaterno[0]}.` : ""}, ${eg.nombres}`
-    : `${eg.apellidos}, ${eg.nombres}`;
+  const initials = `${(eg.apellidoPaterno ?? eg.apellidoMaterno ?? "")[0]}${eg.nombres[0]}`;
+  const nombre = [eg.apellidoPaterno, eg.apellidoMaterno].filter(Boolean).join(" ")
+  ? `${[eg.apellidoPaterno, eg.apellidoMaterno].filter(Boolean).join(" ")}, ${eg.nombres}`
+  : eg.nombres;
 
   // Separar cargo y empresa del campo combinado "cargo — empresa"
   const [cargo, empresa] = eg.empleoActual?.split(" — ") ?? [null, null];

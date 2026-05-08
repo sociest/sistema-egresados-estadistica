@@ -11,7 +11,6 @@ export async function GET(_: NextRequest) {
     const egresados = await db.select({
       id:                  egresado.id,
       nombres:             egresado.nombres,
-      apellidos:           egresado.apellidos,
       apellidoPaterno:     egresado.apellidoPaterno,
       apellidoMaterno:     egresado.apellidoMaterno,
       ultimaActualizacion: egresado.ultimaActualizacion,

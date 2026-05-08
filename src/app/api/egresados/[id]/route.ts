@@ -50,15 +50,12 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
     if (!parsed.success) return err(parsed.error.errors[0].message);
 
     const d = parsed.data;
-    const apellidos = [d.apellidoPaterno, d.apellidoMaterno]
-      .filter(Boolean).join(" ") || d.apellidos;
 
     const [updated] = await db.update(egresado).set({
       // Bloque 0
       tipo:                 d.tipo,
       // Datos personales
       nombres:              d.nombres,
-      apellidos,
       apellidoPaterno:      d.apellidoPaterno     ?? null,
       apellidoMaterno:      d.apellidoMaterno     ?? null,
       ci:                   d.ci,

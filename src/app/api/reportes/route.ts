@@ -47,7 +47,6 @@ export async function GET(req: NextRequest) {
     const rows = await db.select({
       id:                  egresado.id,
       nombres:             egresado.nombres,
-      apellidos:           egresado.apellidos,
       apellidoPaterno:     egresado.apellidoPaterno,
       apellidoMaterno:     egresado.apellidoMaterno,
       ci:                  egresado.ci,
@@ -67,7 +66,7 @@ export async function GET(req: NextRequest) {
     })
     .from(egresado)
     .where(where)
-    .orderBy(egresado.apellidos);
+    .orderBy(egresado.apellidoPaterno, egresado.apellidoMaterno, egresado.nombres);
 
     // ── Exportar Excel ──────────────────────────────────────────────────────
     if (exportar === "excel") {
@@ -90,7 +89,7 @@ export async function GET(req: NextRequest) {
 
       const excelRows = rows.map(r => ({
         "Tipo":                  r.tipo ?? "",
-        "Apellido Paterno":      r.apellidoPaterno ?? r.apellidos,
+        "Apellido Paterno": r.apellidoPaterno ?? "",
         "Apellido Materno":      r.apellidoMaterno ?? "",
         "Nombres":               r.nombres,
         "CI":                    r.ci,

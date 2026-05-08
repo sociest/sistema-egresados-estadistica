@@ -36,7 +36,9 @@ export default async function EditarPerfilPage() {
 
       <div>
         <h1 className="page-title">Editar mis datos</h1>
-        <p className="page-sub">{eg.apellidoPaterno ?? eg.apellidos}, {eg.nombres}</p>
+        <p className="page-sub">
+          {[eg.apellidoPaterno, eg.apellidoMaterno].filter(Boolean).join(" ") || eg.nombres}, {eg.nombres}
+        </p>
       </div>
 
       {perfilIncompleto && (

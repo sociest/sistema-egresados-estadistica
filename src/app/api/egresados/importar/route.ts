@@ -271,13 +271,9 @@ export async function POST(req: NextRequest) {
           continue;
         }
 
-        const apellidos = [d.apellidoPaterno, d.apellidoMaterno]
-          .filter(Boolean).join(" ") || d.nombres;
-
         const [nuevoEgresado] = await db.insert(egresado).values({
           tipo:                d.tipo,
           nombres:             d.nombres,
-          apellidos,
           apellidoPaterno:     d.apellidoPaterno ?? null,
           apellidoMaterno:     d.apellidoMaterno ?? null,
           ci:                  d.ci,

@@ -7,7 +7,6 @@ import { Search, MapPin, Briefcase, GraduationCap, X, ChevronLeft, ChevronRight 
 interface Egresado {
   id:                number;
   nombres:           string;
-  apellidos:         string;
   apellidoPaterno:   string | null;
   apellidoMaterno:   string | null;
   tituloAcademico:   string | null;
@@ -36,8 +35,10 @@ const SECTOR_STYLE: Record<string, React.CSSProperties> = {
 };
 
 function EgresadoCard({ eg }: { eg: Egresado }) {
-  const initials = `${(eg.apellidoPaterno ?? eg.apellidos)[0]}${eg.nombres[0]}`;
-  const nombre   = `${eg.apellidoPaterno ?? eg.apellidos}${eg.apellidoMaterno ? ` ${eg.apellidoMaterno}` : ""}, ${eg.nombres}`;
+  const initials = `${(eg.apellidoPaterno ?? eg.apellidoMaterno ?? "")[0]}${eg.nombres[0]}`;
+  const nombre   = [eg.apellidoPaterno, eg.apellidoMaterno].filter(Boolean).join(" ")
+  ? `${[eg.apellidoPaterno, eg.apellidoMaterno].filter(Boolean).join(" ")}, ${eg.nombres}`
+  : eg.nombres;
 
   return (
     <div

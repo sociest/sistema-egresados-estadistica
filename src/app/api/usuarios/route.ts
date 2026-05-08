@@ -24,7 +24,8 @@ export async function GET(req: NextRequest) {
       idEgresado:      usuario.idEgresado,
       creadoEn:        usuario.creadoEn,
       nombres:         egresado.nombres,
-      apellidos:       egresado.apellidos,
+      apellidoPaterno: egresado.apellidoPaterno,
+      apellidoMaterno: egresado.apellidoMaterno,
     })
     .from(usuario)
     .leftJoin(egresado, eq(usuario.idEgresado, egresado.id))

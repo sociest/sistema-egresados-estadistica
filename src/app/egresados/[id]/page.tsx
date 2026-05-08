@@ -100,12 +100,11 @@ export default async function EgresadoDetallePage({ params }: { params: { id: st
               <div className="w-20 h-20 rounded-2xl bg-primary-600/20 border-2 border-primary-500/30
                               flex items-center justify-center mx-auto mb-4">
                 <span className="text-primary-300 text-2xl font-bold">
-                  {(eg.apellidoPaterno ?? eg.apellidos)[0]}{eg.nombres[0]}
+                  {(eg.apellidoPaterno ?? eg.nombres)[0]}{eg.nombres[0]}
                 </span>
               </div>
               <h2 className="text-white font-bold text-lg">
-                {eg.apellidoPaterno ?? eg.apellidos}
-                {eg.apellidoMaterno ? ` ${eg.apellidoMaterno}` : ""}, {eg.nombres}
+                {[eg.apellidoPaterno, eg.apellidoMaterno].filter(Boolean).join(" ") || eg.nombres}, {eg.nombres}
               </h2>
               <p className="text-slate-500 text-sm mt-1">CI: {eg.ci}</p>
               {eg.genero && <p className="text-slate-600 text-xs mt-0.5">{eg.genero}</p>}

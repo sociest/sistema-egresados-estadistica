@@ -12,8 +12,8 @@ interface Sugerencia {
   leida:     boolean;
   creadoEn:  Date | string;
   nombres:   string | null;
-  apellidos: string | null;
   apellidoPaterno: string | null;
+  apellidoMaterno: string | null;
 }
 
 const TIPO_COLOR: Record<string, React.CSSProperties> = {

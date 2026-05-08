@@ -20,7 +20,7 @@ export default async function UsuariosPage() {
     id: usuario.id, correo: usuario.correo, rol: usuario.rol,
     estado: usuario.estado, creadoEn: usuario.creadoEn,
     idEgresado: usuario.idEgresado,
-    nombres: egresado.nombres, apellidos: egresado.apellidos,
+    nombres: egresado.nombres, apellidoPaterno: egresado.apellidoPaterno, apellidoMaterno: egresado.apellidoMaterno,
   })
   .from(usuario)
   .leftJoin(egresado, eq(usuario.idEgresado, egresado.id))
@@ -59,7 +59,7 @@ export default async function UsuariosPage() {
                   <td><span className={cn("badge", ROL_B[r.rol] ?? "badge-slate")}>{r.rol}</span></td>
                   <td><span className={cn("badge", ESTADO_B[r.estado] ?? "badge-slate")}>{r.estado}</span></td>
                   <td className="text-sm" style={{ color: "var(--gris-grafito)" }}>
-                    {r.nombres ? `${r.apellidos}, ${r.nombres}` : <span style={{ color: "var(--placeholder)" }}>—</span>}
+                    {r.nombres ? `${[r.apellidoPaterno, r.apellidoMaterno].filter(Boolean).join(" ") || r.nombres}, ${r.nombres}` : <span style={{ color: "var(--placeholder)" }}>—</span>}
                   </td>
                   <td className="text-sm" style={{ color: "var(--gris-grafito)" }}>{fmtDate(r.creadoEn?.toISOString())}</td>
                   <td>
@@ -92,7 +92,7 @@ export default async function UsuariosPage() {
               </div>
               {r.nombres && (
                 <p className="text-xs mb-2" style={{ color: "var(--gris-grafito)" }}>
-                  Egresado: {r.apellidos}, {r.nombres}
+                  Egresado: {[r.apellidoPaterno, r.apellidoMaterno].filter(Boolean).join(" ") || r.nombres}, {r.nombres}
                 </p>
               )}
               <div className="flex gap-2">

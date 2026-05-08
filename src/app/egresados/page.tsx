@@ -29,11 +29,12 @@ interface SP {
 async function getData(sp: SP) {
   const conds: any[] = [];
 
-  if (sp.busqueda) conds.push(or(
-    ilike(egresado.nombres,   `%${sp.busqueda}%`),
-    ilike(egresado.apellidos, `%${sp.busqueda}%`),
-    ilike(egresado.ci,        `%${sp.busqueda}%`),
-  ));
+ if (sp.busqueda) conds.push(or(
+  ilike(egresado.nombres,         `%${sp.busqueda}%`),
+  ilike(egresado.apellidoPaterno, `%${sp.busqueda}%`),
+  ilike(egresado.apellidoMaterno, `%${sp.busqueda}%`),
+  ilike(egresado.ci,              `%${sp.busqueda}%`),
+));
   if (sp.anioEgreso)     conds.push(sql`${egresado.anioEgreso} = ${parseInt(sp.anioEgreso)}`);
   if (sp.anioTitulacion) conds.push(sql`${egresado.anioTitulacion} = ${parseInt(sp.anioTitulacion)}`);
   if (sp.genero)         conds.push(sql`${egresado.genero} = ${sp.genero}`);
@@ -71,7 +72,6 @@ async function getData(sp: SP) {
   const rows = await db.select({
     id:                  egresado.id,
     nombres:             egresado.nombres,
-    apellidos:           egresado.apellidos,
     apellidoPaterno:     egresado.apellidoPaterno,
     apellidoMaterno:     egresado.apellidoMaterno,
     ci:                  egresado.ci,
@@ -91,7 +91,7 @@ async function getData(sp: SP) {
     )`,
   })
   .from(egresado).where(where)
-  .orderBy(egresado.apellidos)
+  .orderBy(egresado.apellidoPaterno, egresado.apellidoMaterno, egresado.nombres)
   .limit(pageSize).offset((page - 1) * pageSize);
 
   return { rows, total, page, pageSize, totalPages: Math.ceil(total / pageSize) };
@@ -173,8 +173,7 @@ export default async function EgresadosPage({ searchParams }: { searchParams: SP
                     <tr key={r.id}>
                       <td>
                         <p className="font-semibold text-sm" style={{ color: "var(--azul-pizarra)" }}>
-                          {r.apellidoPaterno ?? r.apellidos}
-                          {r.apellidoMaterno ? ` ${r.apellidoMaterno}` : ""}, {r.nombres}
+                          {[r.apellidoPaterno, r.apellidoMaterno].filter(Boolean).join(" ") || r.nombres}, {r.nombres}
                         </p>
                         {r.genero && (
                           <p className="text-xs mt-0.5" style={{ color: "var(--placeholder)" }}>{r.genero}</p>
@@ -235,7 +234,7 @@ export default async function EgresadosPage({ searchParams }: { searchParams: SP
                           <Link href={`/egresados/${r.id}/editar`} className="btn-slate btn-xs">
                             <Pencil className="w-3 h-3" /> Editar
                           </Link>
-                          <EliminarEgresadoBtn id={r.id} nombre={`${r.nombres} ${r.apellidos}`} />
+                          <EliminarEgresadoBtn id={r.id} nombre={`${r.nombres} ${[r.apellidoPaterno, r.apellidoMaterno].filter(Boolean).join(" ")}`} />
                         </div>
                       </td>
                     </tr>
@@ -251,8 +250,7 @@ export default async function EgresadosPage({ searchParams }: { searchParams: SP
                   <div className="flex items-start justify-between gap-3 mb-3">
                     <div>
                       <p className="font-bold text-sm" style={{ color: "var(--azul-pizarra)" }}>
-                        {r.apellidoPaterno ?? r.apellidos}
-                        {r.apellidoMaterno ? ` ${r.apellidoMaterno}` : ""}, {r.nombres}
+                        {[r.apellidoPaterno, r.apellidoMaterno].filter(Boolean).join(" ") || r.nombres}, {r.nombres}
                       </p>
                       <p className="font-mono text-xs mt-0.5" style={{ color: "var(--gris-grafito)" }}>
                         CI: {r.ci}
@@ -290,7 +288,7 @@ export default async function EgresadosPage({ searchParams }: { searchParams: SP
                     <Link href={`/egresados/${r.id}/editar`} className="btn-slate btn-xs flex-1 justify-center">
                       <Pencil className="w-3 h-3" /> Editar
                     </Link>
-                    <EliminarEgresadoBtn id={r.id} nombre={`${r.nombres} ${r.apellidos}`} />
+                    <EliminarEgresadoBtn id={r.id} nombre={`${r.nombres} ${[r.apellidoPaterno, r.apellidoMaterno].filter(Boolean).join(" ")}`}/>
                   </div>
                 </div>
               ))}
