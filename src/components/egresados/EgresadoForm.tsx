@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { egresadoSchema, type EgresadoInput } from "@/lib/validations";
-import { PLANES_ESTUDIO, MODALIDADES_TITULACION } from "@/lib/schema";
+import { MODALIDADES_TITULACION } from "@/lib/schema";
 import { Save, X, GraduationCap, UserX, Globe, Linkedin } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -46,7 +46,6 @@ export default function EgresadoForm({ egresado: eg, redirectTo, esAdmin = false
       defaultValues: eg ? {
         tipo:                eg.tipo              ?? "Titulado",
         nombres:             eg.nombres,
-        apellidos:           eg.apellidos,
         apellidoPaterno:     eg.apellidoPaterno    ?? "",
         apellidoMaterno:     eg.apellidoMaterno    ?? "",
         ci:                  eg.ci,
@@ -54,15 +53,12 @@ export default function EgresadoForm({ egresado: eg, redirectTo, esAdmin = false
         genero:              eg.genero             ?? undefined,
         correoElectronico:   eg.correoElectronico  ?? "",
         celular:             eg.celular ?? eg.telefono ?? "",
-        direccion:           eg.direccion          ?? "",
-        tituloAcademico:     eg.tituloAcademico    ?? "",
         fechaNacimiento:     eg.fechaNacimiento?.split("T")[0] ?? eg.fechaNacimiento ?? "",
         facebook:            eg.facebook           ?? "",
         linkedin:            eg.linkedin           ?? "",
         areaEspecializacion: eg.areaEspecializacion ?? "",
         observaciones:       eg.observaciones      ?? "",
         estadoLaboral:       eg.estadoLaboral      ?? undefined,
-        planEstudiosNombre:  eg.planEstudiosNombre ?? "",
         anioIngreso:         eg.anioIngreso        ?? undefined,
         anioEgreso:          eg.anioEgreso         ?? undefined,
         anioTitulacion:      eg.anioTitulacion     ?? undefined,
@@ -72,8 +68,7 @@ export default function EgresadoForm({ egresado: eg, redirectTo, esAdmin = false
         inicioProceso:       eg.inicioProceso       ?? undefined,
         motivoNoTitulacion:  eg.motivoNoTitulacion  ?? "",
         planeaTitularse:     eg.planeaTitularse      ?? undefined,
-        ciudadResidencia:    eg.ciudadResidencia     ?? "",
-        regionResidencia:    eg.regionResidencia     ?? "",
+        lugarResidencia:     eg.lugarResidencia      ?? "",
         fallecido:           eg.fallecido            ?? false,
       } : {
         tipo: "Titulado",
@@ -245,24 +240,11 @@ export default function EgresadoForm({ egresado: eg, redirectTo, esAdmin = false
               {errors.correoElectronico && <p className="hint">{errors.correoElectronico.message}</p>}
         </div>
 
-        <div className="md:col-span-2">
-          <label className="label">Dirección</label>
-          <input {...register("direccion")} className="field" />
-        </div>
-
         <div>
           <label className="label">Nacionalidad</label>
           <input {...register("nacionalidad")} className="field" placeholder="Boliviana" />
         </div>
 
-        <div>
-          <label className="label">Último Título Académico</label>
-          <input
-            {...register("tituloAcademico")}
-            className="field"
-            placeholder="Ej: Lic. en Estadística"
-          />
-        </div>
         <div>
           <label className="label">Estado Laboral</label>
           <div className="flex gap-2">
@@ -352,21 +334,12 @@ export default function EgresadoForm({ egresado: eg, redirectTo, esAdmin = false
           />
         </div>
 
-        <div>
-           <FieldLabel campo="ciudad">Ciudad de Residencia</FieldLabel>
+        <div className="md:col-span-2">
+          <label className="label">Lugar de Residencia</label>
           <input
-            {...register("ciudadResidencia")}
+            {...register("lugarResidencia")}
             className="field"
-            placeholder="Ej: La Paz, Cochabamba..."
-          />
-        </div>
-
-        <div>
-          <label className="label">Región / Departamento de Residencia</label>
-          <input
-            {...register("regionResidencia")}
-            className="field"
-            placeholder="Ej: La Paz, Beni, Tarija..."
+            placeholder="Ej: La Paz, Cochabamba, Santa Cruz..."
           />
         </div>
       </Section>
@@ -378,16 +351,6 @@ export default function EgresadoForm({ egresado: eg, redirectTo, esAdmin = false
           Datos Académicos
         </p>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-
-          <div>
-             <FieldLabel campo="plan">Plan de Estudios</FieldLabel>
-            <select {...register("planEstudiosNombre")} className="field">
-              <option value="">— Sin especificar —</option>
-              {PLANES_ESTUDIO.map(p => (
-                <option key={p} value={p}>Plan {p}</option>
-              ))}
-            </select>
-          </div>
 
           <div>
             <label className="label">Año de Ingreso</label>
@@ -530,12 +493,12 @@ export default function EgresadoForm({ egresado: eg, redirectTo, esAdmin = false
             <label className="label">¿Planea titularse en el futuro?</label>
             <div className="flex gap-3">
               {[
-                { label: "Sí", value: "true" },
-                { label: "No", value: "false" },
+                { label: "Sí",      value: "Si"      },
+                { label: "No",      value: "No"      },
+                { label: "No sabe", value: "No sabe" },
               ].map(opt => {
                 const currentVal = watch("planeaTitularse");
-                const isActive = (opt.value === "true" && currentVal === true) ||
-                                 (opt.value === "false" && currentVal === false);
+                const isActive = currentVal === opt.value;
                 return (
                   <label
                     key={opt.value}
@@ -548,9 +511,7 @@ export default function EgresadoForm({ egresado: eg, redirectTo, esAdmin = false
                     <input
                       type="radio"
                       value={opt.value}
-                      {...register("planeaTitularse", {
-                        setValueAs: v => v === "" ? null : v === "true",
-                      })}
+                      {...register("planeaTitularse")}
                       className="sr-only"
                     />
                     <div
@@ -561,7 +522,7 @@ export default function EgresadoForm({ egresado: eg, redirectTo, esAdmin = false
                         <div className="w-1.5 h-1.5 rounded-full" style={{ background: "#f59e0b" }} />
                       )}
                     </div>
-                    <span className="text-sm" style={{ color: "var(--azul-pizarra)" }}>{opt.label}</span>
+                    <span className="text-sm" style={{ color: "var(--azul-pizarra)" }}>{opt.value}</span>
                   </label>
                 );
               })}

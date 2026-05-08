@@ -16,7 +16,6 @@ export async function GET(req: NextRequest) {
 
     const sp       = new URL(req.url).searchParams;
     const busqueda = sp.get("busqueda") ?? "";
-    const plan     = sp.get("plan");
     const anio     = sp.get("anioEgreso");
     const empleo   = sp.get("conEmpleo");
     const genero   = sp.get("genero");
@@ -31,7 +30,6 @@ export async function GET(req: NextRequest) {
       ilike(egresado.apellidos, `%${busqueda}%`),
       ilike(egresado.ci,        `%${busqueda}%`),
     ));
-    if (plan)   conds.push(ilike(egresado.planEstudiosNombre, `%${plan}%`));
     if (anio)   conds.push(sql`${egresado.anioEgreso} = ${parseInt(anio)}`);
     if (genero) conds.push(sql`${egresado.genero} = ${genero}`);
     if (tipo)   conds.push(sql`${egresado.tipo} = ${tipo}`);
@@ -59,7 +57,6 @@ export async function GET(req: NextRequest) {
       celular:             egresado.celular,
       genero:              egresado.genero,
       tipo:                egresado.tipo,           // Bloque 0
-      planEstudiosNombre:  egresado.planEstudiosNombre,
       anioEgreso:          egresado.anioEgreso,
       anioTitulacion:      egresado.anioTitulacion,
       modalidadTitulacion: egresado.modalidadTitulacion,
@@ -121,8 +118,6 @@ export async function POST(req: NextRequest) {
         correoElectronico:    d.correoElectronico   ?? null,
         celular:              d.celular             ?? null,
         telefono:             d.celular             ?? null,
-        direccion:            d.direccion           ?? null,
-        tituloAcademico:      d.tituloAcademico     ?? null,
         fechaNacimiento:      d.fechaNacimiento,
         // Redes y área (Bloque 0 compartidos)
         facebook:             d.facebook            ?? null,
@@ -134,7 +129,6 @@ export async function POST(req: NextRequest) {
         fechaGraduacion:      d.anioTitulacion
           ? `${d.anioTitulacion}-01-01`
           : d.fechaNacimiento,
-        planEstudiosNombre:   d.planEstudiosNombre  ?? null,
         anioIngreso:          d.anioIngreso         ?? null,
         anioEgreso:           d.anioEgreso          ?? null,
         anioTitulacion:       d.anioTitulacion      ?? null,
@@ -144,8 +138,7 @@ export async function POST(req: NextRequest) {
         inicioProceso:        d.tipo === "Egresado" ? (d.inicioProceso ?? null) : null,
         motivoNoTitulacion:   d.tipo === "Egresado" ? (d.motivoNoTitulacion ?? null) : null,
         planeaTitularse:      d.tipo === "Egresado" ? (d.planeaTitularse ?? null) : null,
-        ciudadResidencia:     d.ciudadResidencia    ?? null,
-        regionResidencia:     d.regionResidencia    ?? null,
+        lugarResidencia:      d.lugarResidencia     ?? null,
         // fallecido solo lo puede marcar el admin desde editar, no en creación
       }).returning();
 

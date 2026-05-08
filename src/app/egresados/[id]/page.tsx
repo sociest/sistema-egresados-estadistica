@@ -54,6 +54,13 @@ export default async function EgresadoDetallePage({ params }: { params: { id: st
       .orderBy(postgrado.anioInicio),
   ]);
 
+  // Calcular título académico desde postgrados
+  const { derivarTituloAcademico } = await import("@/lib/schema");
+  const tituloCalculado = derivarTituloAcademico(
+    (eg.tipo as "Titulado" | "Egresado") ?? "Titulado",
+    postgrados,
+  );
+
   const empleoActual = historial.find(h => h.fechaFin === null);
 
   // Primer empleo cronológicamente
@@ -102,8 +109,8 @@ export default async function EgresadoDetallePage({ params }: { params: { id: st
               </h2>
               <p className="text-slate-500 text-sm mt-1">CI: {eg.ci}</p>
               {eg.genero && <p className="text-slate-600 text-xs mt-0.5">{eg.genero}</p>}
-              {eg.tituloAcademico && (
-                <p className="text-slate-400 text-xs mt-1 italic">{eg.tituloAcademico}</p>
+              {tituloCalculado && (
+                <p className="text-slate-400 text-xs mt-1 italic">{tituloCalculado}</p>
               )}
               <div className="mt-3">
                 <span className={cn("badge", empleoActual ? "badge-green" : "badge-slate")}>
@@ -143,9 +150,6 @@ export default async function EgresadoDetallePage({ params }: { params: { id: st
             <div className="card space-y-2.5">
               <p className="text-slate-500 text-xs uppercase tracking-widest font-semibold">Académico</p>
 
-              {eg.planEstudiosNombre && (
-                <Row label="Plan">Plan {eg.planEstudiosNombre}</Row>
-              )}
               {eg.modalidadTitulacion && (
                 <Row label="Modalidad">{eg.modalidadTitulacion}</Row>
               )}
@@ -215,6 +219,7 @@ export default async function EgresadoDetallePage({ params }: { params: { id: st
             )}
           </div>
 
+
           {/* ── Historial laboral ── */}
           <div className="lg:col-span-2">
             <div className="card">
@@ -249,19 +254,19 @@ export default async function EgresadoDetallePage({ params }: { params: { id: st
                               {h.area && (
                                 <span className="text-slate-500 text-xs">{h.area}</span>
                               )}
-                              {h.ciudad && (
+                              {h.ciudadRegionTrabajo && (
                                 <span className="text-slate-500 text-xs flex items-center gap-0.5">
-                                  <MapPin className="w-3 h-3" />{h.ciudad}
+                                  <MapPin className="w-3 h-3" />{h.ciudadRegionTrabajo}
                                 </span>
                               )}
-                              {h.sector && (
+                              {h.sectorTrabajo && (
                                 <span className={cn(
                                   "text-xs px-1.5 py-0.5 rounded-md font-medium",
-                                  h.sector === "Publico"  ? "bg-blue-500/10 text-blue-400" :
-                                  h.sector === "Privado"  ? "bg-purple-500/10 text-purple-400" :
+                                  h.sectorTrabajo === "Publico"  ? "bg-blue-500/10 text-blue-400" :
+                                  h.sectorTrabajo === "Privado"  ? "bg-purple-500/10 text-purple-400" :
                                   "bg-slate-700 text-slate-400"
                                 )}>
-                                  {h.sector}
+                                  {h.sectorTrabajo}
                                 </span>
                               )}
                               {h.tipoContrato && (

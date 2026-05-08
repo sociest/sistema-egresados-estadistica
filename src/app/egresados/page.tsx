@@ -11,11 +11,9 @@ import BuscadorEgresados from "@/components/egresados/BuscadorEgresados";
 import EliminarEgresadoBtn from "@/components/egresados/EliminarEgresadoBtn";
 import ImportarEgresadosBtn from "@/components/egresados/ImportarEgresadosBtn";
 import { cn, fmtDate } from "@/lib/utils";
-import { PLANES_ESTUDIO } from "@/lib/schema";
 
 interface SP {
   busqueda?:       string;
-  plan?:           string;
   anioEgreso?:     string;
   anioTitulacion?: string;
   conEmpleo?:      string;
@@ -36,7 +34,6 @@ async function getData(sp: SP) {
     ilike(egresado.apellidos, `%${sp.busqueda}%`),
     ilike(egresado.ci,        `%${sp.busqueda}%`),
   ));
-  if (sp.plan)           conds.push(ilike(egresado.planEstudiosNombre, `%${sp.plan}%`));
   if (sp.anioEgreso)     conds.push(sql`${egresado.anioEgreso} = ${parseInt(sp.anioEgreso)}`);
   if (sp.anioTitulacion) conds.push(sql`${egresado.anioTitulacion} = ${parseInt(sp.anioTitulacion)}`);
   if (sp.genero)         conds.push(sql`${egresado.genero} = ${sp.genero}`);
@@ -146,11 +143,9 @@ export default async function EgresadosPage({ searchParams }: { searchParams: SP
         </div>
 
         <BuscadorEgresados
-          planes={[...PLANES_ESTUDIO]}
           searchParams={searchParams}
           ciudades={ciudades}
         />
-
                 {rows.length === 0 ? (
           <div className="card text-center py-16" style={{ background: "var(--blanco)" }}>
             <Search className="w-10 h-10 mx-auto mb-3" style={{ color: "var(--borde)" }} />

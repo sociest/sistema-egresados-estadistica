@@ -27,8 +27,8 @@ export default function HistorialForm({ idEgresado, historial, onSuccess }: Prop
     cargo:        historial?.cargo        ?? "",
     area:         historial?.area         ?? "",
     tipoContrato: historial?.tipoContrato ?? "",
-    ciudad:       historial?.ciudad       ?? "",
-    sector:       historial?.sector       ?? "",
+    ciudadRegionTrabajo: historial?.ciudadRegionTrabajo ?? "",
+    sectorTrabajo:       historial?.sectorTrabajo       ?? "",
     fechaInicio:  historial?.fechaInicio?.split("T")[0] ?? historial?.fechaInicio ?? "",
     fechaFin:     historial?.fechaFin?.split("T")[0]   ?? historial?.fechaFin   ?? "",
   });
@@ -60,8 +60,8 @@ export default function HistorialForm({ idEgresado, historial, onSuccess }: Prop
             cargo:              form.cargo,
             area:               form.area || null,
             tipoContrato:       form.tipoContrato || null,
-            ciudad:             form.ciudad || null,
-            sector:             form.sector || null,
+            ciudadRegionTrabajo: form.ciudadRegionTrabajo || null,
+            sectorTrabajo:       form.sectorTrabajo       || null,
             fechaInicio:        form.fechaInicio,
             fechaFin:           esActual ? null : (form.fechaFin || null),
             actualmenteTrabaja: esActual,
@@ -74,8 +74,8 @@ export default function HistorialForm({ idEgresado, historial, onSuccess }: Prop
         fd.append("cargo",              form.cargo);
         fd.append("area",               form.area);
         fd.append("tipoContrato",       form.tipoContrato);
-        fd.append("ciudad",             form.ciudad);
-        fd.append("sector",             form.sector);
+        fd.append("ciudadRegionTrabajo", form.ciudadRegionTrabajo);
+        fd.append("sectorTrabajo",       form.sectorTrabajo);
         fd.append("fechaInicio",        form.fechaInicio);
         fd.append("fechaFin",           esActual ? "" : form.fechaFin);
         fd.append("actualmenteTrabaja", String(esActual));
@@ -133,13 +133,13 @@ export default function HistorialForm({ idEgresado, historial, onSuccess }: Prop
             {TIPOS_CONTRATO.map(t => <option key={t} value={t}>{t}</option>)}
           </select>
         </div>
-        <div>
-          <label className="label">Ciudad</label>
-          <input value={form.ciudad} onChange={e => set("ciudad", e.target.value)} placeholder="Ej: La Paz" className="field" />
+         <div>
+          <label className="label">Ciudad / Región de Trabajo</label>
+          <input value={form.ciudadRegionTrabajo} onChange={e => set("ciudadRegionTrabajo", e.target.value)} placeholder="Ej: La Paz" className="field" />
         </div>
         <div>
           <label className="label">Sector</label>
-          <select value={form.sector} onChange={e => set("sector", e.target.value)} className="field">
+          <select value={form.sectorTrabajo} onChange={e => set("sectorTrabajo", e.target.value)} className="field">
             <option value="">— Seleccionar —</option>
             {SECTORES.map(s => <option key={s} value={s}>{s}</option>)}
           </select>
@@ -190,39 +190,6 @@ export default function HistorialForm({ idEgresado, historial, onSuccess }: Prop
 
       {/* ── Documento de verificación ── */}
 
-      {/* Estado de verificación si ya existe */}
-      {isEditing && historial?.verificacionEstado && (
-        <div
-          className="rounded-xl px-4 py-3 flex items-center gap-3"
-          style={{
-            background: historial.verificacionEstado === "aprobado"
-              ? "var(--verde-light)"
-              : historial.verificacionEstado === "rechazado"
-              ? "#FEF2F2"
-              : "var(--naranja-light)",
-            border: `1px solid ${
-              historial.verificacionEstado === "aprobado" ? "#86efac"
-              : historial.verificacionEstado === "rechazado" ? "#FECACA"
-              : "#fed7aa"
-            }`,
-          }}
-        >
-          <span className="text-sm font-semibold" style={{
-            color: historial.verificacionEstado === "aprobado"
-              ? "var(--verde)"
-              : historial.verificacionEstado === "rechazado"
-              ? "#dc2626"
-              : "var(--naranja)",
-          }}>
-            {historial.verificacionEstado === "aprobado" && "✓ Experiencia verificada"}
-            {historial.verificacionEstado === "rechazado" && "✗ Verificación rechazada"}
-            {historial.verificacionEstado === "pendiente" && "⏳ Pendiente de verificación"}
-          </span>
-          {historial.rechazoMotivo && (
-            <span className="text-xs" style={{ color: "#dc2626" }}>— {historial.rechazoMotivo}</span>
-          )}
-        </div>
-      )}
 
       {/* Acciones */}
       <div className="flex gap-3 pt-3 border-t" style={{ borderColor: "var(--borde)" }}>

@@ -1,35 +1,9 @@
 "use client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Building2, MapPin, Pencil, Trash2, X, Briefcase, CheckCircle, Clock, XCircle } from "lucide-react";
+import { Building2, MapPin, Pencil, Trash2, X, Briefcase } from "lucide-react";
 import { cn, fmtDate } from "@/lib/utils";
 import HistorialForm from "./HistorialForm";
-
-function VerificacionBadge({ estado, motivo }: { estado: string | null; motivo?: string | null }) {
-  if (!estado) return null;
-  if (estado === "aprobado") return (
-    <div className="flex items-center gap-1.5 mt-1">
-      <CheckCircle className="w-3.5 h-3.5" style={{ color: "var(--verde)" }} />
-      <span className="text-xs font-medium" style={{ color: "var(--verde)" }}>Verificado</span>
-    </div>
-  );
-  if (estado === "rechazado") return (
-    <div className="mt-1">
-      <div className="flex items-center gap-1.5">
-        <XCircle className="w-3.5 h-3.5 text-red-400" />
-        <span className="text-xs font-medium text-red-400">Rechazado</span>
-      </div>
-      {motivo && <p className="text-xs text-red-400/70 mt-0.5">{motivo}</p>}
-    </div>
-  );
-  if (estado === "pendiente") return (
-    <div className="flex items-center gap-1.5 mt-1">
-      <Clock className="w-3.5 h-3.5" style={{ color: "var(--naranja)" }} />
-      <span className="text-xs font-medium" style={{ color: "var(--naranja)" }}>En verificación</span>
-    </div>
-  );
-  return null;
-}
 
 export default function MiPerfilHistorial({
   historial, idEgresado,
@@ -85,28 +59,27 @@ export default function MiPerfilHistorial({
                           <Briefcase className="w-3 h-3" /> {h.area}
                         </span>
                       )}
-                      {h.ciudad && (
+                      {h.ciudadRegionTrabajo && (
                         <span className="text-slate-500 text-xs flex items-center gap-1">
-                          <MapPin className="w-3 h-3" /> {h.ciudad}
+                          <MapPin className="w-3 h-3" /> {h.ciudadRegionTrabajo}
                         </span>
                       )}
-                      {h.sector && (
+                      {h.sectorTrabajo && (
                         <span className={cn(
                           "text-xs px-1.5 py-0.5 rounded-md font-medium",
-                          h.sector === "Publico"
+                          h.sectorTrabajo === "Publico"
                             ? "bg-blue-500/10 text-blue-400"
-                            : h.sector === "Privado"
+                            : h.sectorTrabajo === "Privado"
                             ? "bg-purple-500/10 text-purple-400"
                             : "bg-slate-700 text-slate-400"
                         )}>
-                          {h.sector}
+                          {h.sectorTrabajo}
                         </span>
                       )}
                       {h.tipoContrato && (
                         <span className="text-slate-600 text-xs">{h.tipoContrato}</span>
                       )}
                     </div>
-                    <VerificacionBadge estado={h.verificacionEstado} motivo={h.rechazoMotivo} />
                   </div>
                 </div>
 

@@ -67,8 +67,6 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
       correoElectronico:    d.correoElectronico   ?? null,
       celular:              d.celular             ?? null,
       telefono:             d.celular             ?? null,
-      direccion:            d.direccion           ?? null,
-      tituloAcademico:      d.tituloAcademico     ?? null,
       fechaNacimiento:      d.fechaNacimiento,
       // Redes y área (Bloque 0 compartidos)
       facebook:             d.facebook            ?? null,
@@ -80,7 +78,6 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
       fechaGraduacion:      d.anioTitulacion
         ? `${d.anioTitulacion}-01-01`
         : d.fechaNacimiento,
-      planEstudiosNombre:   d.planEstudiosNombre  ?? null,
       anioIngreso:          d.anioIngreso         ?? null,
       anioEgreso:           d.anioEgreso          ?? null,
       anioTitulacion:       d.anioTitulacion      ?? null,
@@ -90,8 +87,7 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
       inicioProceso:        d.tipo === "Egresado" ? (d.inicioProceso ?? null) : null,
       motivoNoTitulacion:   d.tipo === "Egresado" ? (d.motivoNoTitulacion ?? null) : null,
       planeaTitularse:      d.tipo === "Egresado" ? (d.planeaTitularse ?? null) : null,
-      ciudadResidencia:     d.ciudadResidencia    ?? null,
-      regionResidencia:     d.regionResidencia    ?? null,
+      lugarResidencia:      d.lugarResidencia     ?? null,
       fallecido:            d.fallecido           ?? false,
     })
     .where(eq(egresado.id, id))

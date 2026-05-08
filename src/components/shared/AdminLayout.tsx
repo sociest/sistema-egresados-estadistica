@@ -5,7 +5,7 @@ import { useState } from "react";
 import {
   LayoutDashboard, Users, FileBarChart,
   UserCog, LogOut, GraduationCap, ChevronRight,
-  ShieldCheck, MessageSquare, Menu, X, Newspaper,
+  MessageSquare, Menu, X, Newspaper,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 

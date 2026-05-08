@@ -80,21 +80,12 @@ export default function RegistroInicialForm() {
           </select>
         </div>
 
-        <div>
-          <label className="label">Ciudad de Residencia</label>
+        <div className="md:col-span-2">
+          <label className="label">Lugar de Residencia</label>
           <input
-            {...register("ciudadResidencia")}
+            {...register("lugarResidencia")}
             className="field"
-            placeholder="Ej: La Paz"
-          />
-        </div>
-
-        <div>
-          <label className="label">Departamento de Residencia</label>
-          <input
-            {...register("regionResidencia")}
-            className="field"
-            placeholder="Ej: La Paz, Beni..."
+            placeholder="Ej: La Paz, Cochabamba, Santa Cruz..."
           />
         </div>
       </div>

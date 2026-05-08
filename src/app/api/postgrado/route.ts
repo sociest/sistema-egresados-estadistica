@@ -52,19 +52,9 @@ export async function POST(req: NextRequest) {
     const session = await getSession();
     if (!session) return err("No autorizado", 401);
 
-    const formData = await req.formData();
+    const body = await req.json();
 
-    const raw = {
-      idEgresado:  parseInt(formData.get("idEgresado") as string),
-      tipo:        formData.get("tipo") as string,
-      institucion: formData.get("institucion") as string,
-      pais:        formData.get("pais") as string || "Bolivia",
-      anioInicio:  parseInt(formData.get("anioInicio") as string),
-      anioFin:     formData.get("anioFin") ? parseInt(formData.get("anioFin") as string) : null,
-      estado:      formData.get("estado") as string || "En curso",
-    };
-
-    const parsed = postgradoFormSchema.safeParse(raw);
+    const parsed = postgradoFormSchema.safeParse(body);
     if (!parsed.success) return err(parsed.error.errors[0].message);
 
     const d = parsed.data;
@@ -72,38 +62,16 @@ export async function POST(req: NextRequest) {
     if (session.rol === "egresado" && session.idEgresado !== d.idEgresado)
       return err("No autorizado", 403);
 
-    // Procesar documento si se adjuntó
-    const archivo = formData.get("documento") as File | null;
-    let docBinario: Buffer | null = null;
-    let docNombre: string | null = null;
-    let docTipo: string | null = null;
-    let docSubidoEn: Date | null = null;
-
-    if (archivo && archivo.size > 0) {
-      const tiposPermitidos = ["application/pdf", "image/jpeg", "image/png", "image/webp"];
-      if (!tiposPermitidos.includes(archivo.type))
-        return err("Solo se permiten archivos PDF, JPG, PNG o WEBP");
-      if (archivo.size > 5 * 1024 * 1024)
-        return err("El archivo no puede superar los 5MB");
-      const arrayBuffer = await archivo.arrayBuffer();
-      docBinario    = Buffer.from(arrayBuffer);
-      docNombre     = archivo.name;
-      docTipo       = archivo.type;
-      docSubidoEn   = new Date();
-    }
-
-    // Siempre pendiente, tenga o no documento
-    const verificacionEstado = "pendiente";
-
     const [row] = await db.insert(postgrado).values({
-  idEgresado:  d.idEgresado,
-  tipo:        d.tipo,
-  institucion: d.institucion,
-  pais:        d.pais,
-  anioInicio:  d.anioInicio,
-  anioFin:     d.anioFin ?? null,
-  estado:      d.estado,
-}).returning();
+      idEgresado:  d.idEgresado,
+      tipo:        d.tipo,
+      institucion: d.institucion,
+      pais:        d.pais,
+      anioInicio:  d.anioInicio,
+      anioFin:     d.anioFin ?? null,
+      estado:      d.estado,
+    }).returning();
+
     return ok(row, 201);
   } catch (e) { console.error(e); return err("Error al crear postgrado", 500); }
 }

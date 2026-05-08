@@ -25,14 +25,12 @@ function calcularTiempoPrimerEmpleo(
 
 function calcularCompletitud(eg: any): { porcentaje: number; faltantes: string[] } {
   const campos = [
-    { key: "correoElectronico", label: "Correo" },
-    { key: "celular",           label: "Celular" },
-    { key: "ciudadResidencia",  label: "Ciudad de residencia" },
-    { key: "planEstudiosNombre",label: "Plan de estudios" },
-    { key: "anioEgreso",        label: "Año de egreso" },
-    { key: "direccion",         label: "Dirección" },
-    { key: "genero",            label: "Género" },
-    { key: "areaEspecializacion",label: "Área de especialización" },
+    { key: "correoElectronico",   label: "Correo" },
+    { key: "celular",             label: "Celular" },
+    { key: "lugarResidencia",     label: "Lugar de residencia" },
+    { key: "anioEgreso",          label: "Año de egreso" },
+    { key: "genero",              label: "Género" },
+    { key: "areaEspecializacion", label: "Área de especialización" },
   ];
   const faltantes = campos.filter(c => !eg[c.key]).map(c => c.label);
   const porcentaje = Math.round(((campos.length - faltantes.length) / campos.length) * 100);
@@ -65,7 +63,11 @@ export default async function MiPerfilPage() {
       .where(eq(postgrado.idEgresado, eg.id))
       .orderBy(postgrado.anioInicio),
   ]);
-
+  const { derivarTituloAcademico } = await import("@/lib/schema");
+  const tituloCalculado = derivarTituloAcademico(
+    (eg.tipo as "Titulado" | "Egresado") ?? "Titulado",
+    postgrados,
+  );
   const primerEmpleo = historial.length > 0
     ? historial.reduce((a, b) => new Date(a.fechaInicio) < new Date(b.fechaInicio) ? a : b)
     : null;
@@ -91,8 +93,8 @@ export default async function MiPerfilPage() {
               {eg.apellidoPaterno ?? eg.apellidos}
               {eg.apellidoMaterno ? ` ${eg.apellidoMaterno}` : ""}, {eg.nombres}
             </h1>
-            {eg.tituloAcademico && (
-              <p className="text-sm mt-0.5" style={{ color: "var(--gris-grafito)" }}>{eg.tituloAcademico}</p>
+            {tituloCalculado && (
+              <p className="text-sm mt-0.5" style={{ color: "var(--gris-grafito)" }}>{tituloCalculado}</p>
             )}
           </div>
         </div>
@@ -177,7 +179,6 @@ export default async function MiPerfilPage() {
           </h2>
           <div className="space-y-3">
             {[
-              { label: "Plan", value: eg.planEstudiosNombre ? `Plan ${eg.planEstudiosNombre}` : null },
               { label: "Ingreso", value: eg.anioIngreso ? String(eg.anioIngreso) : null },
               { label: "Egreso", value: eg.anioEgreso ? String(eg.anioEgreso) : null },
               { label: "Titulación", value: eg.anioTitulacion ? String(eg.anioTitulacion) : null },

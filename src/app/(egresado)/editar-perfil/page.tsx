@@ -11,8 +11,7 @@ function calcularCamposVacios(eg: any): string[] {
   const vacios: string[] = [];
   if (!eg.correoElectronico) vacios.push("correo");
   if (!eg.celular && !eg.telefono) vacios.push("celular");
-  if (!eg.ciudadResidencia) vacios.push("ciudad");
-  if (!eg.planEstudiosNombre) vacios.push("plan");
+  if (!eg.lugarResidencia) vacios.push("lugarResidencia");
   if (!eg.anioEgreso) vacios.push("anioEgreso");
   return vacios;
 }
@@ -56,11 +55,10 @@ export default async function EditarPerfilPage() {
             <p className="text-xs mt-0.5" style={{ color: "#92400e" }}>
               Completá tu información para aparecer mejor en el directorio. Faltan:{" "}
               {camposVacios.map(c => ({
-                correo: "correo electrónico",
-                celular: "celular",
-                ciudad: "ciudad de residencia",
-                plan: "plan de estudios",
-                anioEgreso: "año de egreso",
+                correo:          "correo electrónico",
+                celular:         "celular",
+                lugarResidencia: "lugar de residencia",
+                anioEgreso:      "año de egreso",
               }[c] ?? c)).join(", ")}.
             </p>
           </div>

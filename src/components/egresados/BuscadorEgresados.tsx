@@ -7,7 +7,6 @@ import { MODALIDADES_TITULACION } from "@/lib/schema";
 
 interface SP {
   busqueda?:       string;
-  plan?:           string;
   anioEgreso?:     string;
   anioTitulacion?: string;
   conEmpleo?:      string;
@@ -21,13 +20,12 @@ interface SP {
 }
 
 interface Props {
-  planes:       readonly string[];
   searchParams: SP;
   ciudades?:    string[];
 }
 
 const LABEL_MAP: Record<string, string> = {
-  busqueda: "Búsqueda", plan: "Plan", anioEgreso: "Año egreso",
+  busqueda: "Búsqueda", anioEgreso: "Año egreso",
   anioTitulacion: "Año titulación", conEmpleo: "Empleo",
   genero: "Género", sector: "Sector", ciudad: "Ciudad",
   modalidad: "Modalidad", tienePostgrado: "Postgrado",
@@ -35,7 +33,7 @@ const LABEL_MAP: Record<string, string> = {
 };
 const BOOL_LABEL: Record<string, string> = { "true": "Sí", "false": "No" };
 
-export default function BuscadorEgresados({ planes, searchParams, ciudades = [] }: Props) {
+export default function BuscadorEgresados({ searchParams, ciudades = [] }: Props) {
   const router   = useRouter();
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
@@ -46,7 +44,6 @@ export default function BuscadorEgresados({ planes, searchParams, ciudades = [] 
 
   const [form, setForm] = useState<SP>({
     busqueda:       searchParams.busqueda       ?? "",
-    plan:           searchParams.plan           ?? "",
     anioEgreso:     searchParams.anioEgreso     ?? "",
     anioTitulacion: searchParams.anioTitulacion ?? "",
     conEmpleo:      searchParams.conEmpleo      ?? "",
@@ -83,7 +80,7 @@ export default function BuscadorEgresados({ planes, searchParams, ciudades = [] 
 
   const onClear = () => {
     const empty: SP = {
-      busqueda: "", plan: "", anioEgreso: "", anioTitulacion: "",
+      busqueda: "", anioEgreso: "", anioTitulacion: "",
       conEmpleo: "", genero: "", sector: "", ciudad: "", modalidad: "", tienePostgrado: "",
     };
     setForm(empty);
@@ -133,16 +130,6 @@ export default function BuscadorEgresados({ planes, searchParams, ciudades = [] 
                   style={{ ...fieldCss, paddingLeft: "2.25rem" }}
                 />
               </div>
-            </Field>
-          </div>
-
-          {/* Plan */}
-          <div style={{ minWidth: "145px" }}>
-            <Field label="Plan de Estudios">
-              <select value={form.plan} onChange={e => set("plan", e.target.value)} style={fieldCss}>
-                <option value="">Todos</option>
-                {planes.map(p => <option key={p} value={p}>Plan {p}</option>)}
-              </select>
             </Field>
           </div>
 
