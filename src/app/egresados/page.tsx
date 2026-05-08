@@ -48,11 +48,11 @@ async function getData(sp: SP) {
 
   // Filtro por sector laboral (en algún empleo actual o pasado)
   if (sp.sector)
-    conds.push(sql`EXISTS(SELECT 1 FROM historial_laboral h WHERE h.id_egresado=${egresado.id} AND h.sector::text = ${sp.sector})`);
+    conds.push(sql`EXISTS(SELECT 1 FROM historial_laboral h WHERE h.id_egresado=${egresado.id} AND h.sector_trabajo::text = ${sp.sector})`);
 
   // Filtro por ciudad (en algún empleo)
   if (sp.ciudad)
-    conds.push(sql`EXISTS(SELECT 1 FROM historial_laboral h WHERE h.id_egresado=${egresado.id} AND LOWER(h.ciudad) = LOWER(${sp.ciudad}))`);
+    conds.push(sql`EXISTS(SELECT 1 FROM historial_laboral h WHERE h.id_egresado=${egresado.id} AND LOWER(h.ciudad_region_trabajo) = LOWER(${sp.ciudad}))`);
 
   // Filtro por postgrado
   if (sp.tienePostgrado === "true")
@@ -77,7 +77,6 @@ async function getData(sp: SP) {
     ci:                  egresado.ci,
     anioTitulacion:      egresado.anioTitulacion,
     anioEgreso:          egresado.anioEgreso,
-    planEstudiosNombre:  egresado.planEstudiosNombre,
     modalidadTitulacion: egresado.modalidadTitulacion,
     genero:              egresado.genero,
     correoElectronico:   egresado.correoElectronico,
@@ -187,12 +186,9 @@ export default async function EgresadosPage({ searchParams }: { searchParams: SP
                         </span>
                       </td>
                       <td>
-                        <p className="text-sm" style={{ color: "var(--gris-grafito)" }}>
-                          {r.planEstudiosNombre ? `Plan ${r.planEstudiosNombre}` : "—"}
-                        </p>
                         {r.modalidadTitulacion && (
                           <p className="text-xs mt-0.5" style={{ color: "var(--placeholder)" }}>
-                            {r.modalidadTitulacion}
+                            {r.modalidadTitulacion ?? "--"}
                           </p>
                         )}
                       </td>
@@ -273,12 +269,6 @@ export default async function EgresadosPage({ searchParams }: { searchParams: SP
                     </span>
                   </div>
                   <div className="flex flex-wrap gap-1.5 mb-3">
-                    {r.planEstudiosNombre && (
-                      <span className="text-xs px-2 py-0.5 rounded-full"
-                        style={{ background: "var(--humo)", color: "var(--gris-grafito)", border: "1px solid var(--borde)" }}>
-                        Plan {r.planEstudiosNombre}
-                      </span>
-                    )}
                     {r.anioTitulacion && (
                       <span className="text-xs px-2 py-0.5 rounded-full"
                         style={{ background: "var(--humo)", color: "var(--gris-grafito)", border: "1px solid var(--borde)" }}>

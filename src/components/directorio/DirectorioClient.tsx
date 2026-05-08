@@ -11,7 +11,6 @@ interface Egresado {
   apellidoPaterno:   string | null;
   apellidoMaterno:   string | null;
   tituloAcademico:   string | null;
-  planEstudiosNombre: string | null;
   anioTitulacion:    number | null;
   correoElectronico: string | null;
   celular:           string | null;
@@ -110,18 +109,6 @@ function EgresadoCard({ eg }: { eg: Egresado }) {
             style={SECTOR_STYLE[eg.sectorActual]}
           >
             {eg.sectorActual}
-          </span>
-        )}
-        {eg.planEstudiosNombre && (
-          <span
-            className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full"
-            style={{
-              background: "var(--turquesa-pale)",
-              color: "var(--turquesa-dark)",
-              border: "1px solid rgba(0,165,168,0.15)",
-            }}
-          >
-            <GraduationCap className="w-3 h-3" /> Plan {eg.planEstudiosNombre}
           </span>
         )}
       </div>

@@ -134,12 +134,6 @@ export default async function EgresadoDetallePage({ params }: { params: { id: st
                   <span className="text-slate-300 break-all">{eg.correoElectronico}</span>
                 </div>
               )}
-              {eg.direccion && (
-                <div className="flex gap-3 text-sm">
-                  <MapPin className="w-4 h-4 text-slate-500 mt-0.5 shrink-0" />
-                  <span className="text-slate-300">{eg.direccion}</span>
-                </div>
-              )}
               <div className="flex gap-3 text-sm">
                 <Calendar className="w-4 h-4 text-slate-500 mt-0.5 shrink-0" />
                 <span className="text-slate-300">{fmtDate(eg.fechaNacimiento)}</span>

@@ -4,7 +4,6 @@ import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { egresadoSchema, type EgresadoInput } from "@/lib/validations";
-import { PLANES_ESTUDIO, MODALIDADES_TITULACION } from "@/lib/schema";
 import { Save } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -17,7 +16,7 @@ export default function RegistroInicialForm() {
 
   const onSubmit = async (d: EgresadoInput) => {
     setError(null);
-    const apellidos = [d.apellidoPaterno, d.apellidoMaterno].filter(Boolean).join(" ") || d.apellidos;
+    const apellidos = [d.apellidoPaterno, d.apellidoMaterno].filter(Boolean).join(" ") || d.nombres;
 
     const res1  = await fetch("/api/egresados", {
       method: "POST",
@@ -70,14 +69,6 @@ export default function RegistroInicialForm() {
         <div>
           <label className="label">Celular</label>
           <input {...register("celular")} type="tel" className="field" />
-        </div>
-        
-        <div className="md:col-span-2">
-          <label className="label">Plan de Estudios</label>
-          <select {...register("planEstudiosNombre")} className="field">
-            <option value="">— Seleccionar —</option>
-            {PLANES_ESTUDIO.map(p => <option key={p} value={p}>Plan {p}</option>)}
-          </select>
         </div>
 
         <div className="md:col-span-2">

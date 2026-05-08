@@ -18,7 +18,6 @@ const filaSchema = z.object({
   genero:              z.enum(["Masculino", "Femenino", "Otro", "Prefiero no decir"]).optional().nullable(),
   correoElectronico:   z.string().email().max(150).optional().nullable(),
   celular:             z.string().max(20).optional().nullable(),
-  direccion:           z.string().max(200).optional().nullable(),
   anioIngreso:         z.number().int().min(1990).max(2030).optional().nullable(),
   anioEgreso:          z.number().int().min(1990).max(2030).optional().nullable(),
   anioTitulacion:      z.number().int().min(1990).max(2030).optional().nullable(),
@@ -118,8 +117,6 @@ const HEADER_MAP: Record<string, string> = {
   "celular": "celular",
   "telefono": "celular",
   "teléfono": "celular",
-  "direccion": "direccion",
-  "dirección": "direccion",
   // académico
   "año ingreso": "anioIngreso",
   "anio ingreso": "anioIngreso",
@@ -288,7 +285,6 @@ export async function POST(req: NextRequest) {
           correoElectronico:   d.correoElectronico ?? null,
           celular:             d.celular ?? null,
           telefono:            d.celular ?? null,
-          direccion:           d.direccion ?? null,
           fechaNacimiento:     d.fechaNacimiento,
           fechaGraduacion:     d.anioTitulacion
             ? `${d.anioTitulacion}-01-01`
@@ -363,7 +359,6 @@ export async function GET(req: NextRequest) {
     "Genero",
     "Correo Electronico",
     "Celular",
-    "Direccion",
     "Plan de Estudios",
     "Año Ingreso",
     "Año Egreso",
@@ -462,7 +457,6 @@ export async function GET(req: NextRequest) {
     ["Genero", "No", "Masculino | Femenino | Otro | Prefiero no decir"],
     ["Correo Electronico", "No", "Formato email válido"],
     ["Celular", "No", "Texto (ej: 71234567)"],
-    ["Direccion", "No", "Texto libre"],
     ["Plan de Estudios", "No", "1994 | 2008 | 2020"],
     ["Año Ingreso", "No", "Número (ej: 2010)"],
     ["Año Egreso", "No", "Número (ej: 2015)"],

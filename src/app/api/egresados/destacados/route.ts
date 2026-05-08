@@ -14,8 +14,6 @@ export async function GET(_: NextRequest) {
       apellidos:           egresado.apellidos,
       apellidoPaterno:     egresado.apellidoPaterno,
       apellidoMaterno:     egresado.apellidoMaterno,
-      tituloAcademico:     egresado.tituloAcademico,
-      planEstudiosNombre:  egresado.planEstudiosNombre,
       ultimaActualizacion: egresado.ultimaActualizacion,
     })
     .from(egresado)
@@ -31,7 +29,7 @@ export async function GET(_: NextRequest) {
       idEgresado: historialLaboral.idEgresado,
       cargo:      historialLaboral.cargo,
       empresa:    historialLaboral.empresa,
-      ciudad:     historialLaboral.ciudad,
+      ciudad:     historialLaboral.ciudadRegionTrabajo,
     })
     .from(historialLaboral)
     .where(

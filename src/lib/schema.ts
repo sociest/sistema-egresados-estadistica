@@ -25,7 +25,6 @@ export const noticiasTipoEnum     = pgEnum("noticias_tipo_enum", [
   "noticia_institucional", "curso_evento", "noticia_social",
 ]);
 
-// Constantes útiles (ya no hay PLANES_ESTUDIO)
 export const MODALIDADES_TITULACION = [
   "Tesis", "Proyecto de grado", "Trabajo dirigido", "Examen de grado", "Otro",
 ] as const;

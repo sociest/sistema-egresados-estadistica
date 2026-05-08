@@ -27,14 +27,13 @@ export async function GET(req: NextRequest) {
 
     const conds: any[] = [];
     if (anio)   conds.push(sql`${egresado.anioEgreso} = ${parseInt(anio)}`);
-    if (plan)   conds.push(ilike(egresado.planEstudiosNombre, `%${plan}%`));
     if (genero) conds.push(sql`${egresado.genero} = ${genero}`);
     if (tipo)   conds.push(sql`${egresado.tipo}::text = ${tipo}`);
     if (modalidad) conds.push(sql`${egresado.modalidadTitulacion}::text = ${modalidad}`);
     if (anioTitulacionDesde) conds.push(sql`${egresado.anioTitulacion} >= ${parseInt(anioTitulacionDesde)}`);
     if (anioTitulacionHasta) conds.push(sql`${egresado.anioTitulacion} <= ${parseInt(anioTitulacionHasta)}`);
     if (sector)
-      conds.push(sql`EXISTS(SELECT 1 FROM historial_laboral h WHERE h.id_egresado=${egresado.id} AND h.sector::text = ${sector} AND h.fecha_fin IS NULL)`);
+      conds.push(sql`EXISTS(SELECT 1 FROM historial_laboral h WHERE h.id_egresado=${egresado.id} AND h.sector_trabajo::text = ${sector} AND h.fecha_fin IS NULL)`);
     if (empleo === "true")
       conds.push(sql`EXISTS(SELECT 1 FROM historial_laboral h WHERE h.id_egresado=${egresado.id} AND h.fecha_fin IS NULL)`);
     if (empleo === "false")
@@ -56,13 +55,11 @@ export async function GET(req: NextRequest) {
       correoElectronico:   egresado.correoElectronico,
       genero:              egresado.genero,
       tipo:                egresado.tipo,
-      planEstudiosNombre:  egresado.planEstudiosNombre,
       modalidadTitulacion: egresado.modalidadTitulacion,
       anioTitulacion:      egresado.anioTitulacion,
       anioEgreso:          egresado.anioEgreso,
       anioIngreso:         egresado.anioIngreso,
-      ciudadResidencia:    egresado.ciudadResidencia,
-      regionResidencia:    egresado.regionResidencia,
+      lugarResidencia:     egresado.lugarResidencia,
       tieneEmpleo: sql<boolean>`EXISTS(
         SELECT 1 FROM historial_laboral h
         WHERE h.id_egresado=${egresado.id} AND h.fecha_fin IS NULL
@@ -100,13 +97,11 @@ export async function GET(req: NextRequest) {
         "Correo":                r.correoElectronico ?? "",
         "Celular":               r.celular ?? "",
         "Género":                r.genero ?? "",
-        "Plan de Estudios":      r.planEstudiosNombre ? `Plan ${r.planEstudiosNombre}` : "",
         "Año Ingreso":           r.anioIngreso ?? "",
         "Año Egreso":            r.anioEgreso ?? "",
         "Año Titulación":        r.anioTitulacion ?? "",
         "Modalidad Titulación":  r.modalidadTitulacion ?? "",
-        "Ciudad Residencia":     r.ciudadResidencia ?? "",
-        "Región / Depto.":       r.regionResidencia ?? "",
+        "Lugar de Residencia":   r.lugarResidencia ?? "",
         "Tiene Empleo Actual":   r.tieneEmpleo ? "Sí" : "No",
       }));
 

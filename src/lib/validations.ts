@@ -44,7 +44,6 @@ export const egresadoSchema = z.object({
   // Fallecido (solo admin)
   fallecido: z.boolean().optional().default(false),
 
-  // Datos académicos — sin planEstudiosNombre
   // Semestres en formato "I/2020" o "II/2020"
   semestreIngreso: semestreSchema,
   semestreEgreso:  semestreSchema,

@@ -144,7 +144,6 @@ export default function ReportesClient({ planes }: Props) {
                     <tr key={r.id}>
                       <td className="text-white font-medium">{r.apellidos}, {r.nombres}</td>
                       <td className="font-mono text-slate-400 text-sm">{r.ci}</td>
-                      <td className="text-slate-500 text-sm">{r.planEstudiosNombre ? `Plan ${r.planEstudiosNombre}` : "—"}</td>
                       <td className="text-slate-500 text-sm">{r.modalidadTitulacion ?? "—"}</td>
                       <td className="text-slate-400 text-sm">{r.anioTitulacion ?? "—"}</td>
                       <td>

@@ -165,7 +165,6 @@ interface EgresadoData {
   apellidoPaterno:    string | null;
   apellidoMaterno:    string | null;
   tituloAcademico:    string | null;
-  planEstudiosNombre: string | null;
   empleoActual:       string | null;
   ciudadActual:       string | null;
 }
@@ -209,14 +208,6 @@ function EgresadoCard({ eg }: { eg: EgresadoData }) {
             style={{ background: "var(--humo)", color: "var(--grafito)", border: "1px solid var(--borde)" }}
           >
             <MapPin className="w-3 h-3" /> {eg.ciudadActual}
-          </span>
-        )}
-        {eg.planEstudiosNombre && (
-          <span
-            className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full"
-            style={{ background: "var(--turquesa-pale)", color: "var(--turquesa-dark)", border: "1px solid rgba(0,165,168,0.15)" }}
-          >
-            Plan {eg.planEstudiosNombre}
           </span>
         )}
       </div>

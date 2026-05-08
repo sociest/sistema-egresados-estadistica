@@ -26,19 +26,18 @@ async function getEgresados(sp: SP) {
     ilike(egresado.nombres,   `%${sp.busqueda}%`),
     ilike(egresado.apellidos, `%${sp.busqueda}%`),
   ));
-  if (sp.plan) conds.push(ilike(egresado.planEstudiosNombre, `%${sp.plan}%`));
   if (sp.sector)
     conds.push(sql`EXISTS(
       SELECT 1 FROM historial_laboral h
       WHERE h.id_egresado = ${egresado.id}
-        AND h.sector::text = ${sp.sector}
+        AND h.sector_trabajo::text = ${sp.sector}
         AND h.fecha_fin IS NULL
     )`);
   if (sp.ciudad)
     conds.push(sql`EXISTS(
       SELECT 1 FROM historial_laboral h
       WHERE h.id_egresado = ${egresado.id}
-        AND LOWER(h.ciudad) = LOWER(${sp.ciudad})
+        AND LOWER(h.ciudad_region_trabajo) = LOWER(${sp.ciudad})
         AND h.fecha_fin IS NULL
     )`);
 
@@ -55,8 +54,6 @@ async function getEgresados(sp: SP) {
     apellidos:           egresado.apellidos,
     apellidoPaterno:     egresado.apellidoPaterno,
     apellidoMaterno:     egresado.apellidoMaterno,
-    tituloAcademico:     egresado.tituloAcademico,
-    planEstudiosNombre:  egresado.planEstudiosNombre,
     anioTitulacion:      egresado.anioTitulacion,
     correoElectronico:   egresado.correoElectronico,
     celular:             egresado.celular,
@@ -76,8 +73,8 @@ async function getEgresados(sp: SP) {
     idEgresado: historialLaboral.idEgresado,
     cargo:      historialLaboral.cargo,
     empresa:    historialLaboral.empresa,
-    ciudad:     historialLaboral.ciudad,
-    sector:     historialLaboral.sector,
+    ciudad:     historialLaboral.ciudadRegionTrabajo,
+    sector:     historialLaboral.sectorTrabajo,
   })
   .from(historialLaboral)
   .where(

@@ -157,7 +157,6 @@ export default async function MiPerfilPage() {
               { label: "Celular", value: eg.celular ?? eg.telefono },
               { label: "Correo", value: eg.correoElectronico },
               { label: "Género", value: eg.genero },
-              { label: "Dirección", value: eg.direccion },
               { label: "Nacimiento", value: fmtDate(eg.fechaNacimiento) },
             ].map(({ label, value, mono }) => value ? (
               <div key={label} className="flex items-start justify-between gap-4">

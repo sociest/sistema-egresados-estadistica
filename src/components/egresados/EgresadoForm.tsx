@@ -87,7 +87,7 @@ export default function EgresadoForm({ egresado: eg, redirectTo, esAdmin = false
 
   const onSubmit = async (d: EgresadoInput) => {
     setServerError(null);
-    const apellidos = [d.apellidoPaterno, d.apellidoMaterno].filter(Boolean).join(" ") || d.apellidos;
+    const apellidos = [d.apellidoPaterno, d.apellidoMaterno].filter(Boolean).join(" ") || d.nombres;
     const payload   = { ...d, apellidos };
 
     const url    = isEditing ? `/api/egresados/${eg.id}` : "/api/egresados";

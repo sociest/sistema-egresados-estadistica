@@ -2,7 +2,7 @@ import { getSession } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import AdminLayout from "@/components/shared/AdminLayout";
 import ReportesClient from "@/components/reportes/ReportesClient";
-import { PLANES_ESTUDIO } from "@/lib/schema";
+
 
 export default async function ReportesPage() {
   const session = await getSession();
@@ -15,7 +15,6 @@ export default async function ReportesPage() {
           <h1 className="page-title">Reportes</h1>
           <p className="page-sub">Filtra, visualiza y exporta información de egresados</p>
         </div>
-        <ReportesClient planes={[...PLANES_ESTUDIO]} />
       </div>
     </AdminLayout>
   );

@@ -78,14 +78,14 @@ export async function GET(req: NextRequest) {
     // "sector = Público" y que el gráfico solo muestre Público
     const porSector = await db.execute(sql`
       SELECT
-        COALESCE(h.sector::text, 'Sin especificar') AS sector,
+        COALESCE(h.sector_trabajo::text, 'Sin especificar') AS sector,
         COUNT(DISTINCT e.id)::int AS cantidad
       FROM egresado e
       INNER JOIN historial_laboral h
         ON h.id_egresado = e.id AND h.fecha_fin IS NULL
       WHERE e.fallecido = false
         ${tipo ? sql`AND e.tipo::text = ${tipo}` : sql``}
-      GROUP BY h.sector
+      GROUP BY h.sector_trabajo
       ORDER BY cantidad DESC
     `);
 
@@ -108,16 +108,16 @@ export async function GET(req: NextRequest) {
     // Filtros que aplican: tipo, sector
     const geoCiudad = await db.execute(sql`
       SELECT
-        COALESCE(h.ciudad, 'Sin especificar') AS ciudad,
+        COALESCE(h.ciudad_region_trabajo, 'Sin especificar') AS ciudad,
         COUNT(DISTINCT e.id)::int AS cantidad
       FROM egresado e
       INNER JOIN historial_laboral h
         ON h.id_egresado = e.id AND h.fecha_fin IS NULL
       WHERE e.fallecido = false
-        AND h.ciudad IS NOT NULL AND h.ciudad != ''
+        AND h.ciudad_region_trabajo IS NOT NULL AND h.ciudad_region_trabajo != ''
         ${tipo   ? sql`AND e.tipo::text = ${tipo}`             : sql``}
-        ${sector ? sql`AND h.sector::text = ${sector}`         : sql``}
-      GROUP BY h.ciudad
+        ${sector ? sql`AND h.sector_trabajo::text = ${sector}`         : sql``}
+      GROUP BY h.ciudad_region_trabajo
       ORDER BY cantidad DESC
       LIMIT 15
     `);
@@ -126,17 +126,17 @@ export async function GET(req: NextRequest) {
     // Filtros que aplican: tipo
     const geoRegion = await db.execute(sql`
       SELECT
-        COALESCE(e.region_residencia, 'Sin especificar') AS region,
+        COALESCE(e.lugar_residencia, 'Sin especificar') AS region,
         COUNT(DISTINCT e.id)::int AS cantidad
       FROM egresado e
       ${sector ? sql`
         INNER JOIN historial_laboral h
           ON h.id_egresado = e.id AND h.fecha_fin IS NULL
-          AND h.sector::text = ${sector}
+          AND h.sector_trabajo::text = ${sector}
       ` : sql``}
       WHERE e.fallecido = false
         ${tipo   ? sql`AND e.tipo::text = ${tipo}` : sql``}
-      GROUP BY e.region_residencia
+      GROUP BY e.lugar_residencia
       ORDER BY cantidad DESC
       LIMIT 10
     `);
