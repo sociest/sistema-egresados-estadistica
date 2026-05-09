@@ -5,13 +5,13 @@ import { MessageSquare, Eye, Trash2, User, UserX, CheckCircle } from "lucide-rea
 import { cn, fmtDate } from "@/lib/utils";
 
 interface Sugerencia {
-  id:        number;
-  tipo:      string;
-  mensaje:   string;
-  esAnonima: boolean;
-  leida:     boolean;
-  creadoEn:  Date | string;
-  nombres:   string | null;
+  id:              number;
+  tipo:            string;
+  mensaje:         string;
+  esAnonima:       boolean;
+  leida:           boolean;
+  creadoEn:        Date | string;
+  nombres:         string | null;
   apellidoPaterno: string | null;
   apellidoMaterno: string | null;
 }
@@ -163,7 +163,7 @@ export default function SugerenciasClient({ sugerencias }: { sugerencias: Sugere
                       <>
                         <User className="w-3.5 h-3.5" style={{ color: "var(--gris-grafito)" }} />
                         <span className="text-xs font-medium" style={{ color: "var(--azul-pizarra)" }}>
-                          {s.apellidoPaterno ?? s.apellidos ?? "Desconocido"}, {s.nombres ?? ""}
+                          {s.apellidoPaterno ?? "Desconocido"}, {s.nombres ?? ""}
                         </span>
                       </>
                     )}

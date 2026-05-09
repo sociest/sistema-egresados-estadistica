@@ -29,7 +29,7 @@ const filaSchema = z.object({
   observaciones:       z.string().optional().nullable(),
   inicioProceso:       z.boolean().optional().nullable(),
   motivoNoTitulacion:  z.string().max(500).optional().nullable(),
-  planeaTitularse:     z.boolean().optional().nullable(),
+  planeaTitularse:     z.enum(["Si", "No", "No sabe"]).optional().nullable(),
 }).refine(d => {
   if (d.tipo === "Titulado" && !d.anioTitulacion) return false;
   return true;
@@ -223,8 +223,14 @@ export async function POST(req: NextRequest) {
 
         if (["anioIngreso", "anioEgreso", "anioTitulacion"].includes(campo)) {
           objeto[campo] = parseEntero(val);
-        } else if (["inicioProceso", "planeaTitularse"].includes(campo)) {
+        } else if (["inicioProceso"].includes(campo)) {
           objeto[campo] = parseBooleano(val);
+        } else if (campo === "planeaTitularse") {
+          const s = celda(val).toLowerCase();
+          if (["si", "sí", "yes"].includes(s)) objeto[campo] = "Si";
+          else if (["no"].includes(s)) objeto[campo] = "No";
+          else if (s) objeto[campo] = "No sabe";
+          else objeto[campo] = null;
         } else if (campo === "fechaNacimiento") {
           objeto[campo] = parseFecha(val) ?? celda(val);
         } else {
@@ -282,9 +288,6 @@ export async function POST(req: NextRequest) {
           celular:             d.celular ?? null,
           telefono:            d.celular ?? null,
           fechaNacimiento:     d.fechaNacimiento,
-          fechaGraduacion:     d.anioTitulacion
-            ? `${d.anioTitulacion}-01-01`
-            : d.fechaNacimiento,
           anioIngreso:         d.anioIngreso ?? null,
           anioEgreso:          d.anioEgreso ?? null,
           anioTitulacion:      d.anioTitulacion ?? null,

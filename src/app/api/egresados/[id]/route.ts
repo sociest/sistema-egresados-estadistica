@@ -72,9 +72,6 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
       observaciones:        d.observaciones       ?? null,
       estadoLaboral:        d.estadoLaboral       ?? null,
       // Legacy
-      fechaGraduacion:      d.anioTitulacion
-        ? `${d.anioTitulacion}-01-01`
-        : d.fechaNacimiento,
       anioIngreso:          d.anioIngreso         ?? null,
       anioEgreso:           d.anioEgreso          ?? null,
       anioTitulacion:       d.anioTitulacion      ?? null,

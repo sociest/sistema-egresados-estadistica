@@ -9,7 +9,7 @@ import { cn } from "@/lib/utils";
 
 interface Props {
   usuario?: any;
-  egresados: { id: number; nombres: string; apellidos: string }[];
+  egresados: { id: number; nombres: string; apellidoPaterno: string | null }[];
 }
 
 export default function UsuarioForm({ usuario: u, egresados }: Props) {
@@ -120,7 +120,7 @@ export default function UsuarioForm({ usuario: u, egresados }: Props) {
         })} className="field">
           <option value="">— Sin vincular (admin sin egresado) —</option>
           {egresados.map(e => (
-            <option key={e.id} value={e.id}>{e.apellidos}, {e.nombres}</option>
+            <option key={e.id} value={e.id}>{e.apellidoPaterno ?? e.nombres}, {e.nombres}</option>
           ))}
         </select>
         <p className="text-slate-600 text-xs mt-1.5">

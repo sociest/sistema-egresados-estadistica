@@ -13,8 +13,8 @@ export default async function NuevoUsuarioPage() {
   if (!session || session.rol !== "admin") redirect("/login");
 
   const egresados = await db.select({
-    id: egresado.id, nombres: egresado.nombres, apellidos: egresado.apellidos,
-  }).from(egresado).orderBy(egresado.apellidos);
+    id: egresado.id, nombres: egresado.nombres, apellidoPaterno: egresado.apellidoPaterno,
+  }).from(egresado).orderBy(egresado.apellidoPaterno);
 
   return (
     <AdminLayout correo={session.correo}>

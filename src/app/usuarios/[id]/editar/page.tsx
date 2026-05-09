@@ -17,8 +17,8 @@ export default async function EditarUsuarioPage({ params }: { params: { id: stri
 
   const [[u], egresados] = await Promise.all([
     db.select().from(usuario).where(eq(usuario.id, id)).limit(1),
-    db.select({ id: egresado.id, nombres: egresado.nombres, apellidos: egresado.apellidos })
-      .from(egresado).orderBy(egresado.apellidos),
+        db.select({ id: egresado.id, nombres: egresado.nombres, apellidoPaterno: egresado.apellidoPaterno })
+      .from(egresado).orderBy(egresado.apellidoPaterno),
   ]);
   if (!u) notFound();
 

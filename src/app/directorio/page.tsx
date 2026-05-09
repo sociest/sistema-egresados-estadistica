@@ -49,7 +49,7 @@ async function getEgresados(sp: SP) {
     .from(egresado).where(where);
 
   // Traer egresados base
-  const egresados = await db.select({
+    const egresados = await db.select({
     id:                  egresado.id,
     nombres:             egresado.nombres,
     apellidoPaterno:     egresado.apellidoPaterno,
@@ -58,6 +58,7 @@ async function getEgresados(sp: SP) {
     correoElectronico:   egresado.correoElectronico,
     celular:             egresado.celular,
     ultimaActualizacion: egresado.ultimaActualizacion,
+    tipo:                egresado.tipo,
   })
   .from(egresado).where(where)
   .orderBy(sql`${egresado.ultimaActualizacion} DESC NULLS LAST`)
@@ -93,10 +94,16 @@ async function getEgresados(sp: SP) {
     }
   }
 
+  const { derivarTituloAcademico } = await import("@/lib/schema");
+
   const rows = egresados.map(eg => {
     const empleo = empleoMap.get(eg.id);
     return {
       ...eg,
+      tituloAcademico: derivarTituloAcademico(
+        (eg.tipo as "Titulado" | "Egresado") ?? "Titulado",
+        [],
+      ),
       empleoActual: empleo ? `${empleo.cargo} — ${empleo.empresa}` : null,
       ciudadActual: empleo?.ciudad ?? null,
       sectorActual: empleo?.sector ?? null,
