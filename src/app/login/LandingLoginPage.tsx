@@ -234,33 +234,47 @@ function SkeletonCard() {
 }
 
 /* ─── Stats ─────────────────────────────────────────────────────────────── */
-const STATS = [
-  { icon: Users,     value: "300+", label: "Egresados registrados" },
-  { icon: Briefcase, value: "78%",  label: "Con empleo activo" },
-  { icon: TrendingUp,value: "45%",  label: "En sector público" },
-  { icon: Award,     value: "12+",  label: "Con postgrado" },
+const STATS_FALLBACK = [
+  { icon: Users,      value: "—",   label: "Titulados registrados" },
+  { icon: Briefcase,  value: "—",   label: "Tasa de empleabilidad" },
+  { icon: TrendingUp, value: "—",   label: "Meses egreso → titulación" },
+  { icon: Award,      value: "—",   label: "Meses hasta primer empleo" },
 ];
 
 /* ─── Página principal ──────────────────────────────────────────────────── */
 export default function LandingLoginPage() {
-  const [modalOpen,  setModalOpen]  = useState(false);
-  const [egresados,  setEgresados]  = useState<EgresadoData[]>([]);
-  const [loadingEg,  setLoadingEg]  = useState(true);
+const [modalOpen,    setModalOpen]    = useState(false);
+  const [egresados,    setEgresados]    = useState<EgresadoData[]>([]);
+  const [loadingEg,    setLoadingEg]    = useState(true);
   const [noticiasPrev, setNoticiasPrev] = useState<any[]>([]);
+  const [stats,        setStats]        = useState<{
+    totalTitulados:           number;
+    totalEgresados:           number;
+    tasaEmpleabilidad:        number;
+    tiempoPromedioTitulacion: number;
+    tiempoPromedioInsercion:  number;
+  } | null>(null);
+  const [loadingStats, setLoadingStats] = useState(true);
 
   // Cargar egresados destacados reales al montar
   useEffect(() => {
-      fetch("/api/egresados/destacados")
-        .then(r => r.json())
-        .then(j => { if (j.data) setEgresados(j.data); })
-        .catch(() => {})
-        .finally(() => setLoadingEg(false));
+    fetch("/api/egresados/destacados")
+      .then(r => r.json())
+      .then(j => { if (j.data) setEgresados(j.data); })
+      .catch(() => {})
+      .finally(() => setLoadingEg(false));
 
-      fetch("/api/noticias?limite=3")
-        .then(r => r.json())
-        .then(j => { if (j.data) setNoticiasPrev(j.data); })
-        .catch(() => {});
-    }, []);
+    fetch("/api/noticias?limite=3")
+      .then(r => r.json())
+      .then(j => { if (j.data) setNoticiasPrev(j.data); })
+      .catch(() => {});
+
+    fetch("/api/stats/publicos")
+      .then(r => r.json())
+      .then(j => { if (j.data) setStats(j.data); })
+      .catch(() => {})
+      .finally(() => setLoadingStats(false));
+  }, []);
 
   return (
     <>
@@ -348,21 +362,117 @@ export default function LandingLoginPage() {
 
             {/* Stats */}
             <div className="grid grid-cols-2 gap-4 animate-fade-up delay-2">
-              {STATS.map(({ icon: Icon, value, label }, i) => (
-                <div
-                  key={i}
-                  className="rounded-2xl p-5"
-                  style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.10)", backdropFilter: "blur(10px)" }}
-                >
-                  <div className="w-10 h-10 rounded-xl flex items-center justify-center mb-3" style={{ background: "rgba(0,165,168,0.15)" }}>
-                    <Icon className="w-5 h-5" style={{ color: "var(--turquesa)" }} />
+              {loadingStats ? (
+                // Skeletons mientras cargan
+                Array.from({ length: 4 }).map((_, i) => (
+                  <div
+                    key={i}
+                    className="rounded-2xl p-5"
+                    style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.10)" }}
+                  >
+                    <div
+                      className="w-10 h-10 rounded-xl mb-3"
+                      style={{ background: "rgba(255,255,255,0.08)" }}
+                    />
+                    <div
+                      className="h-8 rounded-lg mb-2 w-3/4"
+                      style={{ background: "rgba(255,255,255,0.08)" }}
+                    />
+                    <div
+                      className="h-3 rounded-lg w-full"
+                      style={{ background: "rgba(255,255,255,0.05)" }}
+                    />
                   </div>
-                  <p className="text-3xl font-bold text-white mb-1" style={{ fontFamily: "'Source Serif 4', serif" }}>
-                    {value}
-                  </p>
-                  <p className="text-xs" style={{ color: "rgba(255,255,255,0.55)" }}>{label}</p>
-                </div>
-              ))}
+                ))
+              ) : (
+                // Datos reales o fallback
+                [
+                  {
+                    icon: Users,
+                    value: stats ? `${stats.totalTitulados}` : "—",
+                    label: "Titulados registrados",
+                    caption: "Profesionales estadísticos aportando al desarrollo del país",
+                  },
+                  {
+                    icon: Briefcase,
+                    value: stats ? `${stats.tasaEmpleabilidad}%` : "—",
+                    label: "Tasa de empleabilidad",
+                    caption: "Nuestros egresados destacan en el ámbito laboral",
+                  },
+                  {
+                    icon: TrendingUp,
+                    value: stats?.tiempoPromedioTitulacion
+                      ? `${stats.tiempoPromedioTitulacion}m`
+                      : "—",
+                    label: "Meses egreso → titulación",
+                    caption: "Seguimiento real al avance académico y profesional",
+                  },
+                  {
+                    icon: Award,
+                    value: stats?.tiempoPromedioInsercion
+                      ? `${stats.tiempoPromedioInsercion}m`
+                      : "—",
+                    label: "Meses hasta primer empleo",
+                    caption: "Impulsando la inserción laboral de nuestros titulados",
+                  },
+                ].map(({ icon: Icon, value, label, caption }, i) => (
+                  <div
+                    key={i}
+                    className="rounded-2xl p-6 flex flex-col justify-between min-h-[220px] relative overflow-hidden"
+                    style={{
+                      background: "rgba(255,255,255,0.06)",
+                      border: "1px solid rgba(255,255,255,0.10)",
+                      backdropFilter: "blur(10px)",
+                    }}
+                  >
+                    {/* Decoración de fondo */}
+                    <div
+                      className="absolute -right-6 -bottom-6 text-[120px] font-bold pointer-events-none select-none"
+                      style={{
+                        color: "rgba(255,255,255,0.03)",
+                        lineHeight: 1,
+                      }}
+                    >
+                      0{i + 1}
+                    </div>
+
+                    <div>
+                      <div
+                        className="w-12 h-12 rounded-2xl flex items-center justify-center mb-5"
+                        style={{ background: "rgba(0,165,168,0.15)" }}
+                      >
+                        <Icon className="w-6 h-6" style={{ color: "var(--turquesa)" }} />
+                      </div>
+
+                      <p
+                        className="text-5xl font-bold text-white leading-none mb-3"
+                        style={{ fontFamily: "'Source Serif 4', serif" }}
+                      >
+                        {value}
+                      </p>
+
+                      <p
+                        className="text-base font-semibold mb-3"
+                        style={{ color: "rgba(255,255,255,0.88)" }}
+                      >
+                        {label}
+                      </p>
+
+                      <div
+                        className="w-12 h-1 rounded-full mb-4"
+                        style={{ background: "var(--turquesa)" }}
+                      />
+
+                      <p
+                        className="text-sm leading-relaxed max-w-[260px]"
+                        style={{ color: "rgba(255,255,255,0.55)" }}
+                      >
+                        {caption}
+                      </p>
+                    </div>
+                  </div>
+                ))
+              )}
             </div>
           </div>
         </div>

@@ -7,72 +7,50 @@ import { ok, err } from "@/lib/utils";
 import * as XLSX from "xlsx";
 import { z } from "zod";
 
-// Schema de validación para cada fila
+// ── Schema de validación por fila ─────────────────────────────────────────────
 const filaSchema = z.object({
-  tipo:                z.enum(["Titulado", "Egresado"]).default("Titulado"),
   nombres:             z.string().min(2).max(100),
   apellidoPaterno:     z.string().max(100).optional().nullable(),
   apellidoMaterno:     z.string().max(100).optional().nullable(),
   ci:                  z.string().min(4).max(20),
-  fechaNacimiento:     z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Formato YYYY-MM-DD"),
   genero:              z.enum(["Masculino", "Femenino", "Otro", "Prefiero no decir"]).optional().nullable(),
+  semestreIngreso:     z.string().optional().nullable(),
+  semestreEgreso:      z.string().optional().nullable(),
+  anioIngreso:         z.number().int().optional().nullable(),
+  anioEgreso:          z.number().int().optional().nullable(),
+  esTitulado:          z.boolean(),
+  anioTitulacion:      z.number().int().min(1990).max(2030).optional().nullable(),
+  modalidadTitulacion: z.enum(["Tesis", "Proyecto de grado", "Trabajo dirigido", "Examen de grado", "Otro"]).optional().nullable(),
+  areaEspecializacion: z.string().max(150).optional().nullable(),
   correoElectronico:   z.string().email().max(150).optional().nullable(),
   celular:             z.string().max(20).optional().nullable(),
-  anioIngreso:         z.number().int().min(1990).max(2030).optional().nullable(),
-  anioEgreso:          z.number().int().min(1990).max(2030).optional().nullable(),
-  anioTitulacion:      z.number().int().min(1990).max(2030).optional().nullable(),
-  modalidadTitulacion: z.enum(["Tesis", "Proyecto de grado", "Trabajo dirigido", "Excelencia"]).optional().nullable(),
-  areaEspecializacion: z.string().max(150).optional().nullable(),
   lugarResidencia:     z.string().max(200).optional().nullable(),
-  facebook:            z.string().max(200).optional().nullable(),
-  linkedin:            z.string().max(200).optional().nullable(),
   observaciones:       z.string().optional().nullable(),
-  inicioProceso:       z.boolean().optional().nullable(),
-  motivoNoTitulacion:  z.string().max(500).optional().nullable(),
-  planeaTitularse:     z.enum(["Si", "No", "No sabe"]).optional().nullable(),
 }).refine(d => {
-  if (d.tipo === "Titulado" && !d.anioTitulacion) return false;
+  if (d.esTitulado && !d.anioTitulacion) return false;
   return true;
-}, { message: "Un Titulado debe tener año de titulación", path: ["anioTitulacion"] });
+}, { message: "Un titulado debe tener año de titulación", path: ["anioTitulacion"] });
 
-// Normaliza el valor de una celda a string limpio
+// ── Helpers ───────────────────────────────────────────────────────────────────
 function celda(val: any): string {
   if (val === null || val === undefined) return "";
   return String(val).trim();
 }
 
-// Convierte fechas de Excel (número serial) o strings a YYYY-MM-DD
-function parseFecha(val: any): string | null {
-  if (!val) return null;
-  // Si es número (serial de Excel)
-  if (typeof val === "number") {
-    const date = XLSX.SSF.parse_date_code(val);
-    if (!date) return null;
-    const m = String(date.m).padStart(2, "0");
-    const d = String(date.d).padStart(2, "0");
-    return `${date.y}-${m}-${d}`;
-  }
-  const s = String(val).trim();
-  // Formato YYYY-MM-DD
-  if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
-  // Formato DD/MM/YYYY
-  if (/^\d{2}\/\d{2}\/\d{4}$/.test(s)) {
-    const [d, m, y] = s.split("/");
-    return `${y}-${m}-${d}`;
-  }
-  // Formato DD-MM-YYYY
-  if (/^\d{2}-\d{2}-\d{4}$/.test(s)) {
-    const [d, m, y] = s.split("-");
-    return `${y}-${m}-${d}`;
-  }
-  return null;
+// Parsea semestre "I/2020" o "II/2020" → { semestre: "I", anio: 2020 }
+function parseSemestre(val: any): { semestre: string; anio: number } | null {
+  const s = celda(val);
+  if (!s) return null;
+  const match = s.match(/^(I{1,2})\/(\d{4})$/);
+  if (!match) return null;
+  return { semestre: match[1], anio: parseInt(match[2]) };
 }
 
 function parseBooleano(val: any): boolean | null {
   if (val === null || val === undefined || val === "") return null;
-  const s = String(val).trim().toLowerCase();
-  if (["si", "sí", "yes", "1", "true", "verdadero"].includes(s)) return true;
-  if (["no", "0", "false", "falso"].includes(s)) return false;
+  const s = celda(val).toLowerCase();
+  if (["si", "sí", "yes", "1", "true"].includes(s)) return true;
+  if (["no", "0", "false"].includes(s)) return false;
   return null;
 }
 
@@ -82,84 +60,57 @@ function parseEntero(val: any): number | null {
   return isNaN(n) ? null : n;
 }
 
-// Mapeo de encabezados flexibles a campos internos
-const HEADER_MAP: Record<string, string> = {
-  // tipo
-  "tipo": "tipo",
-  // nombres
-  "nombres": "nombres",
-  "nombre": "nombres",
-  // apellidos
-  "apellido paterno": "apellidoPaterno",
-  "apellidopaterno": "apellidoPaterno",
-  "ap. paterno": "apellidoPaterno",
-  "apellido materno": "apellidoMaterno",
-  "apellidomaterno": "apellidoMaterno",
-  "ap. materno": "apellidoMaterno",
-  // ci
-  "ci": "ci",
-  "carnet": "ci",
-  "carnet de identidad": "ci",
-  // fecha nacimiento
-  "fecha nacimiento": "fechaNacimiento",
-  "fechanacimiento": "fechaNacimiento",
-  "fecha de nacimiento": "fechaNacimiento",
-  "nacimiento": "fechaNacimiento",
-  // genero
-  "genero": "genero",
-  "género": "genero",
-  "sexo": "genero",
-  // contacto
-  "correo": "correoElectronico",
-  "correo electronico": "correoElectronico",
-  "correo electrónico": "correoElectronico",
-  "email": "correoElectronico",
-  "celular": "celular",
-  "telefono": "celular",
-  "teléfono": "celular",
-  // académico
-  "año ingreso": "anioIngreso",
-  "anio ingreso": "anioIngreso",
-  "aniоingreso": "anioIngreso",
-  "año de ingreso": "anioIngreso",
-  "año egreso": "anioEgreso",
-  "anio egreso": "anioEgreso",
-  "año de egreso": "anioEgreso",
-  "año titulacion": "anioTitulacion",
-  "año titulación": "anioTitulacion",
-  "anio titulacion": "anioTitulacion",
-  "año de titulacion": "anioTitulacion",
-  "año de titulación": "anioTitulacion",
-  "modalidad": "modalidadTitulacion",
-  "modalidad titulacion": "modalidadTitulacion",
-  "modalidad titulación": "modalidadTitulacion",
-  // especialización
-  "area especializacion": "areaEspecializacion",
-  "área de especialización": "areaEspecializacion",
-  "area": "areaEspecializacion",
-  // residencia
-  "lugar residencia": "lugarResidencia",
-  "lugar de residencia": "lugarResidencia",
-  "ciudad": "lugarResidencia",
-  "ciudad residencia": "lugarResidencia",
-  "departamento": "lugarResidencia",
-  "region": "lugarResidencia",
-  // redes
-  "facebook": "facebook",
-  "linkedin": "linkedin",
-  "observaciones": "observaciones",
-  // egresado sin título
-  "inicio proceso": "inicioProceso",
-  "inicio proceso titulacion": "inicioProceso",
-  "planea titularse": "planeaTitularse",
-  "motivo no titulacion": "motivoNoTitulacion",
-  "motivo no titulación": "motivoNoTitulacion",
-};
-
 function normalizarHeader(h: string): string {
-  return h.toLowerCase().trim().replace(/\s+/g, " ");
+  return h.toLowerCase().trim()
+    .normalize("NFD").replace(/[\u0300-\u036f]/g, "") // quitar tildes
+    .replace(/\s+/g, " ");
 }
 
+// Mapeo flexible de encabezados
+const HEADER_MAP: Record<string, string> = {
+  "nombres":                  "nombres",
+  "nombre":                   "nombres",
+  "apellido paterno":         "apellidoPaterno",
+  "apellidopaterno":          "apellidoPaterno",
+  "ap. paterno":              "apellidoPaterno",
+  "apellido materno":         "apellidoMaterno",
+  "apellidomaterno":          "apellidoMaterno",
+  "ap. materno":              "apellidoMaterno",
+  "ci":                       "ci",
+  "carnet":                   "ci",
+  "carnet de identidad":      "ci",
+  "genero":                   "genero",
+  "sexo":                     "genero",
+  "semestre de ingreso":      "semestreIngreso",
+  "semestreingreso":          "semestreIngreso",
+  "semestre ingreso":         "semestreIngreso",
+  "semestre de egreso":       "semestreEgreso",
+  "semestreegreso":           "semestreEgreso",
+  "semestre egreso":          "semestreEgreso",
+  "es titulado":              "esTitulado",
+  "estitulado":               "esTitulado",
+  "titulado":                 "esTitulado",
+  "ano de titulacion":        "anioTitulacion",
+  "anio titulacion":          "anioTitulacion",
+  "ano titulacion":           "anioTitulacion",
+  "modalidad":                "modalidadTitulacion",
+  "modalidad titulacion":     "modalidadTitulacion",
+  "modalidad de titulacion":  "modalidadTitulacion",
+  "area de especializacion":  "areaEspecializacion",
+  "area especializacion":     "areaEspecializacion",
+  "especializacion":          "areaEspecializacion",
+  "correo":                   "correoElectronico",
+  "correo electronico":       "correoElectronico",
+  "email":                    "correoElectronico",
+  "celular":                  "celular",
+  "telefono":                 "celular",
+  "lugar de residencia":      "lugarResidencia",
+  "lugar residencia":         "lugarResidencia",
+  "residencia":               "lugarResidencia",
+  "observaciones":            "observaciones",
+};
+
+// ── POST — importar archivo ───────────────────────────────────────────────────
 export async function POST(req: NextRequest) {
   try {
     const session = await getSession();
@@ -167,7 +118,6 @@ export async function POST(req: NextRequest) {
 
     const formData = await req.formData();
     const archivo  = formData.get("archivo") as File | null;
-
     if (!archivo) return err("No se recibió ningún archivo");
 
     const ext = archivo.name.split(".").pop()?.toLowerCase();
@@ -178,16 +128,13 @@ export async function POST(req: NextRequest) {
       return err("El archivo no puede superar los 10MB");
     }
 
-    // Leer el archivo
-    const buffer     = await archivo.arrayBuffer();
-    const workbook   = XLSX.read(buffer, { type: "array", cellDates: false });
-    const sheetName  = workbook.SheetNames[0];
-    const worksheet  = workbook.Sheets[sheetName];
+    const buffer    = await archivo.arrayBuffer();
+    const workbook  = XLSX.read(buffer, { type: "array", cellDates: false });
+    const sheetName = workbook.SheetNames[0];
+    const worksheet = workbook.Sheets[sheetName];
     const rawRows: any[][] = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: "" });
 
-    if (rawRows.length < 2) {
-      return err("El archivo está vacío o solo tiene encabezados");
-    }
+    if (rawRows.length < 2) return err("El archivo está vacío o solo tiene encabezados");
 
     // Mapear encabezados
     const headers: string[] = (rawRows[0] as any[]).map(h => normalizarHeader(String(h)));
@@ -201,65 +148,77 @@ export async function POST(req: NextRequest) {
       (row as any[]).some(cell => cell !== "" && cell !== null && cell !== undefined)
     );
 
-    if (dataRows.length === 0) {
-      return err("El archivo no tiene filas de datos");
-    }
-    if (dataRows.length > 500) {
-      return err("Máximo 500 filas por importación");
-    }
+    if (dataRows.length === 0) return err("El archivo no tiene filas de datos");
+    if (dataRows.length > 500) return err("Máximo 500 filas por importación");
 
     const importados: number[] = [];
     const errores: { fila: number; ci?: string; errores: string[] }[] = [];
 
     for (let i = 0; i < dataRows.length; i++) {
-      const row    = dataRows[i] as any[];
-      const fila   = i + 2; // +2 porque fila 1 = encabezados, +1 por 1-indexed
-      const objeto: Record<string, any> = {};
+      const row  = dataRows[i] as any[];
+      const fila = i + 2;
+      const obj: Record<string, any> = {};
 
-      // Mapear cada celda al campo correspondiente
       row.forEach((val, idx) => {
         const campo = camposPorIndex[idx];
         if (!campo) return;
 
-        if (["anioIngreso", "anioEgreso", "anioTitulacion"].includes(campo)) {
-          objeto[campo] = parseEntero(val);
-        } else if (["inicioProceso"].includes(campo)) {
-          objeto[campo] = parseBooleano(val);
-        } else if (campo === "planeaTitularse") {
-          const s = celda(val).toLowerCase();
-          if (["si", "sí", "yes"].includes(s)) objeto[campo] = "Si";
-          else if (["no"].includes(s)) objeto[campo] = "No";
-          else if (s) objeto[campo] = "No sabe";
-          else objeto[campo] = null;
-        } else if (campo === "fechaNacimiento") {
-          objeto[campo] = parseFecha(val) ?? celda(val);
+        if (campo === "semestreIngreso" || campo === "semestreEgreso") {
+          // Guardar el string completo para parsearlo después
+          obj[campo] = celda(val) || null;
+        } else if (campo === "esTitulado") {
+          obj[campo] = parseBooleano(val);
+        } else if (campo === "anioTitulacion") {
+          obj[campo] = parseEntero(val);
         } else {
           const s = celda(val);
-          objeto[campo] = s === "" ? null : s;
+          obj[campo] = s === "" ? null : s;
         }
       });
 
+      // Parsear semestres y extraer años
+      if (obj.semestreIngreso) {
+        const parsed = parseSemestre(obj.semestreIngreso);
+        if (parsed) {
+          obj.anioIngreso     = parsed.anio;
+          obj.semestreIngreso = parsed.semestre;
+        } else {
+          errores.push({ fila, ci: obj.ci, errores: [`Semestre de ingreso inválido: "${obj.semestreIngreso}". Usa formato I/2020 o II/2020`] });
+          continue;
+        }
+      }
+
+      if (obj.semestreEgreso) {
+        const parsed = parseSemestre(obj.semestreEgreso);
+        if (parsed) {
+          obj.anioEgreso     = parsed.anio;
+          obj.semestreEgreso = parsed.semestre;
+        } else {
+          errores.push({ fila, ci: obj.ci, errores: [`Semestre de egreso inválido: "${obj.semestreEgreso}". Usa formato I/2020 o II/2020`] });
+          continue;
+        }
+      }
+
       // Valores por defecto
-      if (!objeto.tipo) objeto.tipo = "Titulado";
-      if (!objeto.nombres) {
-        errores.push({ fila, ci: objeto.ci, errores: ["El campo 'Nombres' es obligatorio"] });
+      if (!obj.nombres) {
+        errores.push({ fila, ci: obj.ci, errores: ["El campo 'Nombres' es obligatorio"] });
         continue;
       }
-      if (!objeto.ci) {
+      if (!obj.ci) {
         errores.push({ fila, errores: ["El campo 'CI' es obligatorio"] });
         continue;
       }
-      if (!objeto.fechaNacimiento) {
-        errores.push({ fila, ci: objeto.ci, errores: ["El campo 'Fecha Nacimiento' es obligatorio (YYYY-MM-DD)"] });
+      if (obj.esTitulado === null || obj.esTitulado === undefined) {
+        errores.push({ fila, ci: obj.ci, errores: ["El campo '¿Es titulado?' es obligatorio (Si / No)"] });
         continue;
       }
 
       // Validar con Zod
-      const parsed = filaSchema.safeParse(objeto);
+      const parsed = filaSchema.safeParse(obj);
       if (!parsed.success) {
         errores.push({
           fila,
-          ci: objeto.ci,
+          ci: obj.ci,
           errores: parsed.error.errors.map(e => `${e.path.join(".")}: ${e.message}`),
         });
         continue;
@@ -267,7 +226,6 @@ export async function POST(req: NextRequest) {
 
       const d = parsed.data;
 
-      // Verificar CI duplicado en BD
       try {
         const [existeCi] = await db.select({ id: egresado.id })
           .from(egresado).where(eq(egresado.ci, d.ci)).limit(1);
@@ -277,42 +235,40 @@ export async function POST(req: NextRequest) {
           continue;
         }
 
+        const tipo = d.esTitulado ? "Titulado" : "Egresado";
+
         const [nuevoEgresado] = await db.insert(egresado).values({
-          tipo:                d.tipo,
+          tipo:                tipo as any,
           nombres:             d.nombres,
-          apellidoPaterno:     d.apellidoPaterno ?? null,
-          apellidoMaterno:     d.apellidoMaterno ?? null,
+          apellidoPaterno:     d.apellidoPaterno     ?? null,
+          apellidoMaterno:     d.apellidoMaterno     ?? null,
           ci:                  d.ci,
-          genero:              (d.genero as any) ?? null,
-          correoElectronico:   d.correoElectronico ?? null,
-          celular:             d.celular ?? null,
-          telefono:            d.celular ?? null,
-          fechaNacimiento:     d.fechaNacimiento,
-          anioIngreso:         d.anioIngreso ?? null,
-          anioEgreso:          d.anioEgreso ?? null,
-          anioTitulacion:      d.anioTitulacion ?? null,
-          modalidadTitulacion: (d.modalidadTitulacion as any) ?? null,
-          facebook:            d.facebook ?? null,
-          linkedin:            d.linkedin ?? null,
+          genero:              (d.genero as any)      ?? null,
+          correoElectronico:   d.correoElectronico   ?? null,
+          celular:             d.celular             ?? null,
+          telefono:            d.celular             ?? null,
+          fechaNacimiento:     "1900-01-01", // campo requerido, se puede actualizar después
+          anioIngreso:         d.anioIngreso         ?? null,
+          anioEgreso:          d.anioEgreso          ?? null,
+          semestreIngreso:     d.semestreIngreso      ?? null,
+          semestreEgreso:      d.semestreEgreso       ?? null,
+          anioTitulacion:      d.esTitulado ? (d.anioTitulacion ?? null) : null,
+          modalidadTitulacion: d.esTitulado ? ((d.modalidadTitulacion as any) ?? null) : null,
           areaEspecializacion: d.areaEspecializacion ?? null,
-          observaciones:       d.observaciones ?? null,
-          lugarResidencia:     d.lugarResidencia ?? null,
-          inicioProceso:       d.tipo === "Egresado" ? (d.inicioProceso ?? null) : null,
-          motivoNoTitulacion:  d.tipo === "Egresado" ? (d.motivoNoTitulacion ?? null) : null,
-          planeaTitularse:     d.tipo === "Egresado" ? (d.planeaTitularse ?? null) : null,
+          lugarResidencia:     d.lugarResidencia     ?? null,
+          observaciones:       d.observaciones       ?? null,
         }).returning({ id: egresado.id });
 
-        // Crear usuario asociado con CI como contraseña inicial
         if (nuevoEgresado) {
           const passwordHash = await hashPassword(d.ci);
           await db.insert(usuario).values({
-            ci:           d.ci,
-            correo:       d.correoElectronico ?? `${d.ci}@sin-correo.local`,
+            ci:                d.ci,
+            correo:            d.correoElectronico ?? `${d.ci}@sin-correo.local`,
             passwordHash,
-            rol:          "egresado",
-            estado:       "activo",
-            idEgresado:   nuevoEgresado.id,
-            primerLogin:  true,
+            rol:               "egresado",
+            estado:            "activo",
+            idEgresado:        nuevoEgresado.id,
+            primerLogin:       true,
             correoVerificado:  false,
             celularVerificado: false,
           }).onConflictDoNothing();
@@ -321,9 +277,9 @@ export async function POST(req: NextRequest) {
         }
       } catch (e: any) {
         if (e.code === "23505") {
-          errores.push({ fila, ci: objeto.ci, errores: [`CI duplicado: ${objeto.ci}`] });
+          errores.push({ fila, ci: obj.ci, errores: [`CI duplicado: ${obj.ci}`] });
         } else {
-          errores.push({ fila, ci: objeto.ci, errores: [`Error interno al insertar: ${e.message}`] });
+          errores.push({ fila, ci: obj.ci, errores: [`Error al insertar: ${e.message}`] });
         }
       }
     }
@@ -340,7 +296,7 @@ export async function POST(req: NextRequest) {
   }
 }
 
-// GET — descargar plantilla Excel
+// ── GET — descargar plantilla ─────────────────────────────────────────────────
 export async function GET(req: NextRequest) {
   const session = await getSession();
   if (!session || session.rol !== "admin") return err("No autorizado", 403);
@@ -349,97 +305,64 @@ export async function GET(req: NextRequest) {
 
   // ── Hoja de datos ─────────────────────────────────────────────────────────
   const encabezados = [
-    "Tipo",
     "Nombres",
     "Apellido Paterno",
     "Apellido Materno",
     "CI",
-    "Fecha Nacimiento",
-    "Genero",
-    "Correo Electronico",
+    "Género",
+    "Semestre de Ingreso",
+    "Semestre de Egreso",
+    "¿Es titulado?",
+    "Año de Titulación",
+    "Modalidad",
+    "Área de Especialización",
+    "Correo Electrónico",
     "Celular",
-    "Plan de Estudios",
-    "Año Ingreso",
-    "Año Egreso",
-    "Año Titulacion",
-    "Modalidad Titulacion",
-    "Titulo Academico",
-    "Area Especializacion",
-    "Ciudad Residencia",
-    "Region Residencia",
-    "Facebook",
-    "LinkedIn",
+    "Lugar de Residencia",
     "Observaciones",
-    "Inicio Proceso",
-    "Planea Titularse",
-    "Motivo No Titulacion",
   ];
 
   const ejemploTitulado = [
-    "Titulado",
     "Carlos Alberto",
     "Mamani",
     "Quispe",
     "12345678",
-    "1990-03-15",
     "Masculino",
+    "I/2010",
+    "II/2015",
+    "Si",
+    "2017",
+    "Tesis",
+    "Estadística oficial",
     "carlos@ejemplo.com",
     "71234567",
-    "Av. Arce 123, La Paz",
-    "2008",
-    "2008",
-    "2014",
-    "2016",
-    "Tesis",
-    "Lic. en Estadística",
-    "Estadística oficial",
     "La Paz",
-    "La Paz",
-    "",
-    "https://linkedin.com/in/carlos",
-    "",
-    "",
-    "",
     "",
   ];
 
   const ejemploEgresado = [
-    "Egresado",
     "María Elena",
     "Flores",
     "Condori",
     "87654321",
-    "1994-07-22",
     "Femenino",
+    "II/2015",
+    "I/2021",
+    "No",
+    "",
+    "",
+    "Econometría",
     "maria@ejemplo.com",
     "78765432",
-    "Calle Potosí 456, La Paz",
-    "2020",
-    "2015",
-    "2021",
+    "Cochabamba",
     "",
-    "",
-    "",
-    "Análisis de datos",
-    "La Paz",
-    "La Paz",
-    "",
-    "",
-    "Trabajando a tiempo completo",
-    "Sí",
-    "Sí",
-    "Dificultades económicas",
   ];
 
   const wsData = XLSX.utils.aoa_to_sheet([encabezados, ejemploTitulado, ejemploEgresado]);
-
-  // Ancho de columnas
   wsData["!cols"] = [
-    {wch:12},{wch:20},{wch:18},{wch:18},{wch:14},{wch:16},{wch:12},{wch:26},
-    {wch:13},{wch:22},{wch:14},{wch:12},{wch:12},{wch:14},{wch:20},{wch:22},
-    {wch:22},{wch:16},{wch:16},{wch:24},{wch:28},{wch:24},{wch:14},{wch:14},{wch:26},
+    {wch:20},{wch:18},{wch:18},{wch:14},{wch:14},{wch:18},{wch:16},
+    {wch:14},{wch:18},{wch:20},{wch:24},{wch:26},{wch:13},{wch:18},{wch:20},
   ];
-
   XLSX.utils.book_append_sheet(wb, wsData, "Datos");
 
   // ── Hoja de instrucciones ─────────────────────────────────────────────────
@@ -447,45 +370,37 @@ export async function GET(req: NextRequest) {
     ["INSTRUCCIONES DE IMPORTACIÓN"],
     [""],
     ["CAMPO", "REQUERIDO", "VALORES VÁLIDOS / FORMATO"],
-    ["Tipo", "Sí", "Titulado | Egresado"],
-    ["Nombres", "Sí", "Texto libre"],
-    ["Apellido Paterno", "No", "Texto libre"],
-    ["Apellido Materno", "No", "Texto libre"],
-    ["CI", "Sí", "Texto, mínimo 4 caracteres, único en el sistema"],
-    ["Fecha Nacimiento", "Sí", "YYYY-MM-DD (ej: 1990-03-15) o DD/MM/YYYY"],
-    ["Genero", "No", "Masculino | Femenino | Otro | Prefiero no decir"],
-    ["Correo Electronico", "No", "Formato email válido"],
-    ["Celular", "No", "Texto (ej: 71234567)"],
-    ["Plan de Estudios", "No", "1994 | 2008 | 2020"],
-    ["Año Ingreso", "No", "Número (ej: 2010)"],
-    ["Año Egreso", "No", "Número (ej: 2015)"],
-    ["Año Titulacion", "Si para Titulado", "Número (ej: 2016)"],
-    ["Modalidad Titulacion", "No", "Tesis | Proyecto de grado | Trabajo dirigido | Excelencia"],
-    ["Titulo Academico", "No", "Texto (ej: Lic. en Estadística)"],
-    ["Area Especializacion", "No", "Texto libre"],
-    ["Ciudad Residencia", "No", "Texto (ej: La Paz)"],
-    ["Region Residencia", "No", "Texto (ej: La Paz, Cochabamba...)"],
-    ["Facebook", "No", "URL o nombre de usuario"],
-    ["LinkedIn", "No", "URL del perfil"],
-    ["Observaciones", "No", "Texto libre"],
-    ["Inicio Proceso", "Solo Egresado", "Sí | No"],
-    ["Planea Titularse", "Solo Egresado", "Sí | No"],
-    ["Motivo No Titulacion", "Solo Egresado", "Texto libre"],
+    ["Nombres",              "Sí",             "Texto libre"],
+    ["Apellido Paterno",     "No",             "Texto libre"],
+    ["Apellido Materno",     "No",             "Texto libre"],
+    ["CI",                   "Sí",             "Texto único, mínimo 4 caracteres"],
+    ["Género",               "No",             "Masculino | Femenino | Otro | Prefiero no decir"],
+    ["Semestre de Ingreso",  "No",             "Formato I/AAAA o II/AAAA (ej: I/2010, II/2015)"],
+    ["Semestre de Egreso",   "No",             "Formato I/AAAA o II/AAAA (ej: I/2020, II/2021)"],
+    ["¿Es titulado?",        "Sí",             "Si | No"],
+    ["Año de Titulación",    "Si es titulado", "Número (ej: 2018)"],
+    ["Modalidad",            "No",             "Tesis | Proyecto de grado | Trabajo dirigido | Examen de grado | Otro"],
+    ["Área de Especialización","No",           "Texto libre"],
+    ["Correo Electrónico",   "No",             "Formato email válido"],
+    ["Celular",              "No",             "Texto (ej: 71234567)"],
+    ["Lugar de Residencia",  "No",             "Texto (ej: La Paz)"],
+    ["Observaciones",        "No",             "Texto libre"],
     [""],
     ["NOTAS IMPORTANTES:"],
-    ["- La primera fila debe contener los encabezados exactamente como se muestran arriba (o similares)"],
-    ["- Los campos marcados como 'Sí' para Titulado son obligatorios si Tipo = Titulado"],
-    ["- Se creará un usuario automáticamente con el CI como contraseña inicial"],
-    ["- Si un CI ya existe en el sistema, esa fila se omitirá y se reportará como error"],
+    ["- El semestre debe tener formato exacto: I/2020 o II/2020"],
+    ["- El año de ingreso y egreso se extraen automáticamente del semestre"],
+    ["- Si ¿Es titulado? = Si, debe completar el Año de Titulación"],
+    ["- Se crea un usuario automáticamente con el CI como contraseña inicial"],
+    ["- Si un CI ya existe en el sistema, esa fila se omitirá"],
     ["- Máximo 500 filas por importación"],
-    ["- Formatos de fecha aceptados: YYYY-MM-DD o DD/MM/YYYY"],
+    ["- La fecha de nacimiento se puede actualizar después desde el perfil"],
   ];
 
   const wsInstr = XLSX.utils.aoa_to_sheet(instrucciones);
-  wsInstr["!cols"] = [{wch:26}, {wch:18}, {wch:55}];
+  wsInstr["!cols"] = [{wch:26}, {wch:16}, {wch:55}];
   XLSX.utils.book_append_sheet(wb, wsInstr, "Instrucciones");
 
-  const buf  = XLSX.write(wb, { type: "buffer", bookType: "xlsx" });
+  const buf = XLSX.write(wb, { type: "buffer", bookType: "xlsx" });
   return new Response(buf, {
     headers: {
       "Content-Type":        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",

@@ -29,7 +29,8 @@ export async function middleware(req: NextRequest) {
       pathname.startsWith("/api/auth/activar-cuenta") ||
       pathname.startsWith("/api/egresados/destacados") ||
       pathname.startsWith("/api/egresados/directorio-publico") ||
-      pathname.startsWith("/api/noticias")
+      pathname.startsWith("/api/noticias") ||
+      pathname.startsWith("/api/stats/publicos")
     ) return NextResponse.next();
 
     const token   = req.cookies.get("eg_token")?.value;

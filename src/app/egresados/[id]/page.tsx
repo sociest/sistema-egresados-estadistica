@@ -6,34 +6,27 @@ import { eq } from "drizzle-orm";
 import Link from "next/link";
 import {
   ArrowLeft, Pencil, Phone, MapPin, Calendar,
-  Briefcase, Building2, GraduationCap, BookOpen, Clock, TrendingUp,
+  Briefcase, Building2, GraduationCap, BookOpen, Clock,
 } from "lucide-react";
 import AdminLayout from "@/components/shared/AdminLayout";
 import { cn, fmtDate } from "@/lib/utils";
+import HistorialExpandible from "@/components/egresados/HistorialExpandible";
+import PostgradoExpandible from "@/components/egresados/PostgradoExpandible";
 
-// ── RF-07: tiempo hasta primer empleo expresado en tramos de año ──────────────
 function calcularTiempoPrimerEmpleo(
-  anioReferencia: number | null | undefined,  // anioTitulacion o anioEgreso
+  anioReferencia: number | null | undefined,
   primerFechaEmpleo: string | null | undefined,
 ): { texto: string; anios: number } | null {
   if (!anioReferencia || !primerFechaEmpleo) return null;
   const anioEmpleo = new Date(primerFechaEmpleo).getFullYear();
   const diff = anioEmpleo - anioReferencia;
-  if (diff < 0) return null; // empleo antes de referencía — dato inconsistente
-
+  if (diff < 0) return null;
   let texto: string;
   if (diff === 0)      texto = "Menos de 1 año";
   else if (diff === 1) texto = "1 año";
   else                 texto = `${diff} años`;
-
   return { texto, anios: diff };
 }
-
-const ESTADO_BADGE: Record<string, string> = {
-  "En curso":   "badge-blue",
-  "Finalizado": "badge-green",
-  "Abandonado": "badge-slate",
-};
 
 export default async function EgresadoDetallePage({ params }: { params: { id: string } }) {
   const session = await getSession();
@@ -54,7 +47,6 @@ export default async function EgresadoDetallePage({ params }: { params: { id: st
       .orderBy(postgrado.anioInicio),
   ]);
 
-  // Calcular título académico desde postgrados
   const { derivarTituloAcademico } = await import("@/lib/schema");
   const tituloCalculado = derivarTituloAcademico(
     (eg.tipo as "Titulado" | "Egresado") ?? "Titulado",
@@ -63,14 +55,12 @@ export default async function EgresadoDetallePage({ params }: { params: { id: st
 
   const empleoActual = historial.find(h => h.fechaFin === null);
 
-  // Primer empleo cronológicamente
   const primerEmpleo = historial.length > 0
     ? historial.reduce((a, b) =>
         new Date(a.fechaInicio) < new Date(b.fechaInicio) ? a : b
       )
     : null;
 
-  // RF-07: usar anioTitulacion si existe, si no anioEgreso
   const anioReferencia = eg.anioTitulacion ?? eg.anioEgreso;
   const tiempoPrimerEmpleo = calcularTiempoPrimerEmpleo(
     anioReferencia,
@@ -97,55 +87,138 @@ export default async function EgresadoDetallePage({ params }: { params: { id: st
 
             {/* Avatar + estado */}
             <div className="card text-center">
-              <div className="w-20 h-20 rounded-2xl bg-primary-600/20 border-2 border-primary-500/30
-                              flex items-center justify-center mx-auto mb-4">
-                <span className="text-primary-300 text-2xl font-bold">
+              <div
+                className="w-20 h-20 rounded-2xl flex items-center justify-center mx-auto mb-4"
+                style={{ background: "var(--turquesa-light)" }}
+              >
+                <span
+                  className="text-2xl font-bold"
+                  style={{ color: "var(--turquesa-dark)", fontFamily: "'Source Serif 4', serif" }}
+                >
                   {(eg.apellidoPaterno ?? eg.nombres)[0]}{eg.nombres[0]}
                 </span>
               </div>
-              <h2 className="text-white font-bold text-lg">
+              <h2
+                className="font-bold text-lg"
+                style={{ color: "var(--azul-pizarra)", fontFamily: "'Source Serif 4', serif" }}
+              >
                 {[eg.apellidoPaterno, eg.apellidoMaterno].filter(Boolean).join(" ") || eg.nombres}, {eg.nombres}
               </h2>
-              <p className="text-slate-500 text-sm mt-1">CI: {eg.ci}</p>
-              {eg.genero && <p className="text-slate-600 text-xs mt-0.5">{eg.genero}</p>}
-              {tituloCalculado && (
-                <p className="text-slate-400 text-xs mt-1 italic">{tituloCalculado}</p>
+              <p className="text-sm mt-1" style={{ color: "var(--gris-grafito)" }}>CI: {eg.ci}</p>
+              {eg.genero && (
+                <p className="text-xs mt-0.5" style={{ color: "var(--placeholder)" }}>{eg.genero}</p>
               )}
-              <div className="mt-3">
-                <span className={cn("badge", empleoActual ? "badge-green" : "badge-slate")}>
-                  {empleoActual ? "Empleado actualmente" : "Sin empleo actual"}
+              {tituloCalculado && (
+                <p className="text-xs mt-1 italic" style={{ color: "var(--gris-grafito)" }}>
+                  {tituloCalculado}
+                </p>
+              )}
+              <div className="mt-3 flex flex-wrap gap-2 justify-center">
+                <span
+                  className="badge"
+                  style={eg.tipo === "Titulado" ? {
+                    background: "var(--turquesa-light)", color: "var(--turquesa-dark)",
+                    border: "1px solid #99e6e7",
+                  } : {
+                    background: "var(--naranja-light)", color: "var(--naranja)",
+                    border: "1px solid #fed7aa",
+                  }}
+                >
+                  {eg.tipo}
                 </span>
+                <span
+                  className="badge"
+                  style={empleoActual ? {
+                    background: "var(--verde-light)", color: "var(--verde)",
+                    border: "1px solid #86efac",
+                  } : {
+                    background: "var(--humo)", color: "var(--placeholder)",
+                    border: "1px solid var(--borde)",
+                  }}
+                >
+                  {empleoActual ? "Empleado" : "Sin empleo actual"}
+                </span>
+                {eg.fallecido && (
+                  <span className="badge" style={{
+                    background: "#FEF2F2", color: "#dc2626", border: "1px solid #FECACA",
+                  }}>
+                    Fallecido
+                  </span>
+                )}
               </div>
             </div>
 
             {/* Contacto */}
             <div className="card space-y-3">
-              <p className="text-slate-500 text-xs uppercase tracking-widest font-semibold">Contacto</p>
+              <p
+                className="text-xs font-semibold uppercase tracking-widest"
+                style={{ color: "var(--placeholder)" }}
+              >
+                Contacto
+              </p>
               {(eg.celular ?? eg.telefono) && (
                 <div className="flex gap-3 text-sm">
-                  <Phone className="w-4 h-4 text-slate-500 mt-0.5 shrink-0" />
-                  <span className="text-slate-300">{eg.celular ?? eg.telefono}</span>
+                  <Phone className="w-4 h-4 shrink-0 mt-0.5" style={{ color: "var(--turquesa)" }} />
+                  <span style={{ color: "var(--azul-pizarra)" }}>{eg.celular ?? eg.telefono}</span>
                 </div>
               )}
               {eg.correoElectronico && (
                 <div className="flex gap-3 text-sm">
-                  <span className="text-slate-500 text-xs mt-0.5">✉</span>
-                  <span className="text-slate-300 break-all">{eg.correoElectronico}</span>
+                  <span className="mt-0.5" style={{ color: "var(--turquesa)" }}>✉</span>
+                  <span className="break-all" style={{ color: "var(--azul-pizarra)" }}>
+                    {eg.correoElectronico}
+                  </span>
                 </div>
               )}
-              <div className="flex gap-3 text-sm">
-                <Calendar className="w-4 h-4 text-slate-500 mt-0.5 shrink-0" />
-                <span className="text-slate-300">{fmtDate(eg.fechaNacimiento)}</span>
-              </div>
+              {eg.fechaNacimiento && (
+                <div className="flex gap-3 text-sm">
+                  <Calendar className="w-4 h-4 shrink-0 mt-0.5" style={{ color: "var(--turquesa)" }} />
+                  <span style={{ color: "var(--azul-pizarra)" }}>{fmtDate(eg.fechaNacimiento)}</span>
+                </div>
+              )}
+              {eg.lugarResidencia && (
+                <div className="flex gap-3 text-sm">
+                  <MapPin className="w-4 h-4 shrink-0 mt-0.5" style={{ color: "var(--turquesa)" }} />
+                  <span style={{ color: "var(--azul-pizarra)" }}>{eg.lugarResidencia}</span>
+                </div>
+              )}
+              {eg.facebook && (
+                <div className="flex gap-3 text-sm">
+                  <span style={{ color: "var(--turquesa)" }}>f</span>
+                  <a
+                    href={eg.facebook}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{ color: "var(--turquesa-dark)" }}
+                  >
+                    Facebook
+                  </a>
+                </div>
+              )}
+              {eg.linkedin && (
+                <div className="flex gap-3 text-sm">
+                  <span style={{ color: "var(--turquesa)" }}>in</span>
+                  <a
+                    href={eg.linkedin}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{ color: "var(--turquesa-dark)" }}
+                  >
+                    LinkedIn
+                  </a>
+                </div>
+              )}
             </div>
 
             {/* Académico */}
             <div className="card space-y-2.5">
-              <p className="text-slate-500 text-xs uppercase tracking-widest font-semibold">Académico</p>
+              <p
+                className="text-xs font-semibold uppercase tracking-widest"
+                style={{ color: "var(--placeholder)" }}
+              >
+                Académico
+              </p>
 
-              {eg.modalidadTitulacion && (
-                <Row label="Modalidad">{eg.modalidadTitulacion}</Row>
-              )}
               {eg.anioIngreso && (
                 <Row label="Ingreso">{eg.anioIngreso}</Row>
               )}
@@ -155,32 +228,78 @@ export default async function EgresadoDetallePage({ params }: { params: { id: st
               {eg.anioTitulacion && (
                 <Row label="Titulación">{eg.anioTitulacion}</Row>
               )}
+              {eg.modalidadTitulacion && (
+                <Row label="Modalidad">{eg.modalidadTitulacion}</Row>
+              )}
               {eg.promedio && (
                 <Row label="Promedio">{eg.promedio}</Row>
               )}
-              {/* RF-03: tiempo de permanencia */}
+              {eg.areaEspecializacion && (
+                <Row label="Área">{eg.areaEspecializacion}</Row>
+              )}
               {eg.anioIngreso && eg.anioEgreso && (
                 <Row label="Permanencia">{eg.anioEgreso - eg.anioIngreso} año(s)</Row>
               )}
 
-              {/* RF-07: tiempo hasta primer empleo */}
               {tiempoPrimerEmpleo !== null && (
-                <div className="mt-2 pt-2.5 border-t border-slate-800">
-                  <div className="flex items-start gap-2">
-                    <Clock className="w-3.5 h-3.5 text-amber-400 shrink-0 mt-0.5" />
-                    <div>
-                      <p className="text-slate-500 text-xs">
-                        1er empleo desde {etiquetaReferencia}
-                      </p>
-                      <p className="text-amber-400 font-semibold text-sm">
-                        {tiempoPrimerEmpleo.texto}
-                      </p>
-                    </div>
-                  </div>
+                <div
+                  className="mt-2 pt-2.5 flex items-center gap-2 rounded-xl px-3 py-2"
+                  style={{ background: "var(--naranja-light)", border: "1px solid #fed7aa" }}
+                >
+                  <Clock className="w-3.5 h-3.5 shrink-0" style={{ color: "var(--naranja)" }} />
+                  <p className="text-xs" style={{ color: "var(--naranja)" }}>
+                    <span className="font-semibold">{tiempoPrimerEmpleo.texto}</span>{" "}
+                    hasta primer empleo (desde {etiquetaReferencia})
+                  </p>
                 </div>
               )}
 
-              <p className="text-slate-700 text-xs pt-2 border-t border-slate-800/50">
+              {/* Campos exclusivos Egresado */}
+              {eg.tipo === "Egresado" && (
+                <div
+                  className="mt-2 pt-2.5 space-y-2"
+                  style={{ borderTop: "1px solid var(--borde)" }}
+                >
+                  {eg.inicioProceso !== null && eg.inicioProceso !== undefined && (
+                    <Row label="Inició proceso">{eg.inicioProceso ? "Sí" : "No"}</Row>
+                  )}
+                  {eg.planeaTitularse && (
+                    <Row label="Planea titularse">{eg.planeaTitularse}</Row>
+                  )}
+                  {eg.motivoNoTitulacion && (
+                    <div>
+                      <p
+                        className="text-xs font-semibold uppercase tracking-wide mb-1"
+                        style={{ color: "var(--placeholder)" }}
+                      >
+                        Motivo no titulación
+                      </p>
+                      <p className="text-xs" style={{ color: "var(--gris-grafito)" }}>
+                        {eg.motivoNoTitulacion}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {eg.observaciones && (
+                <div style={{ borderTop: "1px solid var(--borde)", paddingTop: "0.625rem", marginTop: "0.5rem" }}>
+                  <p
+                    className="text-xs font-semibold uppercase tracking-wide mb-1"
+                    style={{ color: "var(--placeholder)" }}
+                  >
+                    Observaciones
+                  </p>
+                  <p className="text-xs" style={{ color: "var(--gris-grafito)" }}>
+                    {eg.observaciones}
+                  </p>
+                </div>
+              )}
+
+              <p
+                className="text-xs pt-2"
+                style={{ color: "var(--placeholder)", borderTop: "1px solid var(--borde-suave)" }}
+              >
                 Registrado: {fmtDate(eg.fechaRegistro?.toISOString())}
               </p>
             </div>
@@ -188,98 +307,46 @@ export default async function EgresadoDetallePage({ params }: { params: { id: st
             {/* Postgrados */}
             {postgrados.length > 0 && (
               <div className="card space-y-3">
-                <p className="text-slate-500 text-xs uppercase tracking-widest font-semibold">
+                <p
+                  className="text-xs font-semibold uppercase tracking-widest"
+                  style={{ color: "var(--placeholder)" }}
+                >
                   Estudios de Postgrado
                 </p>
-                {postgrados.map(p => (
-                  <div key={p.id} className="flex gap-3">
-                    <div className="w-8 h-8 bg-slate-700 rounded-lg flex items-center justify-center shrink-0">
-                      <BookOpen className="w-3.5 h-3.5 text-slate-400" />
-                    </div>
-                    <div>
-                      <p className="text-white text-sm font-medium">{p.tipo}</p>
-                      <p className="text-slate-400 text-xs">{p.institucion}</p>
-                      <p className="text-slate-600 text-xs">
-                        {p.pais} · {p.anioInicio}{p.anioFin ? `–${p.anioFin}` : ""}
-                      </p>
-                      <span className={cn("badge mt-1", ESTADO_BADGE[p.estado] ?? "badge-slate")}>
-                        {p.estado}
-                      </span>
-                    </div>
-                  </div>
-                ))}
+                <PostgradoExpandible postgrados={postgrados} />
               </div>
             )}
           </div>
-
 
           {/* ── Historial laboral ── */}
           <div className="lg:col-span-2">
             <div className="card">
               <div className="flex items-center justify-between mb-5">
                 <div>
-                  <h3 className="text-white font-bold">Historial Laboral</h3>
-                  <p className="text-slate-500 text-xs mt-0.5">{historial.length} registro(s)</p>
+                  <h3
+                    className="font-bold"
+                    style={{ color: "var(--azul-pizarra)", fontFamily: "'Source Serif 4', serif" }}
+                  >
+                    Historial Laboral
+                  </h3>
+                  <p className="text-xs mt-0.5" style={{ color: "var(--gris-grafito)" }}>
+                    {historial.length} registro(s)
+                  </p>
                 </div>
               </div>
 
               {historial.length === 0 ? (
-                <div className="text-center py-10">
-                  <Briefcase className="w-8 h-8 text-slate-700 mx-auto mb-2" />
-                  <p className="text-slate-600 text-sm">Sin historial laboral registrado</p>
+                <div
+                  className="text-center py-10 rounded-xl border-2 border-dashed"
+                  style={{ borderColor: "var(--borde)" }}
+                >
+                  <Briefcase className="w-8 h-8 mx-auto mb-2" style={{ color: "var(--borde)" }} />
+                  <p className="text-sm" style={{ color: "var(--placeholder)" }}>
+                    Sin historial laboral registrado
+                  </p>
                 </div>
               ) : (
-                <div className="space-y-3">
-                  {historial.map(h => (
-                    <div key={h.id} className={cn("rounded-xl p-4 border",
-                      h.fechaFin === null
-                        ? "bg-emerald-500/5 border-emerald-500/20"
-                        : "bg-slate-800/40 border-slate-700/50")}>
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="flex gap-3 flex-1 min-w-0">
-                          <div className="w-9 h-9 bg-slate-700 rounded-xl flex items-center justify-center shrink-0">
-                            <Building2 className="w-4 h-4 text-slate-400" />
-                          </div>
-                          <div className="min-w-0">
-                            <p className="text-white font-semibold text-sm">{h.cargo}</p>
-                            <p className="text-slate-400 text-sm">{h.empresa}</p>
-                            <div className="flex flex-wrap gap-x-3 gap-y-0.5 mt-1">
-                              {h.area && (
-                                <span className="text-slate-500 text-xs">{h.area}</span>
-                              )}
-                              {h.ciudadRegionTrabajo && (
-                                <span className="text-slate-500 text-xs flex items-center gap-0.5">
-                                  <MapPin className="w-3 h-3" />{h.ciudadRegionTrabajo}
-                                </span>
-                              )}
-                              {h.sectorTrabajo && (
-                                <span className={cn(
-                                  "text-xs px-1.5 py-0.5 rounded-md font-medium",
-                                  h.sectorTrabajo === "Publico"  ? "bg-blue-500/10 text-blue-400" :
-                                  h.sectorTrabajo === "Privado"  ? "bg-purple-500/10 text-purple-400" :
-                                  "bg-slate-700 text-slate-400"
-                                )}>
-                                  {h.sectorTrabajo}
-                                </span>
-                              )}
-                              {h.tipoContrato && (
-                                <span className="text-slate-600 text-xs">{h.tipoContrato}</span>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                        <div className="text-right shrink-0">
-                          {h.fechaFin === null
-                            ? <span className="badge badge-green">Actual</span>
-                            : <span className="badge badge-slate">Finalizado</span>}
-                          <p className="text-slate-600 text-xs mt-1.5">
-                            {fmtDate(h.fechaInicio)} — {h.fechaFin ? fmtDate(h.fechaFin) : "presente"}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
+                <HistorialExpandible historial={historial} />
               )}
             </div>
           </div>
@@ -289,11 +356,13 @@ export default async function EgresadoDetallePage({ params }: { params: { id: st
   );
 }
 
-// Helper inline para filas del card académico
 function Row({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <p className="text-slate-300 text-sm">
-      <span className="text-slate-500">{label}: </span>{children}
-    </p>
+    <div className="flex items-start justify-between gap-2">
+      <p className="text-xs shrink-0" style={{ color: "var(--placeholder)" }}>{label}</p>
+      <p className="text-xs text-right font-medium" style={{ color: "var(--azul-pizarra)" }}>
+        {children}
+      </p>
+    </div>
   );
 }

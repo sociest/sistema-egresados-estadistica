@@ -136,7 +136,7 @@ export default function ImportarEgresadosBtn() {
                     ¿Primera vez? Descarga la plantilla
                   </p>
                   <p className="text-xs mt-0.5" style={{ color: "var(--gris-grafito)" }}>
-                    Incluye ejemplos y hoja de instrucciones
+                    Formato: Semestre I/2020 · ¿Es titulado? Si/No
                   </p>
                 </div>
                 <button
@@ -201,7 +201,7 @@ export default function ImportarEgresadosBtn() {
                           Haz clic para seleccionar el archivo
                         </p>
                         <p className="text-xs mt-1" style={{ color: "var(--placeholder)" }}>
-                          .xlsx, .xls o .csv — máx. 500 filas, 10MB
+                          .xlsx, .xls o .csv — máx. 500 filas, 10MB · Semestres en formato I/2020
                         </p>
                       </div>
                     </button>

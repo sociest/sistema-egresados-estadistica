@@ -63,7 +63,7 @@ export async function GET(req: NextRequest) {
       areaEspecializacion: egresado.areaEspecializacion, // Bloque 0
       tieneEmpleo: sql<boolean>`EXISTS(
         SELECT 1 FROM historial_laboral h
-        WHERE h.id_egresado=${egresado.id} AND h.fecha_fin IS NULL
+        WHERE h.id_egresado = egresado.id AND h.fecha_fin IS NULL
       )`,
     })
     .from(egresado).where(where)
@@ -90,7 +90,6 @@ export async function POST(req: NextRequest) {
 
     const d = parsed.data;
 
-    // Verificar correo único si se proporcionó
     if (d.correoElectronico) {
       const [existe] = await db
         .select({ id: usuario.id })
@@ -101,11 +100,8 @@ export async function POST(req: NextRequest) {
     }
 
     const resultado = await db.transaction(async (tx) => {
-
       const [nuevoEgresado] = await tx.insert(egresado).values({
-        // Bloque 0
         tipo:                 d.tipo,
-        // Datos personales
         nombres:              d.nombres,
         apellidoPaterno:      d.apellidoPaterno     ?? null,
         apellidoMaterno:      d.apellidoMaterno     ?? null,
@@ -116,25 +112,37 @@ export async function POST(req: NextRequest) {
         celular:              d.celular             ?? null,
         telefono:             d.celular             ?? null,
         fechaNacimiento:      d.fechaNacimiento,
-        // Redes y área (Bloque 0 compartidos)
         facebook:             d.facebook            ?? null,
         linkedin:             d.linkedin            ?? null,
         areaEspecializacion:  d.areaEspecializacion ?? null,
         observaciones:        d.observaciones       ?? null,
         estadoLaboral:        d.estadoLaboral       ?? null,
-        // Legacy
         anioIngreso:          d.anioIngreso         ?? null,
         anioEgreso:           d.anioEgreso          ?? null,
         anioTitulacion:       d.anioTitulacion      ?? null,
         promedio:             d.promedio != null ? String(d.promedio) : null,
         modalidadTitulacion:  d.modalidadTitulacion ?? null,
-        // Campos exclusivos Egresado (Bloque 0) — solo si tipo=Egresado
         inicioProceso:        d.tipo === "Egresado" ? (d.inicioProceso ?? null) : null,
         motivoNoTitulacion:   d.tipo === "Egresado" ? (d.motivoNoTitulacion ?? null) : null,
         planeaTitularse:      d.tipo === "Egresado" ? (d.planeaTitularse ?? null) : null,
         lugarResidencia:      d.lugarResidencia     ?? null,
-        // fallecido solo lo puede marcar el admin desde editar, no en creación
       }).returning();
+
+      // Crear usuario automáticamente con CI como contraseña inicial
+      const passwordHash = await hashPassword(d.ci);
+      const correoUsuario = d.correoElectronico ?? `${d.ci}@sin-correo.local`;
+
+      await tx.insert(usuario).values({
+        ci:                d.ci,
+        correo:            correoUsuario,
+        passwordHash,
+        rol:               "egresado",
+        estado:            "activo",
+        idEgresado:        nuevoEgresado.id,
+        primerLogin:       true,
+        correoVerificado:  false,
+        celularVerificado: false,
+      }).onConflictDoNothing();
 
       return nuevoEgresado;
     });

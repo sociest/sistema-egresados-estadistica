@@ -84,10 +84,23 @@ async function getData(sp: SP) {
     tipo:                egresado.tipo,
     tieneEmpleo: sql<boolean>`EXISTS(
       SELECT 1 FROM historial_laboral h
-      WHERE h.id_egresado=${egresado.id} AND h.fecha_fin IS NULL
+      WHERE h.id_egresado = egresado.id AND h.fecha_fin IS NULL
     )`,
     tienePostgrado: sql<boolean>`EXISTS(
-      SELECT 1 FROM postgrado p WHERE p.id_egresado=${egresado.id}
+      SELECT 1 FROM postgrado p WHERE p.id_egresado = egresado.id
+    )`,
+    postgradoMasAlto: sql<string | null>`(
+      SELECT tipo FROM postgrado p
+      WHERE p.id_egresado = egresado.id
+      ORDER BY CASE tipo
+        WHEN 'Postdoctorado' THEN 1
+        WHEN 'Doctorado'     THEN 2
+        WHEN 'Maestria'      THEN 3
+        WHEN 'Especialidad'  THEN 4
+        WHEN 'Diplomado'     THEN 5
+        ELSE 6
+      END
+      LIMIT 1
     )`,
   })
   .from(egresado).where(where)
@@ -100,10 +113,10 @@ async function getData(sp: SP) {
 // Ciudades registradas para el filtro dinámico
 async function getCiudades(): Promise<string[]> {
   const result = await db.execute(sql`
-    SELECT DISTINCT ciudad
+    SELECT DISTINCT ciudad_region_trabajo AS ciudad
     FROM historial_laboral
-    WHERE ciudad IS NOT NULL AND ciudad != ''
-    ORDER BY ciudad
+    WHERE ciudad_region_trabajo IS NOT NULL AND ciudad_region_trabajo != ''
+    ORDER BY ciudad_region_trabajo
   `);
   return (result as any).rows?.map((r: any) => r.ciudad) ?? [];
 }
@@ -160,7 +173,8 @@ export default async function EgresadosPage({ searchParams }: { searchParams: SP
                   <tr>
                     <th>Apellidos, Nombres</th>
                     <th>CI</th>
-                    <th>Plan · Modalidad</th>
+                    <th>Modalidad</th>
+                    <th>Egreso</th>
                     <th>Titulación</th>
                     <th>Tipo</th>
                     <th>Empleo</th>
@@ -184,15 +198,14 @@ export default async function EgresadosPage({ searchParams }: { searchParams: SP
                           {r.ci}
                         </span>
                       </td>
-                      <td>
-                        {r.modalidadTitulacion && (
-                          <p className="text-xs mt-0.5" style={{ color: "var(--placeholder)" }}>
-                            {r.modalidadTitulacion ?? "--"}
-                          </p>
-                        )}
+                      <td className="text-sm" style={{ color: "var(--gris-grafito)" }}>
+                        {r.modalidadTitulacion ?? "—"}
                       </td>
                       <td className="text-sm" style={{ color: "var(--gris-grafito)" }}>
-                        {r.anioTitulacion ?? (r.anioEgreso ? `Egreso ${r.anioEgreso}` : "—")}
+                        {r.anioEgreso ?? "—"}
+                      </td>
+                      <td className="text-sm" style={{ color: "var(--gris-grafito)" }}>
+                        {r.anioTitulacion ?? "--"}
                       </td>
                       <td>
                         <span className="badge" style={r.tipo === "Titulado" ? {
@@ -217,13 +230,13 @@ export default async function EgresadosPage({ searchParams }: { searchParams: SP
                         </span>
                       </td>
                       <td>
-                        {r.tienePostgrado ? (
+                        {r.postgradoMasAlto ? (
                           <span className="badge" style={{
                             background: "rgba(59,130,246,0.08)", color: "#3b82f6",
                             border: "1px solid rgba(59,130,246,0.20)",
-                          }}>Con postgrado</span>
+                          }}>{r.postgradoMasAlto}</span>
                         ) : (
-                          <span style={{ color: "var(--placeholder)", fontSize: "0.875rem" }}>—</span>
+                          <span style={{ color: "var(--placeholder)", fontSize: "0.875rem" }}>--</span>
                         )}
                       </td>
                       <td>
