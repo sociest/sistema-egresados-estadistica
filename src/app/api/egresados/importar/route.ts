@@ -22,14 +22,14 @@ const filaSchema = z.object({
   anioTitulacion:      z.number().int().min(1990).max(2030).optional().nullable(),
   modalidadTitulacion: z.enum(["Tesis", "Proyecto de grado", "Trabajo dirigido", "Examen de grado", "Otro"]).optional().nullable(),
   areaEspecializacion: z.string().max(150).optional().nullable(),
-  correoElectronico:   z.string().email().max(150).optional().nullable(),
-  celular:             z.string().max(20).optional().nullable(),
-  lugarResidencia:     z.string().max(200).optional().nullable(),
-  observaciones:       z.string().optional().nullable(),
 }).refine(d => {
   if (d.esTitulado && !d.anioTitulacion) return false;
   return true;
-}, { message: "Un titulado debe tener año de titulación", path: ["anioTitulacion"] });
+}, { message: "Un titulado debe tener año de titulación", path: ["anioTitulacion"] })
+.refine(d => {
+  if (d.esTitulado && !d.modalidadTitulacion) return false;
+  return true;
+}, { message: "Un titulado debe tener modalidad de titulación", path: ["modalidadTitulacion"] });
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 function celda(val: any): string {
@@ -99,15 +99,6 @@ const HEADER_MAP: Record<string, string> = {
   "area de especializacion":  "areaEspecializacion",
   "area especializacion":     "areaEspecializacion",
   "especializacion":          "areaEspecializacion",
-  "correo":                   "correoElectronico",
-  "correo electronico":       "correoElectronico",
-  "email":                    "correoElectronico",
-  "celular":                  "celular",
-  "telefono":                 "celular",
-  "lugar de residencia":      "lugarResidencia",
-  "lugar residencia":         "lugarResidencia",
-  "residencia":               "lugarResidencia",
-  "observaciones":            "observaciones",
 };
 
 // ── POST — importar archivo ───────────────────────────────────────────────────
@@ -244,26 +235,21 @@ export async function POST(req: NextRequest) {
           apellidoMaterno:     d.apellidoMaterno     ?? null,
           ci:                  d.ci,
           genero:              (d.genero as any)      ?? null,
-          correoElectronico:   d.correoElectronico   ?? null,
-          celular:             d.celular             ?? null,
-          telefono:            d.celular             ?? null,
-          fechaNacimiento:     "1900-01-01", // campo requerido, se puede actualizar después
+          fechaNacimiento:     "1900-01-01",
           anioIngreso:         d.anioIngreso         ?? null,
           anioEgreso:          d.anioEgreso          ?? null,
           semestreIngreso:     d.semestreIngreso      ?? null,
           semestreEgreso:      d.semestreEgreso       ?? null,
           anioTitulacion:      d.esTitulado ? (d.anioTitulacion ?? null) : null,
           modalidadTitulacion: d.esTitulado ? ((d.modalidadTitulacion as any) ?? null) : null,
-          areaEspecializacion: d.areaEspecializacion ?? null,
-          lugarResidencia:     d.lugarResidencia     ?? null,
-          observaciones:       d.observaciones       ?? null,
+          areaEspecializacion: d.esTitulado ? (d.areaEspecializacion ?? null) : null,
         }).returning({ id: egresado.id });
 
         if (nuevoEgresado) {
           const passwordHash = await hashPassword(d.ci);
-          await db.insert(usuario).values({
+            await db.insert(usuario).values({
             ci:                d.ci,
-            correo:            d.correoElectronico ?? `${d.ci}@sin-correo.local`,
+            correo:            `${d.ci}@sin-correo.local`,
             passwordHash,
             rol:               "egresado",
             estado:            "activo",
@@ -316,10 +302,6 @@ export async function GET(req: NextRequest) {
     "Año de Titulación",
     "Modalidad",
     "Área de Especialización",
-    "Correo Electrónico",
-    "Celular",
-    "Lugar de Residencia",
-    "Observaciones",
   ];
 
   const ejemploTitulado = [
@@ -334,10 +316,6 @@ export async function GET(req: NextRequest) {
     "2017",
     "Tesis",
     "Estadística oficial",
-    "carlos@ejemplo.com",
-    "71234567",
-    "La Paz",
-    "",
   ];
 
   const ejemploEgresado = [
@@ -351,18 +329,16 @@ export async function GET(req: NextRequest) {
     "No",
     "",
     "",
-    "Econometría",
-    "maria@ejemplo.com",
-    "78765432",
-    "Cochabamba",
     "",
   ];
 
   const wsData = XLSX.utils.aoa_to_sheet([encabezados, ejemploTitulado, ejemploEgresado]);
   wsData["!cols"] = [
     {wch:20},{wch:18},{wch:18},{wch:14},{wch:14},{wch:18},{wch:16},
-    {wch:14},{wch:18},{wch:20},{wch:24},{wch:26},{wch:13},{wch:18},{wch:20},
+    {wch:14},{wch:18},{wch:20},{wch:24},
   ];
+
+
   XLSX.utils.book_append_sheet(wb, wsData, "Datos");
 
   // ── Hoja de instrucciones ─────────────────────────────────────────────────
@@ -379,21 +355,17 @@ export async function GET(req: NextRequest) {
     ["Semestre de Egreso",   "No",             "Formato I/AAAA o II/AAAA (ej: I/2020, II/2021)"],
     ["¿Es titulado?",        "Sí",             "Si | No"],
     ["Año de Titulación",    "Si es titulado", "Número (ej: 2018)"],
-    ["Modalidad",            "No",             "Tesis | Proyecto de grado | Trabajo dirigido | Examen de grado | Otro"],
-    ["Área de Especialización","No",           "Texto libre"],
-    ["Correo Electrónico",   "No",             "Formato email válido"],
-    ["Celular",              "No",             "Texto (ej: 71234567)"],
-    ["Lugar de Residencia",  "No",             "Texto (ej: La Paz)"],
-    ["Observaciones",        "No",             "Texto libre"],
+    ["Modalidad",            "Si es titulado", "Tesis | Proyecto de grado | Examen de grado | Otro"],
+    ["Área de Especialización","No",           "Texto libre (solo aplica si es titulado)"],
     [""],
     ["NOTAS IMPORTANTES:"],
     ["- El semestre debe tener formato exacto: I/2020 o II/2020"],
     ["- El año de ingreso y egreso se extraen automáticamente del semestre"],
-    ["- Si ¿Es titulado? = Si, debe completar el Año de Titulación"],
+    ["- Si ¿Es titulado? = Si, debe completar el Año de Titulación y Modalidad"],
     ["- Se crea un usuario automáticamente con el CI como contraseña inicial"],
     ["- Si un CI ya existe en el sistema, esa fila se omitirá"],
     ["- Máximo 500 filas por importación"],
-    ["- La fecha de nacimiento se puede actualizar después desde el perfil"],
+    ["- Los datos adicionales (correo, celular, etc.) se pueden agregar luego desde el perfil"],
   ];
 
   const wsInstr = XLSX.utils.aoa_to_sheet(instrucciones);

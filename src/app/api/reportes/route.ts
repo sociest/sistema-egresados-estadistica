@@ -25,6 +25,9 @@ export async function GET(req: NextRequest) {
     const modalidad           = sp.get("modalidad");
     const tipo                = sp.get("tipo");
 
+    const ciudad         = sp.get("ciudad");
+    const tienePostgrado = sp.get("tienePostgrado");
+
     const conds: any[] = [];
     if (anio)   conds.push(sql`${egresado.anioEgreso} = ${parseInt(anio)}`);
     if (genero) conds.push(sql`${egresado.genero} = ${genero}`);
@@ -34,12 +37,18 @@ export async function GET(req: NextRequest) {
     if (anioTitulacionHasta) conds.push(sql`${egresado.anioTitulacion} <= ${parseInt(anioTitulacionHasta)}`);
     if (sector)
       conds.push(sql`EXISTS(SELECT 1 FROM historial_laboral h WHERE h.id_egresado=${egresado.id} AND h.sector_trabajo::text = ${sector} AND h.fecha_fin IS NULL)`);
+    if (ciudad)
+      conds.push(sql`EXISTS(SELECT 1 FROM historial_laboral h WHERE h.id_egresado=${egresado.id} AND LOWER(h.ciudad_region_trabajo) = LOWER(${ciudad}))`);
+    if (tienePostgrado === "true")
+      conds.push(sql`EXISTS(SELECT 1 FROM postgrado p WHERE p.id_egresado=${egresado.id})`);
+    if (tienePostgrado === "false")
+      conds.push(sql`NOT EXISTS(SELECT 1 FROM postgrado p WHERE p.id_egresado=${egresado.id})`);
     if (empleo === "true")
       conds.push(sql`EXISTS(SELECT 1 FROM historial_laboral h WHERE h.id_egresado=${egresado.id} AND h.fecha_fin IS NULL)`);
     if (empleo === "false")
       conds.push(sql`NOT EXISTS(SELECT 1 FROM historial_laboral h WHERE h.id_egresado=${egresado.id} AND h.fecha_fin IS NULL)`);
 
-    // Bloque 3: excluir fallecidos de estadísticas de empleabilidad
+    // Excluir fallecidos de estadísticas
     conds.push(sql`${egresado.fallecido} = false`);
 
     const where = conds.length > 0 ? and(...conds) : undefined;
@@ -58,12 +67,19 @@ export async function GET(req: NextRequest) {
       anioTitulacion:      egresado.anioTitulacion,
       anioEgreso:          egresado.anioEgreso,
       anioIngreso:         egresado.anioIngreso,
+      semestreIngreso:     egresado.semestreIngreso,
+      semestreEgreso:      egresado.semestreEgreso,
       lugarResidencia:     egresado.lugarResidencia,
+      areaEspecializacion: egresado.areaEspecializacion,
       tieneEmpleo: sql<boolean>`EXISTS(
         SELECT 1 FROM historial_laboral h
         WHERE h.id_egresado=${egresado.id} AND h.fecha_fin IS NULL
       )`,
+      tienePostgrado: sql<boolean>`EXISTS(
+        SELECT 1 FROM postgrado p WHERE p.id_egresado=${egresado.id}
+      )`,
     })
+
     .from(egresado)
     .where(where)
     .orderBy(egresado.apellidoPaterno, egresado.apellidoMaterno, egresado.nombres);
@@ -88,20 +104,22 @@ export async function GET(req: NextRequest) {
       ].filter(Boolean).join(", ") || "Ninguno";
 
       const excelRows = rows.map(r => ({
-        "Tipo":                  r.tipo ?? "",
-        "Apellido Paterno": r.apellidoPaterno ?? "",
-        "Apellido Materno":      r.apellidoMaterno ?? "",
-        "Nombres":               r.nombres,
-        "CI":                    r.ci,
-        "Correo":                r.correoElectronico ?? "",
-        "Celular":               r.celular ?? "",
-        "Género":                r.genero ?? "",
-        "Año Ingreso":           r.anioIngreso ?? "",
-        "Año Egreso":            r.anioEgreso ?? "",
-        "Año Titulación":        r.anioTitulacion ?? "",
-        "Modalidad Titulación":  r.modalidadTitulacion ?? "",
-        "Lugar de Residencia":   r.lugarResidencia ?? "",
-        "Tiene Empleo Actual":   r.tieneEmpleo ? "Sí" : "No",
+        "Tipo":                   r.tipo ?? "",
+        "Apellido Paterno":       r.apellidoPaterno ?? "",
+        "Apellido Materno":       r.apellidoMaterno ?? "",
+        "Nombres":                r.nombres,
+        "CI":                     r.ci,
+        "Correo":                 r.correoElectronico ?? "",
+        "Celular":                r.celular ?? "",
+        "Género":                 r.genero ?? "",
+        "Semestre Ingreso":       r.semestreIngreso ? `${r.semestreIngreso}/${r.anioIngreso}` : (r.anioIngreso ? String(r.anioIngreso) : ""),
+        "Semestre Egreso":        r.semestreEgreso  ? `${r.semestreEgreso}/${r.anioEgreso}`  : (r.anioEgreso  ? String(r.anioEgreso)  : ""),
+        "Año Titulación":         r.anioTitulacion ?? "",
+        "Modalidad Titulación":   r.modalidadTitulacion ?? "",
+        "Área de Especialización": r.areaEspecializacion ?? "",
+        "Lugar de Residencia":    r.lugarResidencia ?? "",
+        "Tiene Empleo Actual":    r.tieneEmpleo ? "Sí" : "No",
+        "Tiene Postgrado":        r.tienePostgrado ? "Sí" : "No",
       }));
 
       const wb = XLSX.utils.book_new();
@@ -123,8 +141,8 @@ export async function GET(req: NextRequest) {
 
       // Anchos de columna
       ws["!cols"] = [
-        {wch:12},{wch:20},{wch:20},{wch:20},{wch:14},{wch:28},{wch:14},
-        {wch:12},{wch:18},{wch:12},{wch:12},{wch:14},{wch:20},{wch:18},{wch:18},{wch:16},
+        {wch:12},{wch:18},{wch:18},{wch:20},{wch:12},{wch:26},{wch:12},
+        {wch:12},{wch:18},{wch:18},{wch:16},{wch:22},{wch:24},{wch:20},{wch:18},{wch:14},
       ];
 
       // Estilo para la celda del título (A1) — solo ancho, xlsx sin pro no soporta colores
@@ -133,10 +151,11 @@ export async function GET(req: NextRequest) {
       XLSX.utils.book_append_sheet(wb, ws, "Egresados");
 
       // ── Hoja 2: Resumen ───────────────────────────────────────────────
-      const conEmpleo  = rows.filter(r => r.tieneEmpleo).length;
-      const sinEmpleo  = rows.length - conEmpleo;
-      const titulados  = rows.filter(r => r.tipo === "Titulado").length;
-      const egresados  = rows.filter(r => r.tipo === "Egresado").length;
+      const conEmpleo    = rows.filter(r => r.tieneEmpleo).length;
+      const sinEmpleo    = rows.length - conEmpleo;
+      const titulados    = rows.filter(r => r.tipo === "Titulado").length;
+      const egresadosSin = rows.filter(r => r.tipo === "Egresado").length;
+      const conPostgrado = rows.filter(r => r.tienePostgrado).length;
 
       const resumenRows = [
         ["RESUMEN DEL REPORTE"],
@@ -144,11 +163,12 @@ export async function GET(req: NextRequest) {
         [`Filtros: ${filtrosDesc}`],
         [],
         ["Indicador", "Valor"],
-        ["Total registros",    rows.length],
-        ["Titulados",          titulados],
-        ["Egresados sin título", egresados],
-        ["Con empleo actual",  conEmpleo],
-        ["Sin empleo actual",  sinEmpleo],
+        ["Total registros",      rows.length],
+        ["Titulados",            titulados],
+        ["Egresados sin título", egresadosSin],
+        ["Con empleo actual",    conEmpleo],
+        ["Sin empleo actual",    sinEmpleo],
+        ["Con postgrado",        conPostgrado],
         ["Tasa de empleabilidad", rows.length > 0 ? `${Math.round((conEmpleo / rows.length) * 100)}%` : "N/A"],
       ];
 
@@ -167,7 +187,7 @@ export async function GET(req: NextRequest) {
     }
 
     // ── Estadísticas para gráficos (reportes clásicos) ─────────────────────
-    const [porAnio, porPlan, porGenero, empleabilidad] = await Promise.all([
+    const [porAnio, porPlan, porGenero, empleabilidad, porTipo] = await Promise.all([
       db.execute(sql`
         SELECT anio_titulacion AS anio, COUNT(*)::int AS cantidad
         FROM egresado WHERE anio_titulacion IS NOT NULL AND fallecido = false
@@ -175,10 +195,10 @@ export async function GET(req: NextRequest) {
       `),
       db.execute(sql`
         SELECT
-          COALESCE(plan_estudios_nombre, 'Sin especificar') AS plan,
+          COALESCE(modalidad_titulacion::text, 'Sin especificar') AS plan,
           COUNT(*)::int AS cantidad
         FROM egresado WHERE fallecido = false
-        GROUP BY plan_estudios_nombre ORDER BY cantidad DESC
+        GROUP BY modalidad_titulacion ORDER BY cantidad DESC
       `),
       db.execute(sql`
         SELECT
@@ -197,6 +217,15 @@ export async function GET(req: NextRequest) {
         WHERE e.anio_egreso IS NOT NULL AND e.fallecido = false
         GROUP BY anio_egreso ORDER BY anio_egreso
       `),
+      db.execute(sql`
+        SELECT
+          tipo::text AS tipo,
+          COUNT(*)::int AS cantidad
+        FROM egresado
+        WHERE fallecido = false
+        GROUP BY tipo
+        ORDER BY tipo
+      `),
     ]);
 
     return ok({
@@ -208,6 +237,7 @@ export async function GET(req: NextRequest) {
       porPlan:       porPlan.rows,
       porGenero:     porGenero.rows,
       empleabilidad: empleabilidad.rows,
+      porTipo:       porTipo.rows,
     });
   } catch (e) {
     console.error("[reportes]", e);
