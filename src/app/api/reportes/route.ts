@@ -71,12 +71,13 @@ export async function GET(req: NextRequest) {
       semestreEgreso:      egresado.semestreEgreso,
       lugarResidencia:     egresado.lugarResidencia,
       areaEspecializacion: egresado.areaEspecializacion,
-      tieneEmpleo: sql<boolean>`EXISTS(
-        SELECT 1 FROM historial_laboral h
-        WHERE h.id_egresado=${egresado.id} AND h.fecha_fin IS NULL
+      tieneEmpleo: sql<boolean>`(
+        SELECT COUNT(*) > 0 FROM historial_laboral h
+        WHERE h.id_egresado = egresado.id AND h.fecha_fin IS NULL
       )`,
-      tienePostgrado: sql<boolean>`EXISTS(
-        SELECT 1 FROM postgrado p WHERE p.id_egresado=${egresado.id}
+      tienePostgrado: sql<boolean>`(
+        SELECT COUNT(*) > 0 FROM postgrado p
+        WHERE p.id_egresado = egresado.id
       )`,
     })
 
@@ -228,11 +229,17 @@ export async function GET(req: NextRequest) {
       `),
     ]);
 
+    const filasNormalizadas = rows.map(r => ({
+      ...r,
+      tieneEmpleo:    r.tieneEmpleo    === true || (r.tieneEmpleo    as any) === "true" || (r.tieneEmpleo    as any) === "t",
+      tienePostgrado: r.tienePostgrado === true || (r.tienePostgrado as any) === "true" || (r.tienePostgrado as any) === "t",
+    }));
+
     return ok({
-      filas:         rows,
-      total:         rows.length,
-      conEmpleo:     rows.filter(r => r.tieneEmpleo).length,
-      sinEmpleo:     rows.filter(r => !r.tieneEmpleo).length,
+      filas:         filasNormalizadas,
+      total:         filasNormalizadas.length,
+      conEmpleo:     filasNormalizadas.filter(r => r.tieneEmpleo).length,
+      sinEmpleo:     filasNormalizadas.filter(r => !r.tieneEmpleo).length,
       porAnio:       porAnio.rows,
       porPlan:       porPlan.rows,
       porGenero:     porGenero.rows,

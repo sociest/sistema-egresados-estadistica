@@ -320,10 +320,10 @@ export default function ReportesClient() {
                         {r.modalidadTitulacion ?? "—"}
                       </td>
                       <td className="text-sm" style={{ color: "var(--gris-grafito)" }}>
-                        {r.semestreIngreso ? `${r.semestreIngreso}/${r.anioIngreso}` : (r.anioIngreso ?? "—")}
+                        {r.semestreIngreso ? r.semestreIngreso : r.anioIngreso ?? "—"}
                       </td>
                       <td className="text-sm" style={{ color: "var(--gris-grafito)" }}>
-                        {r.semestreEgreso ? `${r.semestreEgreso}/${r.anioEgreso}` : (r.anioEgreso ?? "—")}
+                        {r.semestreEgreso ? r.semestreEgreso : r.anioEgreso ?? "—"}
                       </td>
                       <td className="text-sm" style={{ color: "var(--gris-grafito)" }}>
                         {r.anioTitulacion ?? "—"}

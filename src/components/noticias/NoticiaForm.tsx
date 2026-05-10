@@ -1,10 +1,10 @@
 "use client";
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { noticiaSchema, type NoticiaInput } from "@/lib/validations";
-import { Save, X, Eye, EyeOff } from "lucide-react";
+import { Save, X, Eye, EyeOff, Upload, Link, ImageIcon, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface Props {
@@ -42,7 +42,14 @@ export default function NoticiaForm({ noticia: n, redirectTo }: Props) {
   const [serverError, setServerError] = useState<string | null>(null);
   const [preview, setPreview]         = useState(false);
 
-  const { register, handleSubmit, watch, formState: { errors, isSubmitting } } =
+  // Estado para el campo de imagen
+  const [imagenTab,     setImagenTab]     = useState<"url" | "subir">("url");
+  const [uploadLoading, setUploadLoading] = useState(false);
+  const [uploadError,   setUploadError]   = useState<string | null>(null);
+  const [previewImg,    setPreviewImg]     = useState<string | null>(n?.imagenUrl ?? null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const { register, handleSubmit, watch, setValue, formState: { errors, isSubmitting } } =
     useForm<NoticiaInput>({
       resolver: zodResolver(noticiaSchema),
       defaultValues: n ? {
@@ -59,8 +66,58 @@ export default function NoticiaForm({ noticia: n, redirectTo }: Props) {
       },
     });
 
-  const cuerpoWatch = watch("cuerpo", "");
-  const tipoWatch   = watch("tipo");
+  const cuerpoWatch  = watch("cuerpo", "");
+  const tipoWatch    = watch("tipo");
+  const imagenWatch  = watch("imagenUrl");
+
+  // Subir imagen al servidor
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploadError(null);
+
+    // Preview local inmediato
+    const localUrl = URL.createObjectURL(file);
+    setPreviewImg(localUrl);
+
+    setUploadLoading(true);
+    try {
+      const fd = new FormData();
+      fd.append("archivo", file);
+
+      const res  = await fetch("/api/upload", { method: "POST", body: fd });
+      const json = await res.json();
+
+      if (!res.ok) {
+        setUploadError(json.error ?? "Error al subir la imagen");
+        setPreviewImg(null);
+        setValue("imagenUrl", "");
+        return;
+      }
+
+      setValue("imagenUrl", json.data.url);
+      setPreviewImg(json.data.url);
+    } catch {
+      setUploadError("Error al conectar con el servidor");
+      setPreviewImg(null);
+    } finally {
+      setUploadLoading(false);
+    }
+  };
+
+  const handleUrlChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value;
+    setValue("imagenUrl", val);
+    setPreviewImg(val || null);
+  };
+
+  const limpiarImagen = () => {
+    setValue("imagenUrl", "");
+    setPreviewImg(null);
+    setUploadError(null);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
 
   const onSubmit = async (d: NoticiaInput) => {
     setServerError(null);
@@ -132,26 +189,127 @@ export default function NoticiaForm({ noticia: n, redirectTo }: Props) {
       </div>
 
       {/* ── Fecha ── */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div>
-          <label className="label">Fecha <span className="text-red-400">*</span></label>
-          <input
-            {...register("fecha")}
-            type="date"
-            className={cn("field", errors.fecha && "field-err")}
-          />
-          {errors.fecha && <p className="hint">{errors.fecha.message}</p>}
+      <div>
+        <label className="label">Fecha <span className="text-red-400">*</span></label>
+        <input
+          {...register("fecha")}
+          type="date"
+          className={cn("field", errors.fecha && "field-err")}
+          style={{ maxWidth: "220px" }}
+        />
+        {errors.fecha && <p className="hint">{errors.fecha.message}</p>}
+      </div>
+
+      {/* ── Imagen con pestañas ── */}
+      <div>
+        <label className="label">Imagen (opcional)</label>
+
+        {/* Pestañas */}
+        <div
+          className="flex rounded-xl overflow-hidden mb-3"
+          style={{ border: "1.5px solid var(--borde)", width: "fit-content" }}
+        >
+          {(["url", "subir"] as const).map(tab => (
+            <button
+              key={tab}
+              type="button"
+              onClick={() => { setImagenTab(tab); setUploadError(null); }}
+              className="flex items-center gap-1.5 px-4 py-2 text-xs font-semibold transition-all"
+              style={imagenTab === tab ? {
+                background: "var(--turquesa)",
+                color: "white",
+              } : {
+                background: "var(--humo)",
+                color: "var(--gris-grafito)",
+              }}
+            >
+              {tab === "url"
+                ? <><Link className="w-3.5 h-3.5" /> Pegar URL</>
+                : <><Upload className="w-3.5 h-3.5" /> Subir imagen</>}
+            </button>
+          ))}
         </div>
 
-        <div>
-          <label className="label">URL de imagen (opcional)</label>
-          <input
-            {...register("imagenUrl")}
-            placeholder="https://ejemplo.com/imagen.jpg"
-            className={cn("field", errors.imagenUrl && "field-err")}
-          />
-          {errors.imagenUrl && <p className="hint">{errors.imagenUrl.message}</p>}
-        </div>
+        {/* Panel URL */}
+        {imagenTab === "url" && (
+          <div className="space-y-2">
+            <input
+              value={imagenWatch ?? ""}
+              onChange={handleUrlChange}
+              placeholder="https://ejemplo.com/imagen.jpg"
+              className={cn("field", errors.imagenUrl && "field-err")}
+            />
+            {errors.imagenUrl && <p className="hint">{errors.imagenUrl.message}</p>}
+          </div>
+        )}
+
+        {/* Panel subida */}
+        {imagenTab === "subir" && (
+          <div className="space-y-3">
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/jpeg,image/jpg,image/png,image/webp"
+              onChange={handleFileChange}
+              className="hidden"
+            />
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={uploadLoading}
+              className="flex flex-col items-center justify-center gap-2 w-full py-8 rounded-xl transition-all"
+              style={{
+                border: "2px dashed var(--borde)",
+                background: "var(--humo)",
+                color: "var(--gris-grafito)",
+              }}
+              onMouseEnter={e => {
+                if (!uploadLoading) {
+                  (e.currentTarget as HTMLElement).style.borderColor = "var(--turquesa)";
+                  (e.currentTarget as HTMLElement).style.background = "var(--turquesa-pale)";
+                }
+              }}
+              onMouseLeave={e => {
+                (e.currentTarget as HTMLElement).style.borderColor = "var(--borde)";
+                (e.currentTarget as HTMLElement).style.background = "var(--humo)";
+              }}
+            >
+              {uploadLoading
+                ? <><Loader2 className="w-6 h-6 animate-spin" style={{ color: "var(--turquesa)" }} /><span className="text-sm">Subiendo...</span></>
+                : <><ImageIcon className="w-6 h-6" style={{ color: "var(--placeholder)" }} /><span className="text-sm font-medium" style={{ color: "var(--azul-pizarra)" }}>Haz clic para seleccionar</span><span className="text-xs" style={{ color: "var(--placeholder)" }}>JPG, PNG o WEBP — máx. 5MB</span></>
+              }
+            </button>
+            {uploadError && <p className="error-box">{uploadError}</p>}
+          </div>
+        )}
+
+        {/* Preview de imagen (se muestra en ambas pestañas si hay URL) */}
+        {previewImg && (
+          <div className="mt-3 relative inline-block">
+            <img
+              src={previewImg}
+              alt="Preview"
+              className="rounded-xl object-cover"
+              style={{
+                maxHeight: "180px",
+                maxWidth: "100%",
+                border: "1px solid var(--borde)",
+              }}
+              onError={() => setPreviewImg(null)}
+            />
+            <button
+              type="button"
+              onClick={limpiarImagen}
+              className="absolute -top-2 -right-2 w-6 h-6 rounded-full flex items-center justify-center"
+              style={{ background: "#dc2626", color: "white" }}
+            >
+              <X className="w-3 h-3" />
+            </button>
+          </div>
+        )}
+
+        {/* Campo oculto que guarda el valor real */}
+        <input type="hidden" {...register("imagenUrl")} />
       </div>
 
       {/* ── Cuerpo con toggle preview ── */}
@@ -213,7 +371,6 @@ export default function NoticiaForm({ noticia: n, redirectTo }: Props) {
         <label className="flex items-center gap-2 cursor-pointer select-none">
           <input type="checkbox" {...register("publicado")} className="sr-only" />
           <div
-            onClick={() => {}}
             className="w-10 h-6 rounded-full relative transition-colors cursor-pointer"
             style={{ background: watch("publicado") ? "var(--verde)" : "var(--borde)" }}
           >
@@ -227,7 +384,7 @@ export default function NoticiaForm({ noticia: n, redirectTo }: Props) {
 
       {/* ── Acciones ── */}
       <div className="flex gap-3 pt-2 border-t" style={{ borderColor: "var(--borde)" }}>
-        <button type="submit" disabled={isSubmitting} className="btn-primary">
+        <button type="submit" disabled={isSubmitting || uploadLoading} className="btn-primary">
           {isSubmitting
             ? <><span className="spinner" /> Guardando...</>
             : <><Save className="w-4 h-4" /> {isEditing ? "Guardar cambios" : "Crear publicación"}</>}

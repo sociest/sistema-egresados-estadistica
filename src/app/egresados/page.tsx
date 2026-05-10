@@ -77,6 +77,7 @@ async function getData(sp: SP) {
     ci:                  egresado.ci,
     anioTitulacion:      egresado.anioTitulacion,
     anioEgreso:          egresado.anioEgreso,
+    semestreEgreso:      egresado.semestreEgreso,
     modalidadTitulacion: egresado.modalidadTitulacion,
     genero:              egresado.genero,
     correoElectronico:   egresado.correoElectronico,
@@ -202,7 +203,9 @@ export default async function EgresadosPage({ searchParams }: { searchParams: SP
                         {r.modalidadTitulacion ?? "—"}
                       </td>
                       <td className="text-sm" style={{ color: "var(--gris-grafito)" }}>
-                        {r.anioEgreso ?? "—"}
+                        {r.semestreEgreso
+                          ? r.semestreEgreso
+                          : r.anioEgreso ?? "—"}
                       </td>
                       <td className="text-sm" style={{ color: "var(--gris-grafito)" }}>
                         {r.anioTitulacion ?? "--"}
