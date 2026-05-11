@@ -30,7 +30,7 @@ export async function GET(req: NextRequest) {
 
     const conds: any[] = [];
     if (anio)   conds.push(sql`${egresado.anioEgreso} = ${parseInt(anio)}`);
-    if (genero) conds.push(sql`${egresado.genero} = ${genero}`);
+    if (genero) conds.push(sql`${egresado.genero}::text = ${genero}`);
     if (tipo)   conds.push(sql`${egresado.tipo}::text = ${tipo}`);
     if (modalidad) conds.push(sql`${egresado.modalidadTitulacion}::text = ${modalidad}`);
     if (anioTitulacionDesde) conds.push(sql`${egresado.anioTitulacion} >= ${parseInt(anioTitulacionDesde)}`);

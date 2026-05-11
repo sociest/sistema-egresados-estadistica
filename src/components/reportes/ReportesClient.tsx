@@ -11,6 +11,19 @@ import { MODALIDADES_TITULACION } from "@/lib/schema";
 const COLORS = ["#0ea5e9","#10b981","#f59e0b","#8b5cf6","#ef4444","#06b6d4","#f97316"];
 const TT = { contentStyle:{ backgroundColor:"#1e293b", border:"1px solid #334155", borderRadius:"10px", color:"#e2e8f0", fontSize:"12px" } };
 
+
+function Field({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div>
+      <label style={{ display:"block", fontSize:"0.7rem", fontWeight:600, textTransform:"uppercase" as const, letterSpacing:"0.05em", color:"var(--gris-grafito)", marginBottom:"0.375rem" }}>
+        {label}
+      </label>
+      {children}
+    </div>
+  );
+}
+
+
 export default function ReportesClient() {
   const [vista,          setVista]          = useState<"tabla" | "grafico">("tabla");
   const [loading,        setLoading]        = useState(false);
@@ -94,15 +107,6 @@ export default function ReportesClient() {
     color: "var(--azul-pizarra)",
     outline: "none",
   };
-
-  const Field = ({ label, children }: { label: string; children: React.ReactNode }) => (
-    <div>
-      <label style={{ display:"block", fontSize:"0.7rem", fontWeight:600, textTransform:"uppercase", letterSpacing:"0.05em", color:"var(--gris-grafito)", marginBottom:"0.375rem" }}>
-        {label}
-      </label>
-      {children}
-    </div>
-  );
 
   return (
     <div className="space-y-6">

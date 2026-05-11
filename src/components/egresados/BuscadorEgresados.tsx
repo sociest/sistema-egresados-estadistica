@@ -33,6 +33,17 @@ const LABEL_MAP: Record<string, string> = {
 };
 const BOOL_LABEL: Record<string, string> = { "true": "Sí", "false": "No" };
 
+function Field({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div>
+      <label style={{ display: "block", fontSize: "0.7rem", fontWeight: 600, textTransform: "uppercase" as const, letterSpacing: "0.05em", color: "var(--gris-grafito)", marginBottom: "0.375rem" }}>
+        {label}
+      </label>
+      {children}
+    </div>
+  );
+}
+
 export default function BuscadorEgresados({ searchParams, ciudades = [] }: Props) {
   const router   = useRouter();
   const pathname = usePathname();
@@ -101,15 +112,6 @@ export default function BuscadorEgresados({ searchParams, ciudades = [] }: Props
     color: "var(--azul-pizarra)",
     outline: "none",
   };
-
-  const Field = ({ label, children }: { label: string; children: React.ReactNode }) => (
-    <div>
-      <label style={{ display: "block", fontSize: "0.7rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em", color: "var(--gris-grafito)", marginBottom: "0.375rem" }}>
-        {label}
-      </label>
-      {children}
-    </div>
-  );
 
   return (
     <form onSubmit={onSubmit}>
