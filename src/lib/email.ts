@@ -3,18 +3,19 @@ import nodemailer from "nodemailer";
 // Si no hay credenciales configuradas, usar consola (modo desarrollo)
 const DEV_MODE = !process.env.EMAIL_USER || !process.env.EMAIL_PASS;
 
-const transporter = DEV_MODE
-  ? null
-  : nodemailer.createTransport({
-      service: "gmail",
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
-      },
-      tls: { rejectUnauthorized: false },
-    });
-
 const FROM = process.env.EMAIL_FROM ?? process.env.EMAIL_USER ?? "sistema@estadistica.bo";
+
+function getTransporter() {
+  if (DEV_MODE) return null;
+  return nodemailer.createTransport({
+    service: "gmail",
+    auth: {
+      user: process.env.EMAIL_USER,
+      pass: process.env.EMAIL_PASS,
+    },
+    tls: { rejectUnauthorized: false },
+  });
+}
 
 // Helper interno: enviar o loguear en consola
 async function enviar(opts: {
@@ -23,7 +24,9 @@ async function enviar(opts: {
   html: string;
   codigo: string; // para mostrarlo en consola en dev
 }) {
-  if (DEV_MODE || !transporter) {
+const transporter = getTransporter();
+if (DEV_MODE || !transporter) {
+
     // ── Modo desarrollo: imprimir en consola ──────────────────────────────
     console.log("\n" + "=".repeat(60));
     console.log("📧 [EMAIL DEV MODE] — no se envió correo real");
