@@ -4,15 +4,11 @@ import Link from "next/link";
 import { KeyRound, Eye, EyeOff, ArrowLeft } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-type Paso = "ci" | "elegir_canal" | "codigo" | "password" | "exito";
+type Paso = "ci" | "codigo" | "password" | "exito";
 
 export default function RecuperarPasswordPage() {
   const [paso,    setPaso]    = useState<Paso>("ci");
   const [ci,      setCi]      = useState("");
-  const [canal,   setCanal]   = useState<"correo" | "celular">("correo");
-  const [tieneAmbos, setTieneAmbos] = useState(false);
-  const [correoMask,  setCorreoMask]  = useState("");
-  const [celularMask, setCelularMask] = useState("");
   const [codigo,  setCodigo]  = useState("");
   const [pass1,   setPass1]   = useState("");
   const [pass2,   setPass2]   = useState("");
@@ -33,29 +29,7 @@ export default function RecuperarPasswordPage() {
       });
       const json = await res.json();
       if (!res.ok) { setError(json.error); return; }
-
-      if (json.data?.tieneAmbos) {
-        setTieneAmbos(true);
-        setCorreoMask(json.data.correoMask ?? "");
-        setCelularMask(json.data.celularMask ?? "");
-        setPaso("elegir_canal");
-        return;
-      }
-      setPaso("codigo");
-    } finally { setLoading(false); }
-  };
-
-  const enviarPorCanal = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await fetch("/api/auth/enviar-reset-canal", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ci: ci.trim(), canal }),
-      });
-      const json = await res.json();
-      if (!res.ok) { setError(json.error); return; }
+      // Siempre avanzar al paso de código (siempre se envía al correo)
       setPaso("codigo");
     } finally { setLoading(false); }
   };
@@ -93,11 +67,10 @@ export default function RecuperarPasswordPage() {
           </div>
           <h1 className="text-2xl font-bold text-white mb-1">Recuperar contraseña</h1>
           <p className="text-slate-500 text-sm">
-            {paso === "ci"          && "Ingresa tu número de CI"}
-            {paso === "elegir_canal"&& "¿Dónde quieres recibir el código?"}
-            {paso === "codigo"      && "Ingresa el código que te enviamos"}
-            {paso === "password"    && "Elige tu nueva contraseña"}
-            {paso === "exito"       && "¡Contraseña actualizada!"}
+            {paso === "ci"       && "Ingresa tu número de CI"}
+            {paso === "codigo"   && "Ingresa el código enviado a tu correo"}
+            {paso === "password" && "Elige tu nueva contraseña"}
+            {paso === "exito"    && "¡Contraseña actualizada!"}
           </p>
         </div>
 
@@ -118,9 +91,12 @@ export default function RecuperarPasswordPage() {
                   autoFocus
                 />
               </div>
+              <p className="text-xs text-slate-500 text-center">
+                Si tienes un correo verificado, recibirás un código para restablecer tu contraseña
+              </p>
               {error && <p className="error-box">{error}</p>}
               <button onClick={solicitarCodigo} disabled={loading || !ci.trim()} className="btn-primary w-full py-3">
-                {loading ? <><span className="spinner" /> Buscando...</> : "Continuar"}
+                {loading ? <><span className="spinner" /> Enviando...</> : "Continuar"}
               </button>
               <Link href="/login" className="btn-ghost w-full text-sm flex items-center justify-center gap-2">
                 <ArrowLeft className="w-4 h-4" /> Volver al login
@@ -128,46 +104,15 @@ export default function RecuperarPasswordPage() {
             </>
           )}
 
-          {/* Paso 2: elegir canal */}
-          {paso === "elegir_canal" && (
-            <>
-              <p className="text-sm text-slate-400">Tenemos dos métodos de contacto verificados para tu cuenta. ¿Por cuál prefieres recibir el código?</p>
-              <div className="space-y-2">
-                <label className={cn(
-                  "flex items-center gap-3 p-3 rounded-xl cursor-pointer border-2 transition-all",
-                  canal === "correo" ? "border-primary-500 bg-primary-500/10" : "border-slate-700 bg-slate-800/40"
-                )}>
-                  <input type="radio" value="correo" checked={canal === "correo"}
-                    onChange={() => setCanal("correo")} className="sr-only" />
-                  <div className={cn("w-4 h-4 rounded-full border-2 flex items-center justify-center",
-                    canal === "correo" ? "border-primary-400" : "border-slate-600")}>
-                    {canal === "correo" && <div className="w-2 h-2 rounded-full bg-primary-400" />}
-                  </div>
-                  <span className="text-sm text-slate-300">Correo: <strong>{correoMask}</strong></span>
-                </label>
-                <label className={cn(
-                  "flex items-center gap-3 p-3 rounded-xl cursor-pointer border-2 transition-all",
-                  canal === "celular" ? "border-primary-500 bg-primary-500/10" : "border-slate-700 bg-slate-800/40"
-                )}>
-                  <input type="radio" value="celular" checked={canal === "celular"}
-                    onChange={() => setCanal("celular")} className="sr-only" />
-                  <div className={cn("w-4 h-4 rounded-full border-2 flex items-center justify-center",
-                    canal === "celular" ? "border-primary-400" : "border-slate-600")}>
-                    {canal === "celular" && <div className="w-2 h-2 rounded-full bg-primary-400" />}
-                  </div>
-                  <span className="text-sm text-slate-300">Celular: <strong>{celularMask}</strong></span>
-                </label>
-              </div>
-              {error && <p className="error-box">{error}</p>}
-              <button onClick={enviarPorCanal} disabled={loading} className="btn-primary w-full py-3">
-                {loading ? <><span className="spinner" /> Enviando...</> : "Enviar código"}
-              </button>
-            </>
-          )}
-
-          {/* Paso 3: código */}
+          {/* Paso 2: código */}
           {paso === "codigo" && (
             <>
+              <div
+                className="rounded-xl px-4 py-3 text-sm"
+                style={{ background: "var(--turquesa-pale)", border: "1px solid rgba(0,165,168,0.20)" }}
+              >
+                Si tu CI tiene un correo verificado, ya recibiste el código. Revisa tu bandeja de entrada.
+              </div>
               <div>
                 <label className="label">Código de verificación</label>
                 <input
@@ -180,14 +125,26 @@ export default function RecuperarPasswordPage() {
                 />
               </div>
               {error && <p className="error-box">{error}</p>}
-              <button onClick={() => { if (codigo.length === 6) { setError(null); setPaso("password"); } else setError("El código debe tener 6 dígitos"); }}
-                disabled={codigo.length !== 6} className="btn-primary w-full py-3">
+              <button
+                onClick={() => {
+                  if (codigo.length === 6) { setError(null); setPaso("password"); }
+                  else setError("El código debe tener 6 dígitos");
+                }}
+                disabled={codigo.length !== 6}
+                className="btn-primary w-full py-3"
+              >
                 Verificar código
+              </button>
+              <button
+                onClick={() => { setPaso("ci"); setCodigo(""); setError(null); }}
+                className="btn-ghost w-full text-sm"
+              >
+                <ArrowLeft className="w-4 h-4 inline mr-1" /> Volver
               </button>
             </>
           )}
 
-          {/* Paso 4: nueva contraseña */}
+          {/* Paso 3: nueva contraseña */}
           {paso === "password" && (
             <>
               <div>
@@ -240,7 +197,7 @@ export default function RecuperarPasswordPage() {
             </>
           )}
 
-          {/* Paso 5: éxito */}
+          {/* Paso 4: éxito */}
           {paso === "exito" && (
             <>
               <div className="text-center py-4">

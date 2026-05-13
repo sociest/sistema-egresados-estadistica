@@ -1,37 +1,30 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Phone, Mail, CheckCircle, ArrowRight, Shield } from "lucide-react";
+import { Mail, CheckCircle, ArrowRight, Shield } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-type Paso = "elegir" | "ingresar" | "verificar" | "listo";
-type Canal = "correo" | "celular";
+type Paso = "ingresar" | "verificar" | "listo";
 
 export default function CompletarContactoPage() {
-  const router  = useRouter();
-  const [paso,   setPaso]   = useState<Paso>("elegir");
-  const [canal,  setCanal]  = useState<Canal>("correo");
-  const [valor,  setValor]  = useState("");
+  const router   = useRouter();
+  const [paso,   setPaso]   = useState<Paso>("ingresar");
+  const [correo, setCorreo] = useState("");
   const [codigo, setCodigo] = useState("");
   const [error,  setError]  = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const [correoVerificado,  setCorreoVerificado]  = useState(false);
-  const [celularVerificado, setCelularVerificado] = useState(false);
+  const [correoVerificado, setCorreoVerificado] = useState(false);
 
   const enviarCodigo = async () => {
     setError(null);
-    if (!valor.trim()) { setError("Ingresa un valor"); return; }
+    if (!correo.trim()) { setError("Ingresa tu correo"); return; }
 
     setLoading(true);
     try {
-      const body = canal === "correo"
-        ? { tipo: "verificar_correo",   correo:  valor.trim() }
-        : { tipo: "verificar_celular",  celular: valor.trim() };
-
       const res  = await fetch("/api/auth/solicitar-codigo", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
+        body: JSON.stringify({ tipo: "verificar_correo", correo: correo.trim() }),
       });
       const json = await res.json();
       if (!res.ok) { setError(json.error); return; }
@@ -45,21 +38,17 @@ export default function CompletarContactoPage() {
 
     setLoading(true);
     try {
-      const tipo = canal === "correo" ? "verificar_correo" : "verificar_celular";
       const res  = await fetch("/api/auth/verificar-contacto", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ tipo, codigo }),
+        body: JSON.stringify({ tipo: "verificar_correo", codigo }),
       });
       const json = await res.json();
       if (!res.ok) { setError(json.error); return; }
 
-      if (canal === "correo")   setCorreoVerificado(true);
-      if (canal === "celular")  setCelularVerificado(true);
-
+      setCorreoVerificado(true);
       setCodigo("");
-      setValor("");
-      setPaso("elegir");
+      setPaso("listo");
     } finally { setLoading(false); }
   };
 
@@ -67,134 +56,50 @@ export default function CompletarContactoPage() {
     router.push("/activar-cuenta");
   };
 
-  const tieneAlMenosUno = correoVerificado || celularVerificado;
-
   return (
     <div className="min-h-screen bg-slate-950 flex items-center justify-center p-4">
       <div className="w-full max-w-md animate-fade-up">
 
-        {/* Encabezado */}
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl
                           bg-primary-600/20 border border-primary-500/30 mb-4">
             <Shield className="w-8 h-8 text-primary-400" />
           </div>
-          <h1 className="text-2xl font-bold text-white mb-1">Agrega un método de contacto</h1>
+          <h1 className="text-2xl font-bold text-white mb-1">Agrega tu correo</h1>
           <p className="text-slate-400 text-sm">
-            Necesitas al menos uno para recuperar tu cuenta y cambiar tu contraseña
+            Necesitas un correo verificado para recuperar tu cuenta y cambiar tu contraseña
           </p>
         </div>
 
         <div className="card space-y-5">
 
-          {/* Estado de verificación */}
-          {(correoVerificado || celularVerificado) && (
-            <div className="space-y-2">
-              {correoVerificado && (
-                <div className="flex items-center gap-2 px-3 py-2 rounded-xl"
-                  style={{ background: "var(--verde-light)", border: "1px solid #86efac" }}>
-                  <CheckCircle className="w-4 h-4 shrink-0" style={{ color: "var(--verde)" }} />
-                  <span className="text-sm font-medium" style={{ color: "var(--verde)" }}>
-                    Correo verificado
-                  </span>
-                </div>
-              )}
-              {celularVerificado && (
-                <div className="flex items-center gap-2 px-3 py-2 rounded-xl"
-                  style={{ background: "var(--verde-light)", border: "1px solid #86efac" }}>
-                  <CheckCircle className="w-4 h-4 shrink-0" style={{ color: "var(--verde)" }} />
-                  <span className="text-sm font-medium" style={{ color: "var(--verde)" }}>
-                    Celular verificado
-                  </span>
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* Paso: elegir canal */}
-          {paso === "elegir" && (
-            <>
-              <p className="text-sm text-slate-400">
-                {tieneAlMenosUno
-                  ? "Ya tienes un método verificado. Puedes agregar otro o continuar."
-                  : "Elige cómo quieres que te contactemos:"}
-              </p>
-
-              <div className="grid grid-cols-2 gap-3">
-                {/* Correo */}
-                {!correoVerificado && (
-                  <button
-                    onClick={() => { setCanal("correo"); setPaso("ingresar"); setError(null); }}
-                    className="flex flex-col items-center gap-2 p-4 rounded-xl transition-all"
-                    style={{
-                      background: "var(--humo)",
-                      border: "1.5px solid var(--borde)",
-                    }}
-                  >
-                    <Mail className="w-6 h-6" style={{ color: "var(--turquesa)" }} />
-                    <span className="text-sm font-medium" style={{ color: "var(--azul-pizarra)" }}>
-                      Correo
-                    </span>
-                  </button>
-                )}
-                {/* Celular */}
-                {!celularVerificado && (
-                  <button
-                    onClick={() => { setCanal("celular"); setPaso("ingresar"); setError(null); }}
-                    className="flex flex-col items-center gap-2 p-4 rounded-xl transition-all"
-                    style={{
-                      background: "var(--humo)",
-                      border: "1.5px solid var(--borde)",
-                    }}
-                  >
-                    <Phone className="w-6 h-6" style={{ color: "var(--turquesa)" }} />
-                    <span className="text-sm font-medium" style={{ color: "var(--azul-pizarra)" }}>
-                      Celular
-                    </span>
-                  </button>
-                )}
-              </div>
-
-              {tieneAlMenosUno && (
-                <button
-                  onClick={continuar}
-                  className="btn-primary w-full py-3"
-                >
-                  Continuar a cambiar contraseña <ArrowRight className="w-4 h-4 inline ml-1" />
-                </button>
-              )}
-            </>
-          )}
-
-          {/* Paso: ingresar valor */}
+          {/* Paso: ingresar correo */}
           {paso === "ingresar" && (
             <>
               <div>
-                <label className="label">
-                  {canal === "correo" ? "Correo electrónico" : "Número de celular"}
+                <label className="label flex items-center gap-2">
+                  <Mail className="w-3.5 h-3.5" /> Correo electrónico
                 </label>
                 <input
-                  type={canal === "correo" ? "email" : "tel"}
-                  value={valor}
-                  onChange={e => setValor(e.target.value)}
-                  placeholder={canal === "correo" ? "tu@correo.com" : "7XXXXXXX"}
+                  type="email"
+                  value={correo}
+                  onChange={e => setCorreo(e.target.value)}
+                  onKeyDown={e => e.key === "Enter" && enviarCodigo()}
+                  placeholder="tu@correo.com"
                   className="field"
                   autoFocus
                 />
               </div>
+              <p className="text-xs text-slate-500 text-center">
+                Te enviaremos un código para confirmar tu dirección de correo
+              </p>
               {error && <p className="error-box">{error}</p>}
               <button
                 onClick={enviarCodigo}
-                disabled={loading || !valor.trim()}
+                disabled={loading || !correo.trim()}
                 className="btn-primary w-full py-3"
               >
                 {loading ? <><span className="spinner" /> Enviando...</> : "Enviar código de verificación"}
-              </button>
-              <button
-                onClick={() => { setPaso("elegir"); setError(null); setValor(""); }}
-                className="btn-ghost w-full text-sm"
-              >
-                Volver
               </button>
             </>
           )}
@@ -206,7 +111,7 @@ export default function CompletarContactoPage() {
                 className="rounded-xl px-4 py-3 text-sm"
                 style={{ background: "var(--turquesa-pale)", border: "1px solid rgba(0,165,168,0.20)" }}
               >
-                Código enviado a <strong>{valor}</strong>
+                Código enviado a <strong>{correo}</strong>
               </div>
               <div>
                 <label className="label">Código de verificación</label>
@@ -233,7 +138,28 @@ export default function CompletarContactoPage() {
                 onClick={() => { setPaso("ingresar"); setError(null); setCodigo(""); }}
                 className="btn-ghost w-full text-sm"
               >
-                Cambiar {canal === "correo" ? "correo" : "celular"}
+                Cambiar correo
+              </button>
+            </>
+          )}
+
+          {/* Paso: listo */}
+          {paso === "listo" && (
+            <>
+              <div className="rounded-xl p-4 text-center"
+                style={{ background: "var(--verde-light)", border: "1px solid #86efac" }}>
+                <CheckCircle className="w-8 h-8 mx-auto mb-2" style={{ color: "var(--verde)" }} />
+                <p className="font-semibold text-sm" style={{ color: "var(--verde)" }}>
+                  Correo verificado
+                </p>
+                <p className="text-xs mt-1 text-slate-500">{correo}</p>
+              </div>
+
+              <button
+                onClick={continuar}
+                className="btn-primary w-full py-3"
+              >
+                Continuar a cambiar contraseña <ArrowRight className="w-4 h-4 inline ml-1" />
               </button>
             </>
           )}

@@ -1,45 +1,39 @@
 "use client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { ShieldCheck, RefreshCw, Eye, EyeOff, Mail, Phone, Check } from "lucide-react";
+import { ShieldCheck, RefreshCw, Eye, EyeOff, Mail, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-type Paso = "contacto" | "verificar" | "password" | "opcionTelefono";
+type Paso = "contacto" | "verificar" | "password";
 
 export default function ActivarCuentaPage() {
   const router = useRouter();
 
-  // Viene del login con idUsuario en lugar de correo
-  const [idUsuario, setIdUsuario] = useState<number | null>(null);
-
-  const [paso,    setPaso]    = useState<Paso>("contacto");
-  const [correo,  setCorreo]  = useState("");
-  const [celular, setCelular] = useState("");
-  const [metodo,  setMetodo]  = useState<"correo" | "celular">("correo");
-  const [correoVerificado,  setCorreoVerificado]  = useState(false);
-  const [celularVerificado, setCelularVerificado] = useState(false);
-
-  const [codigo,  setCodigo]  = useState("");
-  const [pass1,   setPass1]   = useState("");
-  const [pass2,   setPass2]   = useState("");
-  const [show1,   setShow1]   = useState(false);
-  const [show2,   setShow2]   = useState(false);
-  const [error,   setError]   = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
-
-  // Leer idUsuario de sessionStorage (lo guarda el login)
-  useState(() => {
-    const stored = sessionStorage.getItem("activacion_idUsuario");
-    if (stored) setIdUsuario(parseInt(stored));
+  const [idUsuario, setIdUsuario] = useState<number | null>(() => {
+    if (typeof window !== "undefined") {
+      const stored = sessionStorage.getItem("activacion_idUsuario");
+      return stored ? parseInt(stored) : null;
+    }
+    return null;
   });
 
-  // ── Paso 1: enviar contacto ───────────────────────────────────────────────
+  const [paso,   setPaso]   = useState<Paso>("contacto");
+  const [correo, setCorreo] = useState("");
+  const [correoVerificado, setCorreoVerificado] = useState(false);
+
+  const [codigo, setCodigo] = useState("");
+  const [pass1,  setPass1]  = useState("");
+  const [pass2,  setPass2]  = useState("");
+  const [show1,  setShow1]  = useState(false);
+  const [show2,  setShow2]  = useState(false);
+  const [error,  setError]  = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  // ── Paso 1: enviar correo ─────────────────────────────────────────────────
   const enviarContacto = async () => {
     setError(null);
-    if (!correo && !celular) {
-      setError("Ingresa al menos un correo o celular"); return;
-    }
-    if (correo && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correo)) {
+    if (!correo) { setError("Ingresa tu correo electrónico"); return; }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correo)) {
       setError("Correo inválido"); return;
     }
     if (!idUsuario) { setError("Sesión inválida. Vuelve a iniciar sesión."); return; }
@@ -49,18 +43,10 @@ export default function ActivarCuentaPage() {
       const res  = await fetch("/api/auth/agregar-contacto", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          idUsuario,
-          correo:  correo || undefined,
-          celular: celular || undefined,
-        }),
+        body: JSON.stringify({ idUsuario, correo }),
       });
       const json = await res.json();
       if (!res.ok) { setError(json.error); return; }
-
-      // El método principal es correo si existe, sino celular
-      const m = correo ? "correo" : "celular";
-      setMetodo(m);
       setPaso("verificar");
     } catch { setError("Error al enviar. Intenta de nuevo."); }
     finally { setLoading(false); }
@@ -77,43 +63,15 @@ export default function ActivarCuentaPage() {
       const res  = await fetch("/api/auth/verificar-contacto", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ idUsuario, codigo, metodo }),
+        body: JSON.stringify({ idUsuario, codigo, metodo: "correo" }),
       });
       const json = await res.json();
       if (!res.ok) { setError(json.error); return; }
 
-      if (metodo === "correo") setCorreoVerificado(true);
-      if (metodo === "celular") setCelularVerificado(true);
-
-      // Si verificó correo y también tiene celular ingresado, ofrecer verificar celular
-      if (metodo === "correo" && celular && !celularVerificado) {
-        setPaso("opcionTelefono");
-      } else {
-        // Pasar directo a cambiar contraseña
-        setPaso("password");
-      }
+      setCorreoVerificado(true);
       setCodigo("");
+      setPaso("password");
     } catch { setError("Error al verificar."); }
-    finally { setLoading(false); }
-  };
-
-  // ── Verificar teléfono (opcional) ─────────────────────────────────────────
-  const verificarTelefono = async () => {
-    if (!idUsuario) return;
-    setLoading(true);
-    setError(null);
-    try {
-      // Pedir código para celular
-      const res = await fetch("/api/auth/agregar-contacto", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ idUsuario, celular }),
-      });
-      const json = await res.json();
-      if (!res.ok) { setError(json.error); return; }
-      setMetodo("celular");
-      setPaso("verificar");
-    } catch { setError("Error"); }
     finally { setLoading(false); }
   };
 
@@ -147,11 +105,7 @@ export default function ActivarCuentaPage() {
       await fetch("/api/auth/agregar-contacto", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          idUsuario,
-          correo:  metodo === "correo"  ? correo  : undefined,
-          celular: metodo === "celular" ? celular : undefined,
-        }),
+        body: JSON.stringify({ idUsuario, correo }),
       });
     } finally { setLoading(false); }
   };
@@ -167,10 +121,9 @@ export default function ActivarCuentaPage() {
           </div>
           <h1 className="text-2xl font-bold text-white mb-1">Activa tu cuenta</h1>
           <p className="text-slate-500 text-sm">
-            {paso === "contacto"       && "Agrega al menos un método de contacto para continuar"}
-            {paso === "verificar"      && `Ingresa el código enviado a tu ${metodo}`}
-            {paso === "opcionTelefono" && "¿Quieres también verificar tu celular?"}
-            {paso === "password"       && "Elige una contraseña segura"}
+            {paso === "contacto" && "Agrega tu correo electrónico para continuar"}
+            {paso === "verificar" && "Ingresa el código enviado a tu correo"}
+            {paso === "password"  && "Elige una contraseña segura"}
           </p>
         </div>
 
@@ -179,9 +132,9 @@ export default function ActivarCuentaPage() {
           {/* ── Indicador de pasos ── */}
           <div className="flex items-center gap-2">
             {[
-              { label: "Contacto",     activo: paso === "contacto" },
-              { label: "Verificación", activo: paso === "verificar" || paso === "opcionTelefono" },
-              { label: "Contraseña",   activo: paso === "password" },
+              { label: "Correo",       activo: paso === "contacto" },
+              { label: "Verificación", activo: paso === "verificar" },
+              { label: "Contraseña",   activo: paso === "password"  },
             ].map((s, i) => (
               <div key={i} className="flex items-center gap-2 flex-1">
                 <div className={cn(
@@ -206,7 +159,7 @@ export default function ActivarCuentaPage() {
             ))}
           </div>
 
-          {/* ── PASO 1: Contacto ── */}
+          {/* ── PASO 1: Correo ── */}
           {paso === "contacto" && (
             <>
               <div>
@@ -217,40 +170,22 @@ export default function ActivarCuentaPage() {
                   type="email"
                   value={correo}
                   onChange={e => setCorreo(e.target.value)}
+                  onKeyDown={e => e.key === "Enter" && enviarContacto()}
                   placeholder="tu@correo.com"
                   className="field"
                   autoFocus
                 />
               </div>
 
-              <div className="flex items-center gap-3">
-                <div className="flex-1 h-px bg-slate-700" />
-                <span className="text-xs text-slate-500">y/o</span>
-                <div className="flex-1 h-px bg-slate-700" />
-              </div>
-
-              <div>
-                <label className="label flex items-center gap-2">
-                  <Phone className="w-3.5 h-3.5" /> Celular
-                </label>
-                <input
-                  type="tel"
-                  value={celular}
-                  onChange={e => setCelular(e.target.value)}
-                  placeholder="7XXXXXXX"
-                  className="field"
-                />
-              </div>
-
               <p className="text-xs text-slate-500 text-center">
-                Necesitas al menos uno para poder recuperar tu cuenta en el futuro
+                Se enviará un código a este correo para verificar tu identidad
               </p>
 
               {error && <p className="error-box">{error}</p>}
 
               <button
                 onClick={enviarContacto}
-                disabled={loading || (!correo && !celular)}
+                disabled={loading || !correo}
                 className="btn-primary w-full py-3"
               >
                 {loading ? <><span className="spinner" /> Enviando...</> : "Continuar"}
@@ -263,9 +198,7 @@ export default function ActivarCuentaPage() {
             <>
               <div className="bg-slate-800/60 rounded-xl px-4 py-3">
                 <p className="text-slate-500 text-xs">Código enviado a</p>
-                <p className="text-slate-200 text-sm font-medium">
-                  {metodo === "correo" ? correo : celular}
-                </p>
+                <p className="text-slate-200 text-sm font-medium">{correo}</p>
               </div>
 
               <div>
@@ -303,59 +236,15 @@ export default function ActivarCuentaPage() {
             </>
           )}
 
-          {/* ── PASO 2b: Opción de verificar teléfono ── */}
-          {paso === "opcionTelefono" && (
-            <>
-              <div className="rounded-xl p-4 text-center"
-                style={{ background: "var(--verde-light)", border: "1px solid #86efac" }}>
-                <Check className="w-8 h-8 mx-auto mb-2" style={{ color: "var(--verde)" }} />
-                <p className="font-semibold text-sm" style={{ color: "var(--verde)" }}>
-                  Correo verificado
-                </p>
-                <p className="text-xs mt-1 text-slate-500">{correo}</p>
-              </div>
-
-              {celular && (
-                <div>
-                  <p className="text-sm text-slate-300 text-center mb-4">
-                    ¿También quieres verificar tu celular <strong>{celular}</strong>?
-                  </p>
-                  <button
-                    onClick={verificarTelefono}
-                    disabled={loading}
-                    className="btn-slate w-full mb-2"
-                  >
-                    {loading ? <><span className="spinner-turq" /> Enviando...</> : "Sí, verificar celular"}
-                  </button>
-                </div>
-              )}
-
-              <button
-                onClick={() => setPaso("password")}
-                className="btn-primary w-full py-3"
-              >
-                Continuar sin verificar celular →
-              </button>
-            </>
-          )}
-
           {/* ── PASO 3: Contraseña ── */}
           {paso === "password" && (
             <>
-              {(correoVerificado || celularVerificado) && (
-                <div className="flex gap-2 flex-wrap">
-                  {correoVerificado && (
-                    <span className="inline-flex items-center gap-1 text-xs px-2.5 py-1 rounded-full"
-                      style={{ background: "var(--verde-light)", color: "var(--verde)", border: "1px solid #86efac" }}>
-                      <Check className="w-3 h-3" /> Correo verificado
-                    </span>
-                  )}
-                  {celularVerificado && (
-                    <span className="inline-flex items-center gap-1 text-xs px-2.5 py-1 rounded-full"
-                      style={{ background: "var(--verde-light)", color: "var(--verde)", border: "1px solid #86efac" }}>
-                      <Check className="w-3 h-3" /> Celular verificado
-                    </span>
-                  )}
+              {correoVerificado && (
+                <div className="flex gap-2">
+                  <span className="inline-flex items-center gap-1 text-xs px-2.5 py-1 rounded-full"
+                    style={{ background: "var(--verde-light)", color: "var(--verde)", border: "1px solid #86efac" }}>
+                    <Check className="w-3 h-3" /> Correo verificado
+                  </span>
                 </div>
               )}
 
