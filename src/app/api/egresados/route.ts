@@ -90,15 +90,6 @@ export async function POST(req: NextRequest) {
 
     const d = parsed.data;
 
-    if (d.correoElectronico) {
-      const [existe] = await db
-        .select({ id: usuario.id })
-        .from(usuario)
-        .where(eq(usuario.correo, d.correoElectronico))
-        .limit(1);
-      if (existe) return err("Ya existe un usuario con ese correo electrónico.");
-    }
-
     const resultado = await db.transaction(async (tx) => {
       const [nuevoEgresado] = await tx.insert(egresado).values({
         tipo:                 d.tipo,
@@ -130,11 +121,10 @@ export async function POST(req: NextRequest) {
 
       // Crear usuario automáticamente con CI como contraseña inicial
       const passwordHash = await hashPassword(d.ci);
-      const correoUsuario = d.correoElectronico ?? `${d.ci}@sin-correo.local`;
 
       await tx.insert(usuario).values({
         ci:                d.ci,
-        correo:            correoUsuario,
+        correo:            `${d.ci}@pendiente.local`,
         passwordHash,
         rol:               "egresado",
         estado:            "activo",

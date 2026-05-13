@@ -5,13 +5,16 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { egresadoSchema, type EgresadoInput } from "@/lib/validations";
 import { MODALIDADES_TITULACION } from "@/lib/schema";
-import { Save, X, GraduationCap, UserX, Globe, Linkedin } from "lucide-react";
+import { Save, X, GraduationCap, UserX, Globe, Linkedin, Lock } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface Props {
   egresado?:    any;
   redirectTo?:  string;
   esAdmin?:     boolean;
+  /** "egresado" = vista del egresado editando su propio perfil (campos restringidos)
+   *  "admin"    = vista del admin (todos los campos) — por defecto */
+  modo?:        "egresado" | "admin";
   camposVacios?: string[];
 }
 
@@ -30,10 +33,54 @@ function Section({ title, children }: { title: string; children: React.ReactNode
   );
 }
 
-export default function EgresadoForm({ egresado: eg, redirectTo, esAdmin = false, camposVacios = [] }: Props) {
+// ── Campo de solo lectura (egresado no puede editar) ──────────────────────────
+function ReadonlyField({ label, value, badge }: { label: string; value?: string | null; badge?: boolean }) {
+  return (
+    <div>
+      <label className="label flex items-center gap-1.5">
+        <Lock className="w-3 h-3" style={{ color: "var(--placeholder)" }} />
+        {label}
+      </label>
+      {badge ? (
+        <div className="flex items-center h-[42px] px-4">
+          <span
+            className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold"
+            style={value === "Titulado" ? {
+              background: "var(--turquesa-light)", color: "var(--turquesa-dark)",
+              border: "1px solid #99e6e7",
+            } : {
+              background: "var(--naranja-light)", color: "var(--naranja)",
+              border: "1px solid #fed7aa",
+            }}
+          >
+            {value ?? "—"}
+          </span>
+        </div>
+      ) : (
+        <div
+          className="field flex items-center"
+          style={{ opacity: 0.65, cursor: "not-allowed", userSelect: "none" }}
+        >
+          {value || <span style={{ color: "var(--placeholder)" }}>—</span>}
+        </div>
+      )}
+    </div>
+  );
+}
+
+export default function EgresadoForm({
+  egresado: eg,
+  redirectTo,
+  esAdmin = false,
+  modo = "admin",
+  camposVacios = [],
+}: Props) {
   const router    = useRouter();
   const isEditing = !!eg;
   const [serverError, setServerError] = useState<string | null>(null);
+
+  // En modo egresado, esAdmin siempre es false aunque se pase true
+  const isAdminMode = modo === "admin" && esAdmin;
 
   const years = Array.from(
     { length: new Date().getFullYear() - 1997 },
@@ -64,7 +111,6 @@ export default function EgresadoForm({ egresado: eg, redirectTo, esAdmin = false
         anioTitulacion:      eg.anioTitulacion     ?? undefined,
         promedio:            eg.promedio ? parseFloat(eg.promedio) : undefined,
         modalidadTitulacion: eg.modalidadTitulacion ?? undefined,
-        // Campos exclusivos Egresado
         inicioProceso:       eg.inicioProceso       ?? undefined,
         motivoNoTitulacion:  eg.motivoNoTitulacion  ?? "",
         planeaTitularse:     eg.planeaTitularse      ?? undefined,
@@ -76,13 +122,12 @@ export default function EgresadoForm({ egresado: eg, redirectTo, esAdmin = false
       },
     });
 
-  // Observar tipo para mostrar/ocultar secciones condicionalmente
   const tipoWatch           = watch("tipo");
   const anioTitulacionWatch = watch("anioTitulacion");
   const inicioProceso       = watch("inicioProceso");
 
-  const esTitulado  = tipoWatch === "Titulado";
-  const esEgresado  = tipoWatch === "Egresado";
+  const esTitulado      = tipoWatch === "Titulado";
+  const esEgresado      = tipoWatch === "Egresado";
   const tieneTitulacion = !!anioTitulacionWatch;
 
   const onSubmit = async (d: EgresadoInput) => {
@@ -105,6 +150,7 @@ export default function EgresadoForm({ egresado: eg, redirectTo, esAdmin = false
   };
 
   const f = (hasErr?: boolean) => cn("field", hasErr && "field-err");
+
   const FieldLabel = ({ children, campo, required }: {
     children: React.ReactNode;
     campo?: string;
@@ -125,11 +171,298 @@ export default function EgresadoForm({ egresado: eg, redirectTo, esAdmin = false
 
   const fieldStyle = (campo?: string, hasErr?: boolean) =>
     cn("field", hasErr && "field-err", campo && camposVacios.includes(campo) && "border-orange-300");
+
+  // ══════════════════════════════════════════════════════════════════
+  // MODO EGRESADO — formulario restringido
+  // ══════════════════════════════════════════════════════════════════
+  if (modo === "egresado") {
+    return (
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-7">
+        {serverError && <p className="error-box">{serverError}</p>}
+
+        {/* ── Sección 1: Datos de solo lectura ── */}
+        <Section title="Datos de identidad">
+          <ReadonlyField label="CI" value={eg?.ci} />
+          <ReadonlyField label="Tipo" value={eg?.tipo ?? "Titulado"} badge />
+          <ReadonlyField label="Nombres" value={eg?.nombres} />
+          <ReadonlyField label="Apellido Paterno" value={eg?.apellidoPaterno} />
+          <ReadonlyField label="Apellido Materno" value={eg?.apellidoMaterno} />
+          {/* Columna vacía para mantener grid de 2 */}
+          <div />
+        </Section>
+
+        {/* ── Sección 2: Datos de contacto ── */}
+        <section style={{ borderTop: "1px solid var(--borde)", paddingTop: "1.5rem" }}>
+          <p className="text-slate-400 text-xs uppercase tracking-widest font-semibold mb-4 flex items-center gap-2">
+            <span className="inline-block w-4 h-px bg-slate-600" />
+            Datos de contacto
+          </p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <FieldLabel campo="celular">Celular</FieldLabel>
+              <input
+                {...register("celular")}
+                type="tel"
+                placeholder="7XXXXXXX"
+                className={fieldStyle("celular")}
+              />
+            </div>
+            <div
+              className="flex items-end pb-1"
+            >
+              <p className="text-xs" style={{ color: "var(--placeholder)" }}>
+                Para cambiar tu correo, usa el panel de{" "}
+                <strong style={{ color: "var(--turquesa-dark)" }}>verificación de cuenta</strong>{" "}
+                que aparece en tu perfil.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        {/* ── Sección 3: Información personal ── */}
+        <section style={{ borderTop: "1px solid var(--borde)", paddingTop: "1.5rem" }}>
+          <p className="text-slate-400 text-xs uppercase tracking-widest font-semibold mb-4 flex items-center gap-2">
+            <span className="inline-block w-4 h-px bg-slate-600" />
+            Información personal
+          </p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="label">Género</label>
+              <select {...register("genero")} className="field">
+                <option value="">— Seleccionar —</option>
+                <option value="Masculino">Masculino</option>
+                <option value="Femenino">Femenino</option>
+                <option value="Otro">Otro</option>
+                <option value="Prefiero no decir">Prefiero no decir</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="label">Fecha de Nacimiento <span className="text-red-400">*</span></label>
+              <input
+                {...register("fechaNacimiento")}
+                type="date"
+                className={f(!!errors.fechaNacimiento)}
+              />
+              {errors.fechaNacimiento && <p className="hint">{errors.fechaNacimiento.message}</p>}
+            </div>
+
+            <div>
+              <label className="label">Nacionalidad</label>
+              <input
+                {...register("nacionalidad")}
+                className="field"
+                placeholder="Boliviana"
+              />
+            </div>
+
+            <div>
+              <FieldLabel campo="lugarResidencia">Lugar de Residencia</FieldLabel>
+              <input
+                {...register("lugarResidencia")}
+                className={fieldStyle("lugarResidencia")}
+                placeholder="Ej: La Paz, Cochabamba..."
+              />
+            </div>
+          </div>
+        </section>
+
+        {/* ── Sección 4: Redes sociales ── */}
+        <section style={{ borderTop: "1px solid var(--borde)", paddingTop: "1.5rem" }}>
+          <p className="text-slate-400 text-xs uppercase tracking-widest font-semibold mb-4 flex items-center gap-2">
+            <span className="inline-block w-4 h-px bg-slate-600" />
+            Redes sociales
+          </p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="label">
+                <span className="flex items-center gap-1.5">
+                  <Globe className="w-3.5 h-3.5" /> Facebook
+                </span>
+              </label>
+              <input
+                {...register("facebook")}
+                className="field"
+                placeholder="https://facebook.com/usuario"
+              />
+            </div>
+            <div>
+              <label className="label">
+                <span className="flex items-center gap-1.5">
+                  <Linkedin className="w-3.5 h-3.5" /> LinkedIn
+                </span>
+              </label>
+              <input
+                {...register("linkedin")}
+                className="field"
+                placeholder="https://linkedin.com/in/usuario"
+              />
+            </div>
+          </div>
+        </section>
+
+         {/* ── Sección 5: Área de especialización y promedio ── */}
+        <section style={{ borderTop: "1px solid var(--borde)", paddingTop: "1.5rem" }}>
+          <p className="text-slate-400 text-xs uppercase tracking-widest font-semibold mb-4 flex items-center gap-2">
+            <span className="inline-block w-4 h-px bg-slate-600" />
+            Información académica
+          </p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="md:col-span-2">
+              <FieldLabel campo="areaEspecializacion">Área de Especialización</FieldLabel>
+              <input
+                {...register("areaEspecializacion")}
+                className={fieldStyle("areaEspecializacion")}
+                placeholder="Ej: Estadística aplicada, Análisis de datos..."
+              />
+            </div>
+            <div>
+              <FieldLabel campo="promedio">Promedio de Egreso</FieldLabel>
+              <input
+                {...register("promedio", { setValueAs: v => v === "" ? null : Number(v) })}
+                type="number"
+                min="0"
+                max="100"
+                step="0.01"
+                placeholder="Ej: 65.50"
+                className={fieldStyle("promedio", !!errors.promedio)}
+              />
+              {errors.promedio && <p className="hint">{errors.promedio.message}</p>}
+              <p className="text-xs mt-1" style={{ color: "var(--placeholder)" }}>
+                Promedio de notas al momento del egreso
+              </p>
+            </div>
+          </div>
+        </section>
+
+        {/* ── Sección extra: Solo para Egresados sin título ── */}
+        {esEgresado && (
+          <section
+            className="rounded-2xl p-5 space-y-4"
+            style={{ background: "rgba(245,158,11,0.06)", border: "1.5px solid rgba(245,158,11,0.25)", borderTop: "none" }}
+          >
+            <div className="flex items-center gap-2 mb-2">
+              <UserX className="w-4 h-4" style={{ color: "#f59e0b" }} />
+              <p className="text-sm font-semibold uppercase tracking-wide" style={{ color: "#d97706" }}>
+                Información adicional — Egresado sin título
+              </p>
+            </div>
+
+            {/* ¿Inició proceso? */}
+            <div>
+              <label className="label">¿Inició proceso de titulación?</label>
+              <div className="flex gap-3">
+                {[
+                  { label: "Sí, está en proceso", value: "true" },
+                  { label: "No ha iniciado",       value: "false" },
+                ].map(opt => {
+                  const currentVal = inicioProceso;
+                  const isActive =
+                    (opt.value === "true"  && currentVal === true) ||
+                    (opt.value === "false" && currentVal === false);
+                  return (
+                    <label
+                      key={opt.value}
+                      className="flex items-center gap-2 px-4 py-2.5 rounded-xl cursor-pointer transition-all flex-1"
+                      style={{
+                        background: isActive ? "rgba(245,158,11,0.15)" : "var(--humo)",
+                        border: `1.5px solid ${isActive ? "#f59e0b" : "var(--borde)"}`,
+                      }}
+                    >
+                      <input
+                        type="radio"
+                        value={opt.value}
+                        {...register("inicioProceso", {
+                          setValueAs: v => v === "" ? null : v === "true",
+                        })}
+                        className="sr-only"
+                      />
+                      <div
+                        className="w-3.5 h-3.5 rounded-full border-2 flex items-center justify-center shrink-0"
+                        style={{ borderColor: isActive ? "#f59e0b" : "var(--placeholder)" }}
+                      >
+                        {isActive && <div className="w-1.5 h-1.5 rounded-full" style={{ background: "#f59e0b" }} />}
+                      </div>
+                      <span className="text-sm" style={{ color: "var(--azul-pizarra)" }}>{opt.label}</span>
+                    </label>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* ¿Planea titularse? */}
+            <div>
+              <label className="label">¿Planea titularse en el futuro?</label>
+              <div className="flex gap-3">
+                {[
+                  { label: "Sí",      value: "Si"      },
+                  { label: "No",      value: "No"      },
+                  { label: "No sabe", value: "No sabe" },
+                ].map(opt => {
+                  const currentVal = watch("planeaTitularse");
+                  const isActive   = currentVal === opt.value;
+                  return (
+                    <label
+                      key={opt.value}
+                      className="flex items-center gap-2 px-4 py-2.5 rounded-xl cursor-pointer transition-all flex-1"
+                      style={{
+                        background: isActive ? "rgba(245,158,11,0.15)" : "var(--humo)",
+                        border: `1.5px solid ${isActive ? "#f59e0b" : "var(--borde)"}`,
+                      }}
+                    >
+                      <input type="radio" value={opt.value} {...register("planeaTitularse")} className="sr-only" />
+                      <div
+                        className="w-3.5 h-3.5 rounded-full border-2 flex items-center justify-center shrink-0"
+                        style={{ borderColor: isActive ? "#f59e0b" : "var(--placeholder)" }}
+                      >
+                        {isActive && <div className="w-1.5 h-1.5 rounded-full" style={{ background: "#f59e0b" }} />}
+                      </div>
+                      <span className="text-sm" style={{ color: "var(--azul-pizarra)" }}>{opt.value}</span>
+                    </label>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Motivo */}
+            <div>
+              <label className="label">Motivo de no titulación</label>
+              <textarea
+                {...register("motivoNoTitulacion")}
+                rows={3}
+                placeholder="Describe brevemente por qué no se ha titulado aún..."
+                className="field resize-none"
+              />
+              <p className="text-xs mt-1" style={{ color: "var(--placeholder)" }}>
+                Esta información es confidencial y solo visible para el administrador.
+              </p>
+            </div>
+          </section>
+        )}
+
+        {/* ── Acciones ── */}
+        <div className="flex gap-3 pt-4 border-t border-slate-800">
+          <button type="submit" disabled={isSubmitting} className="btn-primary">
+            {isSubmitting
+              ? <><span className="spinner" /> Guardando...</>
+              : <><Save className="w-4 h-4" /> Guardar cambios</>}
+          </button>
+          <button type="button" onClick={() => router.back()} className="btn-ghost">
+            <X className="w-4 h-4" /> Cancelar
+          </button>
+        </div>
+      </form>
+    );
+  }
+
+  // ══════════════════════════════════════════════════════════════════
+  // MODO ADMIN — formulario completo (igual que antes)
+  // ══════════════════════════════════════════════════════════════════
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-7">
       {serverError && <p className="error-box">{serverError}</p>}
 
-      {/* ── SELECTOR DE TIPO — Bloque 0 ── */}
+      {/* ── SELECTOR DE TIPO ── */}
       <div>
         <label className="label">
           Tipo de persona <span className="text-red-400">*</span>
@@ -142,16 +475,15 @@ export default function EgresadoForm({ egresado: eg, redirectTo, esAdmin = false
                 key={t}
                 className="relative flex items-center gap-3 rounded-xl px-4 py-3 cursor-pointer transition-all"
                 style={{
-                  background: active ? (t === "Titulado" ? "rgba(0,165,168,0.10)" : "rgba(245,158,11,0.10)") : "var(--humo)",
-                  border: `1.5px solid ${active ? (t === "Titulado" ? "var(--turquesa)" : "#f59e0b") : "var(--borde)"}`,
+                  background: active
+                    ? (t === "Titulado" ? "rgba(0,165,168,0.10)" : "rgba(245,158,11,0.10)")
+                    : "var(--humo)",
+                  border: `1.5px solid ${active
+                    ? (t === "Titulado" ? "var(--turquesa)" : "#f59e0b")
+                    : "var(--borde)"}`,
                 }}
               >
-                <input
-                  type="radio"
-                  value={t}
-                  {...register("tipo")}
-                  className="sr-only"
-                />
+                <input type="radio" value={t} {...register("tipo")} className="sr-only" />
                 <div
                   className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
                   style={{
@@ -195,29 +527,24 @@ export default function EgresadoForm({ egresado: eg, redirectTo, esAdmin = false
           <input {...register("nombres")} className={f(!!errors.nombres)} />
           {errors.nombres && <p className="hint">{errors.nombres.message}</p>}
         </div>
-
         <div>
           <label className="label">CI <span className="text-red-400">*</span></label>
           <input {...register("ci")} className={f(!!errors.ci)} />
           {errors.ci && <p className="hint">{errors.ci.message}</p>}
         </div>
-
         <div>
           <label className="label">Apellido Paterno</label>
           <input {...register("apellidoPaterno")} className="field" />
         </div>
-
         <div>
           <label className="label">Apellido Materno</label>
           <input {...register("apellidoMaterno")} className="field" />
         </div>
-
         <div>
           <label className="label">Fecha de Nacimiento <span className="text-red-400">*</span></label>
           <input {...register("fechaNacimiento")} type="date" className={f(!!errors.fechaNacimiento)} />
           {errors.fechaNacimiento && <p className="hint">{errors.fechaNacimiento.message}</p>}
         </div>
-
         <div>
           <label className="label">Género</label>
           <select {...register("genero")} className="field">
@@ -228,32 +555,26 @@ export default function EgresadoForm({ egresado: eg, redirectTo, esAdmin = false
             <option value="Prefiero no decir">Prefiero no decir</option>
           </select>
         </div>
-
         <div>
-           <FieldLabel campo="celular">Celular</FieldLabel>
-              <input {...register("celular")} type="tel" placeholder="7XXXXXXX" className={fieldStyle("celular")} />
+          <FieldLabel campo="celular">Celular</FieldLabel>
+          <input {...register("celular")} type="tel" placeholder="7XXXXXXX" className={fieldStyle("celular")} />
         </div>
-
         <div>
           <FieldLabel campo="correo">Correo Electrónico</FieldLabel>
-              <input {...register("correoElectronico")} type="email" className={fieldStyle("correo", !!errors.correoElectronico)} />
-              {errors.correoElectronico && <p className="hint">{errors.correoElectronico.message}</p>}
+          <input {...register("correoElectronico")} type="email" className={fieldStyle("correo", !!errors.correoElectronico)} />
+          {errors.correoElectronico && <p className="hint">{errors.correoElectronico.message}</p>}
         </div>
-
         <div>
           <label className="label">Nacionalidad</label>
           <input {...register("nacionalidad")} className="field" placeholder="Boliviana" />
         </div>
-
         <div>
           <label className="label">Estado Laboral</label>
           <div className="flex gap-2">
             {(["Empleado", "Desempleado", "Independiente"] as const).map(est => {
               const active = watch("estadoLaboral") === est;
               const colors: Record<string, string> = {
-                Empleado:      "var(--verde)",
-                Desempleado:   "#dc2626",
-                Independiente: "#f59e0b",
+                Empleado: "var(--verde)", Desempleado: "#dc2626", Independiente: "#f59e0b",
               };
               return (
                 <label
@@ -264,16 +585,8 @@ export default function EgresadoForm({ egresado: eg, redirectTo, esAdmin = false
                     border: `1.5px solid ${active ? colors[est] : "var(--borde)"}`,
                   }}
                 >
-                  <input
-                    type="radio"
-                    value={est}
-                    {...register("estadoLaboral")}
-                    className="sr-only"
-                  />
-                  <div
-                    className="w-2.5 h-2.5 rounded-full"
-                    style={{ background: active ? colors[est] : "var(--borde)" }}
-                  />
+                  <input type="radio" value={est} {...register("estadoLaboral")} className="sr-only" />
+                  <div className="w-2.5 h-2.5 rounded-full" style={{ background: active ? colors[est] : "var(--borde)" }} />
                   <span className="text-xs font-medium" style={{ color: active ? colors[est] : "var(--gris-grafito)" }}>
                     {est}
                   </span>
@@ -282,65 +595,29 @@ export default function EgresadoForm({ egresado: eg, redirectTo, esAdmin = false
             })}
           </div>
         </div>
-
-
       </Section>
 
-      {/* ── Redes y Área — Bloque 0 (compartido) ── */}
+      {/* ── Redes y Área ── */}
       <Section title="Redes Sociales y Especialización">
         <div>
-          <label className="label">
-            <span className="flex items-center gap-1.5">
-              <Globe className="w-3.5 h-3.5" />
-              Facebook
-            </span>
-          </label>
-          <input
-            {...register("facebook")}
-            className="field"
-            placeholder="https://facebook.com/usuario"
-          />
+          <label className="label"><span className="flex items-center gap-1.5"><Globe className="w-3.5 h-3.5" />Facebook</span></label>
+          <input {...register("facebook")} className="field" placeholder="https://facebook.com/usuario" />
         </div>
-
         <div>
-          <label className="label">
-            <span className="flex items-center gap-1.5">
-              <Linkedin className="w-3.5 h-3.5" />
-              LinkedIn
-            </span>
-          </label>
-          <input
-            {...register("linkedin")}
-            className="field"
-            placeholder="https://linkedin.com/in/usuario"
-          />
+          <label className="label"><span className="flex items-center gap-1.5"><Linkedin className="w-3.5 h-3.5" />LinkedIn</span></label>
+          <input {...register("linkedin")} className="field" placeholder="https://linkedin.com/in/usuario" />
         </div>
-
         <div>
           <label className="label">Área de Especialización</label>
-          <input
-            {...register("areaEspecializacion")}
-            className="field"
-            placeholder="Ej: Estadística aplicada, Análisis de datos..."
-          />
+          <input {...register("areaEspecializacion")} className="field" placeholder="Ej: Estadística aplicada..." />
         </div>
-
         <div>
           <label className="label">Observaciones</label>
-          <input
-            {...register("observaciones")}
-            className="field"
-            placeholder="Notas adicionales (opcional)"
-          />
+          <input {...register("observaciones")} className="field" placeholder="Notas adicionales (opcional)" />
         </div>
-
         <div className="md:col-span-2">
           <label className="label">Lugar de Residencia</label>
-          <input
-            {...register("lugarResidencia")}
-            className="field"
-            placeholder="Ej: La Paz, Cochabamba, Santa Cruz..."
-          />
+          <input {...register("lugarResidencia")} className="field" placeholder="Ej: La Paz, Cochabamba..." />
         </div>
       </Section>
 
@@ -351,135 +628,78 @@ export default function EgresadoForm({ egresado: eg, redirectTo, esAdmin = false
           Datos Académicos
         </p>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-
           <div>
             <label className="label">Año de Ingreso</label>
-            <select
-              {...register("anioIngreso", { setValueAs: v => v === "" ? null : Number(v) })}
-              className="field"
-            >
+            <select {...register("anioIngreso", { setValueAs: v => v === "" ? null : Number(v) })} className="field">
               <option value="">— Sin especificar —</option>
               {years.map(y => <option key={y} value={y}>{y}</option>)}
             </select>
-            {errors.anioIngreso && <p className="hint">{errors.anioIngreso.message}</p>}
           </div>
-
           <div>
             <FieldLabel campo="anioEgreso">Año de Egreso</FieldLabel>
-            <select
-              {...register("anioEgreso", { setValueAs: v => v === "" ? null : Number(v) })}
-              className={f(!!errors.anioEgreso)}
-            >
+            <select {...register("anioEgreso", { setValueAs: v => v === "" ? null : Number(v) })} className={f(!!errors.anioEgreso)}>
               <option value="">— Sin especificar —</option>
               {years.map(y => <option key={y} value={y}>{y}</option>)}
             </select>
             {errors.anioEgreso && <p className="hint">{errors.anioEgreso.message}</p>}
           </div>
-
           <div>
             <label className="label">Promedio de Egreso</label>
             <input
               {...register("promedio", { setValueAs: v => v === "" ? null : Number(v) })}
-              type="number"
-              min="0"
-              max="100"
-              step="0.01"
+              type="number" min="0" max="100" step="0.01"
               placeholder="Ej: 65.50"
               className={f(!!errors.promedio)}
             />
-            {errors.promedio && <p className="hint">{errors.promedio.message}</p>}
           </div>
-
-          {/* Año de titulación — obligatorio para Titulado, opcional para Egresado */}
           <div>
             <label className="label">
               Año de Titulación
               {esTitulado && <span className="text-red-400 ml-1">*</span>}
-              {esEgresado && (
-                <span className="text-slate-500 text-xs ml-1 font-normal">(si ya se tituló)</span>
-              )}
+              {esEgresado && <span className="text-slate-500 text-xs ml-1 font-normal">(si ya se tituló)</span>}
             </label>
-            <select
-              {...register("anioTitulacion", { setValueAs: v => v === "" ? null : Number(v) })}
-              className={f(!!errors.anioTitulacion)}
-            >
-              <option value="">
-                {esTitulado ? "— Seleccionar año —" : "— No titulado / Sin especificar —"}
-              </option>
+            <select {...register("anioTitulacion", { setValueAs: v => v === "" ? null : Number(v) })} className={f(!!errors.anioTitulacion)}>
+              <option value="">{esTitulado ? "— Seleccionar año —" : "— No titulado / Sin especificar —"}</option>
               {years.map(y => <option key={y} value={y}>{y}</option>)}
             </select>
             {errors.anioTitulacion && <p className="hint">{errors.anioTitulacion.message}</p>}
           </div>
-
-          {/* Modalidad — aparece solo cuando hay año de titulación */}
           {tieneTitulacion && (
             <div>
               <label className="label">Modalidad de Titulación</label>
               <select {...register("modalidadTitulacion")} className="field">
                 <option value="">— Seleccionar —</option>
-                {MODALIDADES_TITULACION.map(m => (
-                  <option key={m} value={m}>{m}</option>
-                ))}
+                {MODALIDADES_TITULACION.map(m => <option key={m} value={m}>{m}</option>)}
               </select>
             </div>
           )}
         </div>
       </section>
 
-      {/* ── Sección exclusiva para EGRESADOS (Bloque 0) ── */}
+      {/* ── Sección exclusiva Egresados ── */}
       {esEgresado && (
         <section
           className="rounded-2xl p-5 space-y-4"
-          style={{
-            background: "rgba(245,158,11,0.06)",
-            border: "1.5px solid rgba(245,158,11,0.25)",
-          }}
+          style={{ background: "rgba(245,158,11,0.06)", border: "1.5px solid rgba(245,158,11,0.25)" }}
         >
           <div className="flex items-center gap-2 mb-2">
             <UserX className="w-4 h-4" style={{ color: "#f59e0b" }} />
-            <p
-              className="text-sm font-semibold uppercase tracking-wide"
-              style={{ color: "#d97706" }}
-            >
+            <p className="text-sm font-semibold uppercase tracking-wide" style={{ color: "#d97706" }}>
               Información adicional — Egresado sin título
             </p>
           </div>
-
-          {/* ¿Inició proceso de titulación? */}
           <div>
             <label className="label">¿Inició proceso de titulación?</label>
             <div className="flex gap-3">
-              {[
-                { label: "Sí, está en proceso", value: "true" },
-                { label: "No ha iniciado", value: "false" },
-              ].map(opt => {
+              {[{ label: "Sí, está en proceso", value: "true" }, { label: "No ha iniciado", value: "false" }].map(opt => {
                 const currentVal = inicioProceso;
-                const isActive = (opt.value === "true" && currentVal === true) ||
-                                 (opt.value === "false" && currentVal === false);
+                const isActive = (opt.value === "true" && currentVal === true) || (opt.value === "false" && currentVal === false);
                 return (
-                  <label
-                    key={opt.value}
-                    className="flex items-center gap-2 px-4 py-2.5 rounded-xl cursor-pointer transition-all flex-1"
-                    style={{
-                      background: isActive ? "rgba(245,158,11,0.15)" : "var(--humo)",
-                      border: `1.5px solid ${isActive ? "#f59e0b" : "var(--borde)"}`,
-                    }}
-                  >
-                    <input
-                      type="radio"
-                      value={opt.value}
-                      {...register("inicioProceso", {
-                        setValueAs: v => v === "" ? null : v === "true",
-                      })}
-                      className="sr-only"
-                    />
-                    <div
-                      className="w-3.5 h-3.5 rounded-full border-2 flex items-center justify-center shrink-0"
-                      style={{ borderColor: isActive ? "#f59e0b" : "var(--placeholder)" }}
-                    >
-                      {isActive && (
-                        <div className="w-1.5 h-1.5 rounded-full" style={{ background: "#f59e0b" }} />
-                      )}
+                  <label key={opt.value} className="flex items-center gap-2 px-4 py-2.5 rounded-xl cursor-pointer transition-all flex-1"
+                    style={{ background: isActive ? "rgba(245,158,11,0.15)" : "var(--humo)", border: `1.5px solid ${isActive ? "#f59e0b" : "var(--borde)"}` }}>
+                    <input type="radio" value={opt.value} {...register("inicioProceso", { setValueAs: v => v === "" ? null : v === "true" })} className="sr-only" />
+                    <div className="w-3.5 h-3.5 rounded-full border-2 flex items-center justify-center shrink-0" style={{ borderColor: isActive ? "#f59e0b" : "var(--placeholder)" }}>
+                      {isActive && <div className="w-1.5 h-1.5 rounded-full" style={{ background: "#f59e0b" }} />}
                     </div>
                     <span className="text-sm" style={{ color: "var(--azul-pizarra)" }}>{opt.label}</span>
                   </label>
@@ -487,40 +707,17 @@ export default function EgresadoForm({ egresado: eg, redirectTo, esAdmin = false
               })}
             </div>
           </div>
-
-          {/* ¿Planea titularse? */}
           <div>
             <label className="label">¿Planea titularse en el futuro?</label>
             <div className="flex gap-3">
-              {[
-                { label: "Sí",      value: "Si"      },
-                { label: "No",      value: "No"      },
-                { label: "No sabe", value: "No sabe" },
-              ].map(opt => {
-                const currentVal = watch("planeaTitularse");
-                const isActive = currentVal === opt.value;
+              {[{ label: "Sí", value: "Si" }, { label: "No", value: "No" }, { label: "No sabe", value: "No sabe" }].map(opt => {
+                const isActive = watch("planeaTitularse") === opt.value;
                 return (
-                  <label
-                    key={opt.value}
-                    className="flex items-center gap-2 px-4 py-2.5 rounded-xl cursor-pointer transition-all flex-1"
-                    style={{
-                      background: isActive ? "rgba(245,158,11,0.15)" : "var(--humo)",
-                      border: `1.5px solid ${isActive ? "#f59e0b" : "var(--borde)"}`,
-                    }}
-                  >
-                    <input
-                      type="radio"
-                      value={opt.value}
-                      {...register("planeaTitularse")}
-                      className="sr-only"
-                    />
-                    <div
-                      className="w-3.5 h-3.5 rounded-full border-2 flex items-center justify-center shrink-0"
-                      style={{ borderColor: isActive ? "#f59e0b" : "var(--placeholder)" }}
-                    >
-                      {isActive && (
-                        <div className="w-1.5 h-1.5 rounded-full" style={{ background: "#f59e0b" }} />
-                      )}
+                  <label key={opt.value} className="flex items-center gap-2 px-4 py-2.5 rounded-xl cursor-pointer transition-all flex-1"
+                    style={{ background: isActive ? "rgba(245,158,11,0.15)" : "var(--humo)", border: `1.5px solid ${isActive ? "#f59e0b" : "var(--borde)"}` }}>
+                    <input type="radio" value={opt.value} {...register("planeaTitularse")} className="sr-only" />
+                    <div className="w-3.5 h-3.5 rounded-full border-2 flex items-center justify-center shrink-0" style={{ borderColor: isActive ? "#f59e0b" : "var(--placeholder)" }}>
+                      {isActive && <div className="w-1.5 h-1.5 rounded-full" style={{ background: "#f59e0b" }} />}
                     </div>
                     <span className="text-sm" style={{ color: "var(--azul-pizarra)" }}>{opt.value}</span>
                   </label>
@@ -528,43 +725,21 @@ export default function EgresadoForm({ egresado: eg, redirectTo, esAdmin = false
               })}
             </div>
           </div>
-
-          {/* Motivo de no titulación */}
           <div>
             <label className="label">Motivo de no titulación</label>
-            <textarea
-              {...register("motivoNoTitulacion")}
-              rows={3}
-              placeholder="Describe brevemente por qué no se ha titulado aún..."
-              className="field resize-none"
-            />
-            <p className="text-xs mt-1" style={{ color: "var(--placeholder)" }}>
-              Esta información es confidencial y solo visible para el administrador.
-            </p>
+            <textarea {...register("motivoNoTitulacion")} rows={3} placeholder="Describe brevemente por qué no se ha titulado aún..." className="field resize-none" />
+            <p className="text-xs mt-1" style={{ color: "var(--placeholder)" }}>Esta información es confidencial.</p>
           </div>
         </section>
       )}
 
       {/* ── Marcar como fallecido — solo admin ── */}
-      {esAdmin && (
-        <section
-          className="rounded-2xl p-4"
-          style={{
-            background: "rgba(220,38,38,0.04)",
-            border: "1px solid rgba(220,38,38,0.15)",
-          }}
-        >
+      {isAdminMode && (
+        <section className="rounded-2xl p-4" style={{ background: "rgba(220,38,38,0.04)", border: "1px solid rgba(220,38,38,0.15)" }}>
           <label className="flex items-center gap-3 cursor-pointer select-none">
-            <input
-              type="checkbox"
-              {...register("fallecido")}
-              className="w-4 h-4 rounded"
-              style={{ accentColor: "#dc2626" }}
-            />
+            <input type="checkbox" {...register("fallecido")} className="w-4 h-4 rounded" style={{ accentColor: "#dc2626" }} />
             <div>
-              <p className="text-sm font-semibold" style={{ color: "#dc2626" }}>
-                Marcar como fallecido
-              </p>
+              <p className="text-sm font-semibold" style={{ color: "#dc2626" }}>Marcar como fallecido</p>
               <p className="text-xs mt-0.5" style={{ color: "var(--placeholder)" }}>
                 Este registro no aparecerá en el directorio ni en estadísticas de empleabilidad.
               </p>

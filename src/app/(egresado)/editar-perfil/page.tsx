@@ -9,10 +9,11 @@ import EgresadoForm from "@/components/egresados/EgresadoForm";
 
 function calcularCamposVacios(eg: any): string[] {
   const vacios: string[] = [];
-  if (!eg.correoElectronico) vacios.push("correo");
-  if (!eg.celular && !eg.telefono) vacios.push("celular");
-  if (!eg.lugarResidencia) vacios.push("lugarResidencia");
-  if (!eg.anioEgreso) vacios.push("anioEgreso");
+  if (!eg.celular && !eg.telefono)   vacios.push("celular");
+  if (!eg.lugarResidencia)           vacios.push("lugarResidencia");
+  if (!eg.genero)                    vacios.push("genero");
+  if (!eg.areaEspecializacion)       vacios.push("areaEspecializacion");
+  if (!eg.nacionalidad)              vacios.push("nacionalidad");
   return vacios;
 }
 
@@ -25,7 +26,7 @@ export default async function EditarPerfilPage() {
     .where(eq(egresado.id, session.idEgresado)).limit(1);
   if (!eg) redirect("/registro-inicial");
 
-  const camposVacios = calcularCamposVacios(eg);
+  const camposVacios    = calcularCamposVacios(eg);
   const perfilIncompleto = camposVacios.length > 0;
 
   return (
@@ -44,10 +45,7 @@ export default async function EditarPerfilPage() {
       {perfilIncompleto && (
         <div
           className="flex items-start gap-3 px-4 py-3.5 rounded-xl"
-          style={{
-            background: "var(--naranja-light)",
-            border: "1.5px solid #fed7aa",
-          }}
+          style={{ background: "var(--naranja-light)", border: "1.5px solid #fed7aa" }}
         >
           <AlertTriangle className="w-5 h-5 shrink-0 mt-0.5" style={{ color: "var(--naranja)" }} />
           <div>
@@ -57,10 +55,11 @@ export default async function EditarPerfilPage() {
             <p className="text-xs mt-0.5" style={{ color: "#92400e" }}>
               Completá tu información para aparecer mejor en el directorio. Faltan:{" "}
               {camposVacios.map(c => ({
-                correo:          "correo electrónico",
-                celular:         "celular",
-                lugarResidencia: "lugar de residencia",
-                anioEgreso:      "año de egreso",
+                celular:           "celular",
+                lugarResidencia:   "lugar de residencia",
+                genero:            "género",
+                areaEspecializacion: "área de especialización",
+                nacionalidad:      "nacionalidad",
               }[c] ?? c)).join(", ")}.
             </p>
           </div>
@@ -68,7 +67,12 @@ export default async function EditarPerfilPage() {
       )}
 
       <div className="card">
-        <EgresadoForm egresado={eg} redirectTo="/mi-perfil" camposVacios={camposVacios} />
+        <EgresadoForm
+          egresado={eg}
+          redirectTo="/mi-perfil"
+          modo="egresado"
+          camposVacios={camposVacios}
+        />
       </div>
     </div>
   );

@@ -218,7 +218,8 @@ async function main() {
 
   for (const eg of egresadosCreados) {
     await db.insert(schema.usuario).values({
-      ci: eg.ci, correo: eg.correoElectronico!,
+      ci: eg.ci,
+      correo: `${eg.ci}@pendiente.local`,
       passwordHash: await bcrypt.hash(eg.ci, 12),
       rol: "egresado", estado: "activo", idEgresado: eg.id,
       primerLogin: true, correoVerificado: false, celularVerificado: false,

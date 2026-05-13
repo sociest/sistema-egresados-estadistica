@@ -25,12 +25,14 @@ function calcularTiempoPrimerEmpleo(
 
 function calcularCompletitud(eg: any): { porcentaje: number; faltantes: string[] } {
   const campos = [
-    { key: "correoElectronico",   label: "Correo" },
+    { key: "correoElectronico",   label: "Correo electrónico" },
     { key: "celular",             label: "Celular" },
     { key: "lugarResidencia",     label: "Lugar de residencia" },
     { key: "anioEgreso",          label: "Año de egreso" },
     { key: "genero",              label: "Género" },
     { key: "areaEspecializacion", label: "Área de especialización" },
+    { key: "nacionalidad",        label: "Nacionalidad" },
+    { key: "promedio",            label: "Promedio de egreso" },
   ];
   const faltantes = campos.filter(c => !eg[c.key]).map(c => c.label);
   const porcentaje = Math.round(((campos.length - faltantes.length) / campos.length) * 100);
