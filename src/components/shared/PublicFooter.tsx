@@ -153,38 +153,7 @@ export default function PublicFooter() {
   ];
 
   return (
-    <footer style={{ background: "linear-gradient(170deg, #001d3d 0%, #003d6e 50%, #00447e 100%)" }}>
-      {/* Decoración de ondas SVG */}
-      <div className="relative overflow-hidden" aria-hidden="true">
-        <div className="absolute inset-0 pointer-events-none">
-          <svg
-            className="absolute inset-0 w-full h-full opacity-[0.06]"
-            viewBox="0 0 1400 80"
-            preserveAspectRatio="none"
-            fill="none"
-          >
-            <path
-              d="M0 60C233 60 467 40 700 14C933 -12 1167 10 1400 60"
-              stroke="white"
-              strokeWidth="1.8"
-            />
-            <path
-              d="M0 68C233 68 467 48 700 22C933 -4 1167 18 1400 68"
-              stroke="white"
-              strokeWidth="1.3"
-              opacity="0.6"
-            />
-          </svg>
-        </div>
-      </div>
-
-      {/* Línea blanca superior */}
-      <div
-        className="h-[3px]"
-        style={{
-          background: "linear-gradient(90deg, #ffffff, rgba(255,255,255,0.5), #ffffff)",
-        }}
-      />
+    <footer style={{ background: "linear-gradient(170deg, #001d3d 0%, #002a52 50%, #00325a 100%)" }}>
 
       {/* Contenido principal */}
       <div className="max-w-[1200px] mx-auto px-4 sm:px-6 md:px-12 lg:px-20 py-10 sm:py-14">
