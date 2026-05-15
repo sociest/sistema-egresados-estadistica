@@ -361,6 +361,22 @@ Mejoras de atractivo visual manteniendo la paleta turquesa/marino:
 
 ---
 
+## 🟡 BLOQUE F2 — Landing page + header + footer
+
+### Contexto
+Se pidió mejorar el atractivo visual de la landing con los colores institucionales, y hay componentes del header y footer provistos por un compañero que necesitan integrarse. Los links y botones no están funcionando.
+
+### Subtareas
+
+Está bien el header pero se está mostrando académico, postgrado e IETA y comunidad, además de sia umsa e ingresar y también una barra de busqueda, quisiera que en luger de eso el header esté la sección de noticias, la sección para ver el directorio de Egresados y como botón el botón de ingresar esta bien pero no está funcionando, quiero que igual que los otros botones mande el modal para ingresar al sistema de egresados
+También la mejora de la landingpage no se está efectuando, ósea yo la veo igual que antes, especialmente en los colores, usa masomenos los colores que está usando el header y el footer, tiene que estar mas "llamativa"
+
+
+### Archivos a modificar
+- `src/components/shared/PublicHeader.tsx`
+- `src/components/shared/PublicFooter.tsx`
+- `src/app/login/LandingLoginPage.tsx`
+
 ## 🟠 BLOQUE G — Audit log + backup a Google Drive
 
 > Sin cambios respecto al roadmap anterior. Implementar según lo especificado en el Bloque 9 del roadmap v1.
