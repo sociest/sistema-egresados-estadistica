@@ -1,9 +1,10 @@
+// src/components/shared/PublicLayout.tsx
 import { getSession } from "@/lib/auth";
 import PublicHeader from "@/components/shared/PublicHeader";
 import PublicFooter from "@/components/shared/PublicFooter";
+import PublicLayoutClient from "@/components/shared/PublicLayoutClient";
 
 export default async function PublicLayout({ children }: { children: React.ReactNode }) {
-  // Detectamos sesión en el servidor para pasarla al header
   const session = await getSession();
   const isLoggedIn = !!session;
   const correo = session?.correo;
@@ -15,6 +16,8 @@ export default async function PublicLayout({ children }: { children: React.React
         {children}
       </main>
       <PublicFooter />
+      {/* Modal de login global — escucha "abrir-modal-login" desde cualquier página */}
+      <PublicLayoutClient />
     </div>
   );
 }

@@ -189,7 +189,6 @@ function SkeletonCard() {
    COMPONENTE PRINCIPAL
 ───────────────────────────────────────────────────────────────────────────── */
 export default function LandingLoginPage() {
-  const [modalOpen,     setModalOpen]     = useState(false);
   const [egresados,     setEgresados]     = useState<EgresadoData[]>([]);
   const [loadingEg,     setLoadingEg]     = useState(true);
   const [noticiasPrev,  setNoticiasPrev]  = useState<any[]>([]);
@@ -199,18 +198,6 @@ export default function LandingLoginPage() {
   } | null>(null);
   const [loadingStats, setLoadingStats] = useState(true);
   const [counters,     setCounters]     = useState({ titulados: 0, empleabilidad: 0, meses: 0, egresados: 0 });
-
-   useEffect(() => {
-    const handleAbrirModal = () => {
-      setModalOpen(true);
-    };
-
-    window.addEventListener("abrir-modal-login", handleAbrirModal);
-    
-    return () => {
-      window.removeEventListener("abrir-modal-login", handleAbrirModal);
-    };
-  }, []);
 
   useEffect(() => {
     fetch("/api/egresados/destacados").then(r => r.json()).then(j => { if (j.data) setEgresados(j.data); }).catch(() => {}).finally(() => setLoadingEg(false));
@@ -235,7 +222,6 @@ export default function LandingLoginPage() {
 
   return (
     <>
-      {modalOpen && <LoginModal onClose={() => setModalOpen(false)} />}
 
       {/* ══════════════════════════════════════════════════════════════════
           HERO — sección principal
@@ -294,7 +280,7 @@ export default function LandingLoginPage() {
 
               {/* CTAs */}
               <div className="flex flex-col sm:flex-row gap-4">
-                <button onClick={() => setModalOpen(true)}
+                <button onClick={() => window.dispatchEvent(new CustomEvent("abrir-modal-login"))}
                   className="group flex items-center justify-center gap-3 px-8 py-4 rounded-2xl font-black text-sm uppercase tracking-widest transition-all duration-300 hover:-translate-y-1"
                   style={{ background: "linear-gradient(135deg, #ea580c 0%, #c2410c 100%)", color: "white", boxShadow: "0 8px 32px rgba(234,88,12,0.45)" }}>
                   
@@ -447,7 +433,7 @@ export default function LandingLoginPage() {
 
           {/* CTA central */}
           <div className="text-center">
-            <button onClick={() => setModalOpen(true)}
+            <button onClick={() => window.dispatchEvent(new CustomEvent("abrir-modal-login"))}
               className="group inline-flex items-center gap-3 px-10 py-5 rounded-2xl font-black text-sm uppercase tracking-widest transition-all duration-300 hover:-translate-y-1 hover:scale-105"
               style={{ background: "linear-gradient(135deg, #00447e 0%, #001d3d 100%)", color: "white", boxShadow: "0 8px 32px rgba(0,29,61,0.25)" }}>
               Actualizar mi perfil ahora
@@ -494,7 +480,7 @@ export default function LandingLoginPage() {
                 : (
                   <div className="col-span-3 text-center py-16">
                     <p className="text-sm" style={{ color: "var(--placeholder)" }}>Ningún egresado ha activado aún su visibilidad en el directorio.</p>
-                    <button onClick={() => setModalOpen(true)} className="btn-primary btn-sm mt-4 inline-flex">Sé el primero — Activar mi perfil</button>
+                    <button onClick={() => window.dispatchEvent(new CustomEvent("abrir-modal-login"))} className="btn-primary btn-sm mt-4 inline-flex">Sé el primero — Activar mi perfil</button>
                   </div>
                 )}
           </div>
@@ -521,7 +507,7 @@ export default function LandingLoginPage() {
                   Los perfiles actualizados se muestran primero y son más visibles para empleadores y proyectos de investigación.
                 </p>
               </div>
-              <button onClick={() => setModalOpen(true)}
+              <button onClick={() => window.dispatchEvent(new CustomEvent("abrir-modal-login"))}
                 className="group flex items-center gap-3 px-8 py-4 rounded-2xl font-black text-sm uppercase tracking-widest transition-all duration-300 hover:-translate-y-1 hover:scale-105 shrink-0"
                 style={{ background: "linear-gradient(135deg, #ea580c 0%, #c2410c 100%)", color: "white", boxShadow: "0 8px 28px rgba(234,88,12,0.40)" }}>
                 <LogIn className="w-4 h-4 transition-transform group-hover:scale-110" />
