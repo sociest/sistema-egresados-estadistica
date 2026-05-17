@@ -24,6 +24,8 @@ export const planeaTitularseEnum  = pgEnum("planea_titularse_enum",  ["Si", "No"
 export const noticiasTipoEnum     = pgEnum("noticias_tipo_enum", [
   "noticia_institucional", "curso_evento", "noticia_social",
 ]);
+export const auditAccionEnum  = pgEnum("audit_accion_enum",  ["crear", "editar", "eliminar"]);
+export const auditEntidadEnum = pgEnum("audit_entidad_enum", ["egresado", "usuario", "noticia", "encuesta"])
 
 export const MODALIDADES_TITULACION = [
   "Tesis", "Proyecto de grado", "Trabajo dirigido", "Examen de grado", "Otro",
@@ -202,6 +204,23 @@ export const sugerencias = pgTable("sugerencias", {
   creadoEn:   timestamp("creado_en").notNull().defaultNow(),
 });
 
+export const auditLog = pgTable("audit_log", {
+  id:               serial("id").primaryKey(),
+  idUsuario:        integer("id_usuario")
+    .references(() => usuario.id, { onDelete: "set null" }),
+  accion:           auditAccionEnum("accion").notNull(),
+  entidad:          auditEntidadEnum("entidad").notNull(),
+  entidadId:        integer("entidad_id"),
+  datosAnteriores:  text("datos_anteriores"),
+  datosNuevos:      text("datos_nuevos"),
+  ip:               varchar("ip", { length: 45 }),
+  creadoEn:         timestamp("creado_en").notNull().defaultNow(),
+}, (t) => ({
+  accionIdx:   index("idx_audit_accion").on(t.accion),
+  entidadIdx:  index("idx_audit_entidad").on(t.entidad),
+  creadoEnIdx: index("idx_audit_creado_en").on(t.creadoEn),
+}));
+
 // ── Relations ─────────────────────────────────────────────────────────────────
 export const egresadoRelations = relations(egresado, ({ many }) => ({
   historial:   many(historialLaboral),
@@ -241,6 +260,8 @@ export type Noticia           = typeof noticias.$inferSelect;
 export type NuevaNoticia      = typeof noticias.$inferInsert;
 export type Sugerencia        = typeof sugerencias.$inferSelect;
 export type NuevaSugerencia   = typeof sugerencias.$inferInsert;
+export type AuditLog    = typeof auditLog.$inferSelect;
+export type NuevoAudit  = typeof auditLog.$inferInsert;
 
 // ── Helpers de formato ────────────────────────────────────────────────────────
 export const fmtGestion = (

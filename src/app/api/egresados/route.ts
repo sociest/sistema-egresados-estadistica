@@ -8,6 +8,7 @@ import { eq, ilike, and, or, sql, desc } from "drizzle-orm";
 import { getSession, hashPassword } from "@/lib/auth";
 import { egresadoSchema } from "@/lib/validations";
 import { ok, err, generarPasswordInicial } from "@/lib/utils";
+import { registrarAudit, getIpFromRequest } from "@/lib/audit";
 
 export async function GET(req: NextRequest) {
   try {
@@ -137,10 +138,22 @@ export async function POST(req: NextRequest) {
       return nuevoEgresado;
     });
 
+    registrarAudit({
+      idUsuario:   session.idUsuario,
+      accion:      "crear",
+      entidad:     "egresado",
+      entidadId:   resultado.id,
+      datosNuevos: { ci: d.ci, nombres: d.nombres, tipo: d.tipo },
+      ip:          getIpFromRequest(req),
+    });
+
     return ok(resultado, 201);
+    
   } catch (e: any) {
+    
     console.error("[egresados POST]", e);
     if (e.code === "23505") return err("Ya existe un egresado con ese CI");
     return err("Error al crear egresado", 500);
   }
+  
 }

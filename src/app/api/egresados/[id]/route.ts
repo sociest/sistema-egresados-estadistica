@@ -8,6 +8,8 @@ import { eq } from "drizzle-orm";
 import { getSession } from "@/lib/auth";
 import { egresadoSchema } from "@/lib/validations";
 import { ok, err } from "@/lib/utils";
+import { registrarAudit, getIpFromRequest } from "@/lib/audit";
+
 
 export async function GET(_: NextRequest, { params }: { params: { id: string } }) {
   try {
@@ -88,6 +90,15 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
     .returning();
 
     if (!updated) return err("Egresado no encontrado", 404);
+    registrarAudit({
+          idUsuario:       session.idUsuario,
+          accion:          "editar",
+          entidad:         "egresado",
+          entidadId:       id,
+          datosNuevos:     { ci: d.ci, nombres: d.nombres, tipo: d.tipo },
+          ip:              getIpFromRequest(req),
+        });
+
     return ok(updated);
   } catch (e: any) {
     console.error("[egresado PUT id]", e);
@@ -96,7 +107,7 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
   }
 }
 
-export async function DELETE(_: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {
   try {
     const session = await getSession();
     if (!session || session.rol !== "admin") return err("No autorizado", 403);
@@ -106,7 +117,19 @@ export async function DELETE(_: NextRequest, { params }: { params: { id: string 
 
     const [deleted] = await db.delete(egresado).where(eq(egresado.id, id)).returning();
     if (!deleted) return err("Egresado no encontrado", 404);
+
+    registrarAudit({
+      idUsuario:       session.idUsuario,
+      accion:          "eliminar",
+      entidad:         "egresado",
+      entidadId:       id,
+      datosAnteriores: { id: deleted.id, ci: deleted.ci, nombres: deleted.nombres },
+      ip:              getIpFromRequest(req),
+    });
+    
     return ok({ message: "Eliminado correctamente" });
+
+    
   } catch (e) {
     console.error("[egresado DELETE id]", e);
     return err("Error al eliminar", 500);

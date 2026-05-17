@@ -5,6 +5,7 @@ import { eq, ilike, or } from "drizzle-orm";
 import { getSession, hashPassword } from "@/lib/auth";
 import { usuarioSchema } from "@/lib/validations";
 import { ok, err } from "@/lib/utils";
+import { registrarAudit, getIpFromRequest } from "@/lib/audit";
 
 export async function GET(req: NextRequest) {
   try {
@@ -55,6 +56,15 @@ export async function POST(req: NextRequest) {
       idEgresado:   d.idEgresado ?? null,
     }).returning({ id: usuario.id, correo: usuario.correo, rol: usuario.rol, estado: usuario.estado });
 
+    registrarAudit({
+      idUsuario:   session.idUsuario,
+      accion:      "crear",
+      entidad:     "usuario",
+      entidadId:   row.id,
+      datosNuevos: { correo: row.correo, rol: row.rol },
+      ip:          getIpFromRequest(req),
+    });
+    
     return ok(row, 201);
   } catch (e: any) {
     console.error(e);

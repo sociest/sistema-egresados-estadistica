@@ -5,7 +5,7 @@ import { useState } from "react";
 import {
   LayoutDashboard, Users, FileBarChart,
   UserCog, LogOut, GraduationCap, ChevronRight,
-  MessageSquare, Menu, X, Newspaper,
+  MessageSquare, Menu, X, Newspaper, Activity,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -15,7 +15,9 @@ const NAV = [
   { href: "/reportes",       label: "Reportes",       icon: FileBarChart },
   { href: "/usuarios",       label: "Usuarios",       icon: UserCog },
   { href: "/noticias-admin", label: "Noticias",        icon: Newspaper },
+  { href: "/actividad",      label: "Actividad",       icon: Activity },
 ];
+
 function SidebarContent({ correo, onClose }: { correo?: string; onClose?: () => void }) {
   const pathname = usePathname();
   const router   = useRouter();
