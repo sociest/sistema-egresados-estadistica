@@ -7,3 +7,8 @@ next-env.d.ts
 # Imágenes subidas por usuarios
 public/uploads/noticias/*
 !public/uploads/noticias/.gitkeep
+data/
+backups/
+ssl/
+.env.production
+.env.local.docker
