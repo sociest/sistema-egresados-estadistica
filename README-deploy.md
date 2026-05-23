@@ -15,6 +15,21 @@
 
 ---
 
+## Cómo funciona el despliegue
+
+El sistema usa **4 contenedores Docker**:
+
+| Contenedor | Rol |
+|---|---|
+| `egresados_db` | Base de datos PostgreSQL |
+| `egresados_migrate` | Crea/actualiza las tablas en la BD (se apaga solo) |
+| `egresados_app` | Aplicación Next.js |
+| `egresados_nginx` | Proxy inverso con HTTPS |
+
+Al hacer `docker compose up`, los contenedores arrancan en orden: primero la BD, luego las migraciones, luego la app, luego nginx. No es necesario correr comandos manuales para crear las tablas.
+
+---
+
 ## Paso 1 — Instalar Docker en el servidor
 
 ```bash
@@ -54,7 +69,6 @@ docker compose version
 ## Paso 2 — Clonar el repositorio
 
 ```bash
-# Clonar en /opt (recomendado para apps de producción)
 sudo mkdir -p /opt/egresados
 sudo chown $USER:$USER /opt/egresados
 cd /opt/egresados
@@ -67,22 +81,21 @@ git clone https://github.com/tu-usuario/egresados-estadistica.git .
 ## Paso 3 — Configurar variables de entorno
 
 ```bash
-# Copiar el ejemplo
 cp .env.production.example .env.production
-
-# Editar con tus valores reales
 nano .env.production
 ```
 
 Valores que **debes cambiar obligatoriamente**:
 
-```bash
-DB_PASSWORD=una_contraseña_muy_segura_aqui
-DATABASE_URL=postgresql://postgres:una_contraseña_muy_segura_aqui@db:5432/egresados_db
-JWT_SECRET=genera_con_node_e_console.log_require_crypto_randomBytes_32_toString_base64
+```env
+DB_PASSWORD=una_contraseña_segura_aqui
+DATABASE_URL=postgresql://postgres:una_contraseña_segura_aqui@db:5432/egresados_db
+JWT_SECRET=genera_con_el_comando_de_abajo
 NEXTAUTH_URL=https://tudominio.bo
 EMAIL_USER=tu_correo@gmail.com
 EMAIL_PASS=tu_contraseña_de_aplicacion_de_gmail
+ADMIN_EMAIL=admin@estadistica.bo
+ADMIN_PASSWORD=CambiaEstoEnProduccion123!
 ```
 
 Para generar el JWT_SECRET:
@@ -90,7 +103,7 @@ Para generar el JWT_SECRET:
 node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"
 ```
 
-Para el correo con Gmail, necesitas una **contraseña de aplicación**:
+Para el correo con Gmail necesitas una **contraseña de aplicación**:
 1. Activa la verificación en dos pasos en tu cuenta Gmail
 2. Ve a: Cuenta Google → Seguridad → Contraseñas de aplicaciones
 3. Genera una contraseña para "Correo" → "Otro (nombre personalizado)"
@@ -106,74 +119,96 @@ Para el correo con Gmail, necesitas una **contraseña de aplicación**:
 # Instalar Certbot
 sudo apt install -y certbot
 
-# Obtener certificado (detén nginx si está corriendo)
+# Obtener certificado (asegúrate que el puerto 80 esté libre)
 sudo certbot certonly --standalone -d tudominio.bo
 
-# Crear carpeta ssl y copiar certificados
+# Copiar certificados al proyecto
 mkdir -p ssl
 sudo cp /etc/letsencrypt/live/tudominio.bo/fullchain.pem ssl/
 sudo cp /etc/letsencrypt/live/tudominio.bo/privkey.pem ssl/
 sudo chown $USER:$USER ssl/*.pem
 ```
 
-### Opción B — Sin dominio (solo HTTP, para pruebas)
+### Opción B — Sin dominio (solo HTTP, para pruebas internas)
 
-Edita `nginx.conf` y usa la versión simplificada sin HTTPS (ver comentario en el archivo).
-Elimina el servicio `nginx` del `docker-compose.yml` si no tienes dominio aún.
+Si no tienes dominio aún, elimina el servicio `nginx` del `docker-compose.yml` antes de continuar. La app quedará accesible directamente en el puerto 3000.
 
 ---
 
-## Paso 5 — Primer despliegue
+## Paso 5 — Crear carpetas necesarias
+
+```bash
+mkdir data\postgres public\uploads\noticias backups ssl
+```
+
+---
+
+## Paso 6 — Primer despliegue
 
 ```bash
 cd /opt/egresados
-
-# Crear carpetas necesarias
-mkdir -p data/postgres public/uploads/noticias backups ssl
-
-# Construir e iniciar todos los servicios
 docker compose --env-file .env.production up -d --build
+```
 
-# Ver que todos los contenedores estén corriendo
+Este comando hace todo automáticamente:
+1. Construye las imágenes de la app
+2. Levanta la base de datos
+3. **Crea todas las tablas automáticamente** (contenedor `migrate`)
+4. Inicia la aplicación
+5. Inicia nginx
+
+Espera 2-3 minutos mientras se construye. Luego verifica:
+
+```bash
 docker compose ps
 ```
 
-Deberías ver tres contenedores en estado `Up`:
-- `egresados_db`
-- `egresados_app`
-- `egresados_nginx`
+Deberías ver:
+NAME                 STATUS
+egresados_db         Up (healthy)
+egresados_migrate    Exited (0)      ← normal, se apaga solo al terminar
+egresados_app        Up (healthy)
+egresados_nginx      Up
 
----
+El estado `Exited (0)` del contenedor `migrate` es **correcto** — significa que las migraciones se ejecutaron exitosamente y el contenedor se apagó.
 
-## Paso 6 — Inicializar la base de datos
-
+Si `migrate` muestra `Exited (1)`, hubo un error. Revisa los logs:
 ```bash
-# Esperar a que la BD esté lista (unos segundos)
-sleep 10
-
-# Aplicar el schema
-docker exec egresados_app npx drizzle-kit push
-
-# Cargar datos iniciales (admin + datos de ejemplo)
-docker exec egresados_app npx tsx scripts/seed.ts
+docker logs egresados_migrate
 ```
 
 ---
 
-## Paso 7 — Verificar que funciona
+## Paso 7 — Cargar datos iniciales (solo la primera vez)
+
+```bash
+docker compose --env-file .env.production run --rm seed
+```
+
+Esto crea:
+- Usuario admin con las credenciales configuradas en `ADMIN_EMAIL` y `ADMIN_PASSWORD`
+- Datos de ejemplo para probar el sistema
+
+**Solo ejecutar una vez.** Si lo ejecutas de nuevo borrará y recreará todos los datos.
+
+---
+
+## Paso 8 — Verificar que funciona
 
 ```bash
 # Ver logs de la app
 docker logs egresados_app --tail=50
-
-# Ver logs de nginx
-docker logs egresados_nginx --tail=20
 
 # Probar que la API responde
 curl http://localhost:3000/api/stats/publicos
 
 # Si tienes dominio con HTTPS
 curl https://tudominio.bo/api/stats/publicos
+```
+
+La respuesta debería ser algo como:
+```json
+{"data":{"totalTitulados":7,"totalEgresados":3,"tasaEmpleabilidad":82}}
 ```
 
 ---
@@ -188,11 +223,13 @@ bash scripts/deploy.sh
 ```
 
 El script hace automáticamente:
-1. `git pull` — baja los últimos cambios
+1. `git pull` — descarga los últimos cambios
 2. Reconstruye solo la imagen de la app
 3. Reinicia el contenedor sin tocar la BD ni nginx
 4. Verifica que la app esté respondiendo
 5. Limpia imágenes Docker antiguas
+
+Si hubo cambios en el schema de la BD, las migraciones se aplican automáticamente al reiniciar gracias al contenedor `migrate`.
 
 ---
 
@@ -222,6 +259,9 @@ docker logs egresados_db -f
 
 # Logs de nginx
 docker logs egresados_nginx -f
+
+# Logs de las migraciones
+docker logs egresados_migrate
 
 # Logs del backup automático
 tail -f /var/log/backup-egresados.log
@@ -258,13 +298,13 @@ docker compose down -v
 
 ---
 
-## Configurar backup automático
+## Configurar backup automático a Google Drive
 
 ```bash
-# Instalar rclone y configurar Google Drive
+# Seguir las instrucciones interactivas
 bash scripts/setup-rclone.sh
 
-# Dar permisos de ejecución
+# Dar permisos de ejecución al script
 chmod +x scripts/backup.sh
 
 # Probar el backup manualmente
@@ -275,10 +315,7 @@ crontab -e
 ```
 
 Agrega esta línea al crontab:
-```
 0 2 * * * /opt/egresados/scripts/backup.sh >> /var/log/backup-egresados.log 2>&1
-```
-
 ---
 
 ## Solución de problemas comunes
@@ -287,6 +324,12 @@ Agrega esta línea al crontab:
 ```bash
 docker logs egresados_app --tail=100
 # Verifica que DATABASE_URL y JWT_SECRET estén bien en .env.production
+```
+
+**Las migraciones fallan (migrate Exited 1):**
+```bash
+docker logs egresados_migrate
+# Verifica que DATABASE_URL apunte a @db:5432 (no localhost)
 ```
 
 **La BD no conecta:**

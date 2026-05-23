@@ -377,42 +377,41 @@ También la mejora de la landingpage no se está efectuando, ósea yo la veo igu
 - `src/components/shared/PublicFooter.tsx`
 - `src/app/login/LandingLoginPage.tsx`
 
-## 🟠 BLOQUE G — Audit log + backup a Google Drive
 
-> Sin cambios respecto al roadmap anterior. Implementar según lo especificado en el Bloque 9 del roadmap v1.
+### 🟠 BLOQUE 9 — Audit log y backup a Google Drive
 
-**Resumen:**
-- Tabla `audit_log` + helper `registrarAudit()` (fire-and-forget)
-- Registrar en: create/update/delete de egresados y usuarios
-- Vista `/actividad` paginada con filtros
-- Script `backup.sh` con `pg_dump` + gzip + upload a Google Drive via `rclone`
-- Script `setup-rclone.sh` con instrucciones
-- Endpoint `GET /api/backup` para descarga inmediata de Excel completo
+**Qué hay que hacer:**
 
-**Archivos:**
-- `src/lib/schema.ts` (nueva tabla)
-- `src/lib/audit.ts` (nuevo)
-- `src/app/actividad/page.tsx` (nuevo)
-- `src/app/api/backup/route.ts` (nuevo)
-- `scripts/backup.sh` (nuevo)
-- `scripts/setup-rclone.sh` (nuevo)
-- `src/components/shared/AdminLayout.tsx` (agregar link "Actividad")
+**Audit log:**
+- Nueva tabla `audit_log`: id, idUsuario, accion enum (`crear`, `editar`, `eliminar`), entidad enum (`egresado`, `usuario`, `noticia`, `encuesta`), entidadId, datosAnteriores (JSON texto), datosNuevos (JSON texto), ip, creadoEn
+- Nuevo `src/lib/audit.ts` con función `registrarAudit(opts)` que inserta en la tabla — debe ser llamada desde los route handlers de forma no bloqueante (no usar await, solo fire-and-forget para no enlentecer las respuestas)
+- Agregar llamadas en: `POST /api/egresados`, `PUT /api/egresados/[id]`, `DELETE /api/egresados/[id]`, `POST /api/usuarios`, `PUT /api/usuarios/[id]`, `DELETE /api/usuarios/[id]`
+- Vista admin `/actividad/page.tsx` con tabla paginada (20 por página), filtros por entidad, acción y rango de fechas
+- Agregar "Actividad" al sidebar de AdminLayout
+
+**Backup a Google Drive:**
+- Script `scripts/backup.sh` que ejecuta `pg_dump` dentro del contenedor Docker, comprime con `gzip` (nombre: `backup_YYYYMMDD_HHMMSS.sql.gz`), sube el archivo a Google Drive usando `rclone` (herramienta gratuita de CLI), y elimina backups locales de más de 7 días
+- Script de configuración `scripts/setup-rclone.sh` con instrucciones paso a paso para autorizar `rclone` con Google Drive (requiere hacer el proceso una sola vez en el servidor con un navegador o token)
+- Crontab entry para ejecutar el backup todos los días a las 2:00am: `0 2 * * * /ruta/al/proyecto/scripts/backup.sh >> /var/log/backup-egresados.log 2>&1`
+- Endpoint admin `GET /api/backup` que genere y descargue un Excel completo con: hoja Egresados (todos los campos), hoja Historial Laboral, hoja Postgrados, hoja Usuarios (sin passwordHash), hoja Audit Log (últimos 1000 registros) — útil para backup manual inmediato sin acceso al servidor
+
+**Archivos a crear/modificar:** actualizar `src/lib/schema.ts`, nuevo `src/lib/audit.ts`, actualizar routes de egresados y usuarios, nuevo `src/app/actividad/page.tsx`, nuevo `src/app/api/backup/route.ts`, nuevos `scripts/backup.sh` y `scripts/setup-rclone.sh`, actualizar `src/components/shared/AdminLayout.tsx`
 
 ---
 
-## 🔵 BLOQUE H — Docker y despliegue
+### 🔵 BLOQUE 10 — Docker y despliegue en servidor
 
-> Sin cambios respecto al roadmap anterior. Puede implementarse en cualquier momento.
-> **Recomendación: hacerlo después del Bloque F** para que el contenedor de producción tenga el sistema visualmente completo.
+**Qué hay que hacer:**
 
-**Archivos a crear:**
-- `Dockerfile` (multi-stage)
-- `docker-compose.yml` (ya parcialmente implementado — revisar y completar)
-- `nginx.conf` (ya parcialmente implementado — revisar HTTPS redirect)
-- `.env.production.example`
-- `scripts/deploy.sh`
-- `scripts/restore-backup.sh`
-- `README-deploy.md`
+- `Dockerfile` multi-stage: stage 1 instala dependencias y compila el proyecto Next.js, stage 2 copia solo lo necesario para producción — resultado: imagen liviana de ~300MB
+- `docker-compose.yml` con tres servicios: `db` (PostgreSQL 16 con volumen persistente `./data/postgres`), `app` (Next.js en puerto 3000, depende de `db`), `nginx` (reverse proxy en puertos 80 y 443, redirige a `app:3000`)
+- `nginx.conf` con: redirect de HTTP a HTTPS, reverse proxy a Next.js, headers de seguridad (HSTS, X-Frame-Options, etc.), cache de archivos estáticos de `/uploads/` (1 mes), límite de tamaño de subida (`client_max_body_size 10m`)
+- `.env.production.example` con todas las variables: `DATABASE_URL`, `JWT_SECRET`, `NODE_ENV=production`, `NEXTAUTH_URL`, y en el futuro `TWILIO_*` para SMS
+- `scripts/deploy.sh` para actualizar la aplicación en producción: `git pull`, `docker-compose build app`, `docker-compose up -d app` (sin bajar la BD)
+- `scripts/restore-backup.sh` para restaurar desde un archivo `.sql.gz`: descomprime y carga con `pg_restore` dentro del contenedor de la BD
+- `README-deploy.md` con guía completa paso a paso: requisitos del servidor (Ubuntu 22.04+, 2GB RAM mínimo, 20GB disco), instalación de Docker, clonar el repo, configurar `.env.production`, primer despliegue, cómo actualizar, cómo restaurar backup, cómo ver logs
+
+**Archivos a crear:** `Dockerfile`, `docker-compose.yml`, `nginx.conf`, `.env.production.example`, `scripts/deploy.sh`, `scripts/restore-backup.sh`, `README-deploy.md`
 
 ---
 

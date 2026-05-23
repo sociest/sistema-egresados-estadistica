@@ -1,6 +1,6 @@
 import type { Config } from "drizzle-kit";
 import * as dotenv from "dotenv";
-dotenv.config({ path: ".env.local" });
+dotenv.config({ path: ".env.production" });
 export default {
   schema:      "./src/lib/schema.ts",
   out:         "./drizzle/migrations",
