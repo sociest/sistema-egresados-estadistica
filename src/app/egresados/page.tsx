@@ -5,7 +5,7 @@ import { db } from "@/lib/db";
 import { egresado, historialLaboral } from "@/lib/schema";
 import { ilike, and, or, sql, eq } from "drizzle-orm";
 import Link from "next/link";
-import { Plus, Search, Eye, Pencil } from "lucide-react";
+import { Plus, Search, Eye, Pencil, Download } from "lucide-react";
 import AdminLayout from "@/components/shared/AdminLayout";
 import BuscadorEgresados from "@/components/egresados/BuscadorEgresados";
 import EliminarEgresadoBtn from "@/components/egresados/EliminarEgresadoBtn";
@@ -148,11 +148,20 @@ export default async function EgresadosPage({ searchParams }: { searchParams: SP
             <p className="page-sub">{total} egresado(s) encontrado(s)</p>
           </div>
           <div className="flex items-center gap-2">
-            <ImportarEgresadosBtn />
-            <Link href="/egresados/nuevo" className="btn-primary btn-sm">
-              <Plus className="w-3.5 h-3.5" /> Nuevo Egresado
-            </Link>
-          </div>
+              <a
+                href="/api/backup"
+                download
+                className="btn-slate btn-sm flex items-center gap-2"
+                title="Descargar backup completo en Excel"
+              >
+                <Download className="w-3.5 h-3.5" />
+                Backup
+              </a>
+              <ImportarEgresadosBtn />
+              <Link href="/egresados/nuevo" className="btn-primary btn-sm">
+                <Plus className="w-3.5 h-3.5" /> Nuevo Egresado
+              </Link>
+            </div>
         </div>
 
         <BuscadorEgresados
