@@ -142,13 +142,24 @@ export default async function EgresadosPage({ searchParams }: { searchParams: SP
   return (
     <AdminLayout correo={session.correo}>
       <div className="page">
-        <div className="page-header">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-2">
           <div>
-            <h1 className="page-title">Egresados</h1>
-            <p className="page-sub">{total} egresado(s) encontrado(s)</p>
+            <div className="flex items-center gap-3 mb-1">
+              <div className="h-[2px] w-6 rounded-full" style={{ background: "#ea580c" }} />
+              <span className="text-[10px] font-black uppercase tracking-[0.3em]" style={{ color: "#ea580c" }}>
+                Gestión de egresados
+              </span>
+            </div>
+            <h1 className="text-2xl font-black uppercase leading-none tracking-tighter"
+              style={{ color: "var(--azul-pizarra)", fontFamily: "'Source Serif 4', serif" }}>
+              Egresados
+            </h1>
+            <p className="text-sm mt-0.5" style={{ color: "var(--gris-grafito)" }}>
+              {total} egresado(s) encontrado(s)
+            </p>
           </div>
           <div className="flex items-center gap-2">
-              <a
+            <a
                 href="/api/backup"
                 download
                 className="btn-slate btn-sm flex items-center gap-2"
@@ -157,11 +168,11 @@ export default async function EgresadosPage({ searchParams }: { searchParams: SP
                 <Download className="w-3.5 h-3.5" />
                 Backup
               </a>
-              <ImportarEgresadosBtn />
-              <Link href="/egresados/nuevo" className="btn-primary btn-sm">
-                <Plus className="w-3.5 h-3.5" /> Nuevo Egresado
-              </Link>
-            </div>
+            <ImportarEgresadosBtn />
+            <Link href="/egresados/nuevo" className="btn-primary btn-sm">
+              <Plus className="w-3.5 h-3.5" /> Nuevo Egresado
+            </Link>
+          </div>
         </div>
 
         <BuscadorEgresados

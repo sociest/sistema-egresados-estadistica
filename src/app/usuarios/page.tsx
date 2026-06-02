@@ -36,11 +36,29 @@ export default async function UsuariosPage() {
   return (
     <AdminLayout correo={session.correo}>
       <div className="page">
-        <div className="page-header">
+        <div className="page-header mb-4">
           <div>
-            <h1 className="page-title">Usuarios</h1>
-            <p className="page-sub">{rows.length} usuario(s) registrado(s)</p>
+            {/* Etiqueta superior con la línea naranja */}
+            <div className="flex items-center gap-3 mb-1">
+              <div className="h-[2px] w-6 rounded-full" style={{ background: "#ea580c" }} />
+              <span className="text-[10px] font-black uppercase tracking-[0.3em]" style={{ color: "#ea580c" }}>
+                Gestión de usuarios
+              </span>
+            </div>
+            
+            {/* Título Principal */}
+            <h1 className="text-2xl font-black uppercase leading-none tracking-tighter"
+              style={{ color: "var(--azul-pizarra)", fontFamily: "'Source Serif 4', serif" }}>
+              Usuarios
+            </h1>
+            
+            {/* Subtítulo con el contador de filas */}
+            <p className="text-sm mt-0.5" style={{ color: "var(--gris-grafito)" }}>
+              {rows.length} usuario(s) registrado(s)
+            </p>
           </div>
+
+          {/* Botón de acción */}
           <Link href="/usuarios/nuevo" className="btn-primary btn-sm">
             <Plus className="w-3.5 h-3.5" /> Nuevo Usuario
           </Link>
