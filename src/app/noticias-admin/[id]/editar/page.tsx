@@ -20,7 +20,7 @@ export default async function EditarNoticiaPage({ params }: { params: { id: stri
 
   return (
     <AdminLayout correo={session.correo}>
-      <div className="max-w-2xl space-y-6">
+      <div className="max-w-2xl mx-auto space-y-6">
         <Link href="/noticias-admin" className="btn-ghost btn-sm inline-flex">
           <ArrowLeft className="w-4 h-4" /> Volver a Noticias
         </Link>

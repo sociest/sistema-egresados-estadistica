@@ -173,7 +173,13 @@ export const noticiaSchema = z.object({
   cuerpo:    z.string().min(10, "Mínimo 10 caracteres"),
   tipo:      z.enum(["noticia_institucional", "curso_evento", "noticia_social"]),
   fecha:     z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Fecha inválida"),
-  imagenUrl: z.string().url("URL inválida").max(500).optional().nullable(),
+  imagenUrl: z.union([
+    // CAMBIO AQUÍ: Eliminamos .url() para permitir rutas relativas (/uploads/...)
+    z.string().max(500, "La ruta es demasiado larga"), 
+    z.literal(""),
+    z.null(),
+    z.undefined(),
+  ]).transform(v => (v === "" || v === undefined) ? null : v).optional().nullable(),
   publicado: z.boolean().default(false),
 });
 

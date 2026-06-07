@@ -58,14 +58,14 @@ export default function PublicHeader({ isLoggedIn, correo }: PublicHeaderProps) 
         }}
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
+          <div className="flex items-center justify-between h-16 md:h-20">
 
             {/* ── Brand ── */}
             <Link href={isLoggedIn ? "/mi-perfil" : "/"} className="flex items-center gap-2 sm:gap-3 shrink-0">
               <img
                 src="/iconos/icono_estaditica.png"
                 alt="Logo Carrera de Estadística"
-                className="h-[34px] w-[34px] sm:h-[42px] sm:w-[42px] object-contain shrink-0"
+                className="h-[44px] w-[44px] sm:h-[56px] sm:w-[56px] object-contain shrink-0"
                 onError={(e) => {
                   const img = e.currentTarget as HTMLImageElement;
                   img.style.display = "none";
@@ -74,16 +74,16 @@ export default function PublicHeader({ isLoggedIn, correo }: PublicHeaderProps) 
                 }}
               />
               <div
-                className="h-[34px] w-[34px] sm:h-[42px] sm:w-[42px] rounded-xl items-center justify-center shrink-0 text-lg font-bold"
+                className="h-[44px] w-[44px] sm:h-[56px] sm:w-[56px] rounded-xl items-center justify-center shrink-0 text-lg font-bold"
                 style={{ display: "none", background: "rgba(255,255,255,0.10)", border: "1px solid rgba(255,255,255,0.15)", color: "var(--turquesa)", fontFamily: "'Source Serif 4', serif" }}
               >
                 σ
               </div>
               <div className="hidden sm:block">
-                <p className="font-bold text-[14px] sm:text-[16px] leading-tight text-white tracking-wide">
+                <p className="font-bold text-[16px] sm:text-[20px] leading-tight text-white tracking-wide">
                   CARRERA DE ESTADÍSTICA
                 </p>
-                <p className="text-[10px] sm:text-[11px] leading-tight font-medium" style={{ color: "rgba(255,255,255,0.80)" }}>
+                <p className="text-[11px] sm:text-[13px] leading-tight font-medium" style={{ color: "rgba(255,255,255,0.80)" }}>
                   Facultad de Ciencias Puras y Naturales
                 </p>
               </div>

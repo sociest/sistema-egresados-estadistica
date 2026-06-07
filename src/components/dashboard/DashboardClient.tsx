@@ -48,6 +48,80 @@ function KpiCard({ label, value, sub, icon: Icon, color, bg }: {
   );
 }
 
+// ── KPI Card Género ───────────────────────────────────────────────────────────
+function KpiCardGenero({ masculino, femenino, otro, total }: {
+  masculino: number; femenino: number; otro: number; total: number;
+}) {
+  const conGenero = masculino + femenino + otro;
+  const pctM = conGenero > 0 ? Math.round((masculino / conGenero) * 100) : 0;
+  const pctF = conGenero > 0 ? Math.round((femenino  / conGenero) * 100) : 0;
+  const pctO = conGenero > 0 ? Math.round((otro      / conGenero) * 100) : 0;
+
+  return (
+    <div className="rounded-2xl p-5 col-span-2 lg:col-span-1"
+      style={{ background: "var(--blanco)", border: "1px solid var(--borde)", boxShadow: "var(--shadow-sm)" }}>
+      <p className="text-xs font-medium uppercase tracking-wide mb-1" style={{ color: "var(--gris-grafito)" }}>
+        Distribución por género
+      </p>
+      <p className="text-xs mb-3" style={{ color: "var(--placeholder)" }}>
+        {conGenero} con género registrado
+      </p>
+
+      {/* Barra apilada */}
+      <div className="flex h-2 rounded-full overflow-hidden mb-3" style={{ background: "var(--borde)" }}>
+        {masculino > 0 && (
+          <div style={{ width: `${pctM}%`, background: "#3b82f6", transition: "width 0.5s" }} />
+        )}
+        {femenino > 0 && (
+          <div style={{ width: `${pctF}%`, background: "#ec4899", transition: "width 0.5s" }} />
+        )}
+        {otro > 0 && (
+          <div style={{ width: `${pctO}%`, background: "var(--placeholder)", transition: "width 0.5s" }} />
+        )}
+      </div>
+
+      {/* Valores */}
+      <div className="flex gap-4">
+        <div className="flex items-center gap-1.5">
+          <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: "#3b82f6" }} />
+          <div>
+            <p className="text-lg font-bold leading-none" style={{ color: "var(--azul-pizarra)", fontFamily: "'Source Serif 4', serif" }}>
+              {masculino}
+            </p>
+            <p className="text-[10px] font-semibold uppercase tracking-wide" style={{ color: "var(--gris-grafito)" }}>
+              Masc. ({pctM}%)
+            </p>
+          </div>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: "#ec4899" }} />
+          <div>
+            <p className="text-lg font-bold leading-none" style={{ color: "var(--azul-pizarra)", fontFamily: "'Source Serif 4', serif" }}>
+              {femenino}
+            </p>
+            <p className="text-[10px] font-semibold uppercase tracking-wide" style={{ color: "var(--gris-grafito)" }}>
+              Fem. ({pctF}%)
+            </p>
+          </div>
+        </div>
+        {otro > 0 && (
+          <div className="flex items-center gap-1.5">
+            <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: "var(--placeholder)" }} />
+            <div>
+              <p className="text-lg font-bold leading-none" style={{ color: "var(--azul-pizarra)", fontFamily: "'Source Serif 4', serif" }}>
+                {otro}
+              </p>
+              <p className="text-[10px] font-semibold uppercase tracking-wide" style={{ color: "var(--gris-grafito)" }}>
+                Otro ({pctO}%)
+              </p>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 // ── Tooltip personalizado ─────────────────────────────────────────────────────
 function CustomTooltip({ active, payload, label }: any) {
   if (!active || !payload?.length) return null;
@@ -397,6 +471,10 @@ export default function DashboardClient() {
     const kpis = data.kpis ?? {};
     sectionTitle("Indicadores Clave");
 
+    const generoTotal = (kpis.masculino ?? 0) + (kpis.femenino ?? 0) + (kpis.otro ?? 0);
+    const pctMpdf = generoTotal > 0 ? Math.round(((kpis.masculino ?? 0) / generoTotal) * 100) : 0;
+    const pctFpdf = generoTotal > 0 ? Math.round(((kpis.femenino  ?? 0) / generoTotal) * 100) : 0;
+
     const kpiData: [string, string][] = [
       ["Total registrados",        String(kpis.totalRegistrados ?? 0)],
       ["Con empleo activo",        String(kpis.conEmpleo ?? 0)],
@@ -404,6 +482,11 @@ export default function DashboardClient() {
       ["Inserción laboral",        kpis.tiempoPromedioInsercion ? `${kpis.tiempoPromedioInsercion} meses` : "—"],
       ...(modo !== "egresados"
         ? [["Egreso → Titulación", kpis.tiempoPromedioTitulacion ? `${kpis.tiempoPromedioTitulacion} meses` : "—"] as [string, string]]
+        : []),
+      ["Masculino", `${kpis.masculino ?? 0} (${pctMpdf}%)`],
+      ["Femenino",  `${kpis.femenino  ?? 0} (${pctFpdf}%)`],
+      ...((kpis.otro ?? 0) > 0
+        ? [["Otro / No especif.", String(kpis.otro)] as [string, string]]
         : []),
     ];
 
@@ -798,6 +881,12 @@ export default function DashboardClient() {
             {renderKpis().map((kpi, i) => (
               <KpiCard key={i} {...kpi} />
             ))}
+            <KpiCardGenero
+              masculino={kpis.masculino ?? 0}
+              femenino={kpis.femenino  ?? 0}
+              otro={kpis.otro          ?? 0}
+              total={kpis.totalRegistrados ?? 0}
+            />
           </div>
 
           {/* ── Separador ── */}

@@ -42,11 +42,10 @@ export default function NoticiaForm({ noticia: n, redirectTo }: Props) {
   const [serverError, setServerError] = useState<string | null>(null);
   const [preview, setPreview]         = useState(false);
 
-  // Estado para el campo de imagen
   const [imagenTab,     setImagenTab]     = useState<"url" | "subir">("url");
   const [uploadLoading, setUploadLoading] = useState(false);
   const [uploadError,   setUploadError]   = useState<string | null>(null);
-  const [previewImg,    setPreviewImg]     = useState<string | null>(n?.imagenUrl ?? null);
+  const [previewImg,    setPreviewImg]    = useState<string | null>(n?.imagenUrl ?? null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const { register, handleSubmit, watch, setValue, formState: { errors, isSubmitting } } =
@@ -57,20 +56,21 @@ export default function NoticiaForm({ noticia: n, redirectTo }: Props) {
         cuerpo:    n.cuerpo,
         tipo:      n.tipo,
         fecha:     n.fecha?.split("T")[0] ?? n.fecha ?? "",
-        imagenUrl: n.imagenUrl ?? "",
+        imagenUrl: n.imagenUrl ?? null,
         publicado: n.publicado ?? false,
       } : {
         tipo:      "noticia_institucional",
         publicado: false,
         fecha:     new Date().toISOString().split("T")[0],
+        imagenUrl: null,
       },
     });
 
-  const cuerpoWatch  = watch("cuerpo", "");
-  const tipoWatch    = watch("tipo");
-  const imagenWatch  = watch("imagenUrl");
+  const cuerpoWatch = watch("cuerpo", "");
+  const tipoWatch   = watch("tipo");
+  // Leemos el valor actual de imagenUrl desde el formulario
+  const imagenWatch = watch("imagenUrl");
 
-  // Subir imagen al servidor
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -92,15 +92,17 @@ export default function NoticiaForm({ noticia: n, redirectTo }: Props) {
       if (!res.ok) {
         setUploadError(json.error ?? "Error al subir la imagen");
         setPreviewImg(null);
-        setValue("imagenUrl", "");
+        setValue("imagenUrl", null, { shouldValidate: false });
         return;
       }
 
-      setValue("imagenUrl", json.data.url);
+      // Sincronizar con react-hook-form
+      setValue("imagenUrl", json.data.url, { shouldValidate: true, shouldDirty: true });
       setPreviewImg(json.data.url);
     } catch {
       setUploadError("Error al conectar con el servidor");
       setPreviewImg(null);
+      setValue("imagenUrl", null, { shouldValidate: false });
     } finally {
       setUploadLoading(false);
     }
@@ -108,12 +110,12 @@ export default function NoticiaForm({ noticia: n, redirectTo }: Props) {
 
   const handleUrlChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value;
-    setValue("imagenUrl", val);
+    setValue("imagenUrl", val === "" ? null : val, { shouldValidate: true, shouldDirty: true });
     setPreviewImg(val || null);
   };
 
   const limpiarImagen = () => {
-    setValue("imagenUrl", "");
+    setValue("imagenUrl", null, { shouldValidate: false });
     setPreviewImg(null);
     setUploadError(null);
     if (fileInputRef.current) fileInputRef.current.value = "";
@@ -234,12 +236,12 @@ export default function NoticiaForm({ noticia: n, redirectTo }: Props) {
         {imagenTab === "url" && (
           <div className="space-y-2">
             <input
-              value={imagenWatch ?? ""}
+              value={(imagenWatch as string) ?? ""}
               onChange={handleUrlChange}
               placeholder="https://ejemplo.com/imagen.jpg"
               className={cn("field", errors.imagenUrl && "field-err")}
             />
-            {errors.imagenUrl && <p className="hint">{errors.imagenUrl.message}</p>}
+            {/* SE ELIMINÓ EL ERROR DE AQUÍ INTERNAMENTE */}
           </div>
         )}
 
@@ -282,8 +284,8 @@ export default function NoticiaForm({ noticia: n, redirectTo }: Props) {
             {uploadError && <p className="error-box">{uploadError}</p>}
           </div>
         )}
-
-        {/* Preview de imagen (se muestra en ambas pestañas si hay URL) */}
+        {errors.imagenUrl && <p className="hint text-red-500 mt-1">{errors.imagenUrl.message}</p>}
+        {/* Preview de imagen */}
         {previewImg && (
           <div className="mt-3 relative inline-block">
             <img
@@ -308,8 +310,12 @@ export default function NoticiaForm({ noticia: n, redirectTo }: Props) {
           </div>
         )}
 
-        {/* Campo oculto que guarda el valor real */}
-        <input type="hidden" {...register("imagenUrl")} />
+        {/* Indicador de imagen cargada al usar "Subir" */}
+        {imagenTab === "subir" && imagenWatch && !uploadLoading && (
+          <p className="text-xs mt-2 flex items-center gap-1.5" style={{ color: "var(--verde)" }}>
+            <span>✓</span> Imagen lista para guardar
+          </p>
+        )}
       </div>
 
       {/* ── Cuerpo con toggle preview ── */}

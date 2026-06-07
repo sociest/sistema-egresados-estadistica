@@ -41,7 +41,7 @@ export async function GET(req: NextRequest) {
 
     if (modo === "titulados") {
       kpisResult = await db.execute(sql`
-        SELECT
+          SELECT
           (SELECT COUNT(*)::int FROM egresado WHERE tipo = 'Titulado' AND fallecido = false
             ${filtroTitulacion} ${filtroSectorEmpleo} ${filtroModalidad}
           ) AS "totalRegistrados",
@@ -66,11 +66,23 @@ export async function GET(req: NextRequest) {
             WHERE e.tipo = 'Titulado' AND e.fallecido = false AND e.anio_titulacion IS NOT NULL
             AND (EXTRACT(YEAR FROM h.fecha_inicio::date) * 12 + EXTRACT(MONTH FROM h.fecha_inicio::date)) >= e.anio_titulacion * 12
             ${filtroTitulacion} ${filtroModalidad}
-          ) AS "tiempoPromedioInsercion"
+          ) AS "tiempoPromedioInsercion",
+          (SELECT COUNT(CASE WHEN genero::text = 'Masculino' THEN 1 END)::int
+            FROM egresado WHERE tipo = 'Titulado' AND fallecido = false
+            ${filtroTitulacion} ${filtroSectorEmpleo} ${filtroModalidad}
+          ) AS "masculino",
+          (SELECT COUNT(CASE WHEN genero::text = 'Femenino' THEN 1 END)::int
+            FROM egresado WHERE tipo = 'Titulado' AND fallecido = false
+            ${filtroTitulacion} ${filtroSectorEmpleo} ${filtroModalidad}
+          ) AS "femenino",
+          (SELECT COUNT(CASE WHEN genero::text NOT IN ('Masculino','Femenino') OR genero IS NULL THEN 1 END)::int
+            FROM egresado WHERE tipo = 'Titulado' AND fallecido = false
+            ${filtroTitulacion} ${filtroSectorEmpleo} ${filtroModalidad}
+          ) AS "otro"
       `);
     } else if (modo === "egresados") {
       kpisResult = await db.execute(sql`
-        SELECT
+         SELECT
           (SELECT COUNT(*)::int FROM egresado WHERE tipo = 'Egresado' AND fallecido = false
             ${filtroEgreso} ${filtroSectorEmpleo}
           ) AS "totalRegistrados",
@@ -91,7 +103,19 @@ export async function GET(req: NextRequest) {
             WHERE e.tipo = 'Egresado' AND e.fallecido = false AND e.anio_egreso IS NOT NULL
             AND (EXTRACT(YEAR FROM h.fecha_inicio::date) * 12 + EXTRACT(MONTH FROM h.fecha_inicio::date)) >= e.anio_egreso * 12
             ${filtroEgreso}
-          ) AS "tiempoPromedioInsercion"
+          ) AS "tiempoPromedioInsercion",
+          (SELECT COUNT(CASE WHEN genero::text = 'Masculino' THEN 1 END)::int
+            FROM egresado WHERE tipo = 'Egresado' AND fallecido = false
+            ${filtroEgreso} ${filtroSectorEmpleo}
+          ) AS "masculino",
+          (SELECT COUNT(CASE WHEN genero::text = 'Femenino' THEN 1 END)::int
+            FROM egresado WHERE tipo = 'Egresado' AND fallecido = false
+            ${filtroEgreso} ${filtroSectorEmpleo}
+          ) AS "femenino",
+          (SELECT COUNT(CASE WHEN genero::text NOT IN ('Masculino','Femenino') OR genero IS NULL THEN 1 END)::int
+            FROM egresado WHERE tipo = 'Egresado' AND fallecido = false
+            ${filtroEgreso} ${filtroSectorEmpleo}
+          ) AS "otro"
       `);
     } else {
       // ambos
@@ -121,7 +145,19 @@ export async function GET(req: NextRequest) {
             WHERE e.fallecido = false AND COALESCE(e.anio_titulacion, e.anio_egreso) IS NOT NULL
             AND (EXTRACT(YEAR FROM h.fecha_inicio::date) * 12 + EXTRACT(MONTH FROM h.fecha_inicio::date)) >= COALESCE(e.anio_titulacion, e.anio_egreso) * 12
             ${filtroTitulacion} ${filtroModalidad}
-          ) AS "tiempoPromedioInsercion"
+          ) AS "tiempoPromedioInsercion",
+          (SELECT COUNT(CASE WHEN genero::text = 'Masculino' THEN 1 END)::int
+            FROM egresado WHERE fallecido = false
+            ${filtroTitulacion} ${filtroSectorEmpleo} ${filtroModalidad}
+          ) AS "masculino",
+          (SELECT COUNT(CASE WHEN genero::text = 'Femenino' THEN 1 END)::int
+            FROM egresado WHERE fallecido = false
+            ${filtroTitulacion} ${filtroSectorEmpleo} ${filtroModalidad}
+          ) AS "femenino",
+          (SELECT COUNT(CASE WHEN genero::text NOT IN ('Masculino','Femenino') OR genero IS NULL THEN 1 END)::int
+            FROM egresado WHERE fallecido = false
+            ${filtroTitulacion} ${filtroSectorEmpleo} ${filtroModalidad}
+          ) AS "otro"
       `);
     }
 
@@ -130,6 +166,9 @@ export async function GET(req: NextRequest) {
     const conEmpleo        = parseInt(k.conEmpleo ?? 0);
     const tasaEmpleabilidad = totalRegistrados > 0
       ? Math.round((conEmpleo / totalRegistrados) * 100) : 0;
+    const masculino = parseInt(k.masculino ?? 0);
+    const femenino  = parseInt(k.femenino  ?? 0);
+    const otro      = parseInt(k.otro      ?? 0);
 
     // ── Gráfico 1: Por año ────────────────────────────────────────────────
     let porAnio: any[];
@@ -270,6 +309,9 @@ export async function GET(req: NextRequest) {
         tasaEmpleabilidad,
         tiempoPromedioTitulacion: parseFloat(k.tiempoPromedioTitulacion ?? 0) || 0,
         tiempoPromedioInsercion:  parseFloat(k.tiempoPromedioInsercion ?? 0) || 0,
+        masculino,
+        femenino,
+        otro,
       },
       graficos: {
         porAnio,

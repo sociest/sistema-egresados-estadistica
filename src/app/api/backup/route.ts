@@ -6,6 +6,7 @@ import { desc } from "drizzle-orm";
 import { getSession } from "@/lib/auth";
 import { err } from "@/lib/utils";
 import * as XLSX from "xlsx";
+import { registrarAudit, getIpFromRequest } from "@/lib/audit";
 
 export async function GET(_req: NextRequest) {
   try {
@@ -178,7 +179,26 @@ export async function GET(_req: NextRequest) {
     wsRes["!cols"] = [{wch:30},{wch:16}];
     XLSX.utils.book_append_sheet(wb, wsRes, "Resumen");
 
-    const buf = XLSX.write(wb, { type: "buffer", bookType: "xlsx" });
+     const buf = XLSX.write(wb, { type: "buffer", bookType: "xlsx" });
+
+    registrarAudit({
+      idUsuario: session.idUsuario,
+      accion:    "crear",
+      entidad:   "egresado",
+      entidadId: null,
+      datosNuevos: {
+        tipo:    "backup_completo_excel",
+        fecha:   new Date().toISOString(),
+        registros: {
+          egresados: egresados.length,
+          historial: historial.length,
+          postgrados: postgrados.length,
+          usuarios:  usuarios.length,
+          auditLogs: auditLogs.length,
+        },
+      },
+      ip: getIpFromRequest(_req),
+    });
 
     return new Response(buf, {
       headers: {

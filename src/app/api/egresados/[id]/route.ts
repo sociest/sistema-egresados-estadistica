@@ -91,13 +91,30 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
 
     if (!updated) return err("Egresado no encontrado", 404);
     registrarAudit({
-          idUsuario:       session.idUsuario,
-          accion:          "editar",
-          entidad:         "egresado",
-          entidadId:       id,
-          datosNuevos:     { ci: d.ci, nombres: d.nombres, tipo: d.tipo },
-          ip:              getIpFromRequest(req),
-        });
+      idUsuario: session.idUsuario,
+      accion:    "editar",
+      entidad:   d.tipo === "Titulado" ? "titulado" : "egresado",
+      entidadId: id,
+      datosNuevos: {
+        ci:                  d.ci,
+        nombres:             d.nombres,
+        apellidoPaterno:     d.apellidoPaterno ?? null,
+        apellidoMaterno:     d.apellidoMaterno ?? null,
+        tipo:                d.tipo,
+        genero:              d.genero ?? null,
+        correoElectronico:   d.correoElectronico ?? null,
+        celular:             d.celular ?? null,
+        anioIngreso:         d.anioIngreso ?? null,
+        anioEgreso:          d.anioEgreso ?? null,
+        anioTitulacion:      d.anioTitulacion ?? null,
+        modalidadTitulacion: d.modalidadTitulacion ?? null,
+        lugarResidencia:     d.lugarResidencia ?? null,
+        areaEspecializacion: d.areaEspecializacion ?? null,
+        observaciones:       d.observaciones ?? null,
+        fallecido:           d.fallecido ?? false,
+      },
+      ip: getIpFromRequest(req),
+    });
 
     return ok(updated);
   } catch (e: any) {
@@ -119,12 +136,17 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
     if (!deleted) return err("Egresado no encontrado", 404);
 
     registrarAudit({
-      idUsuario:       session.idUsuario,
-      accion:          "eliminar",
-      entidad:         "egresado",
-      entidadId:       id,
-      datosAnteriores: { id: deleted.id, ci: deleted.ci, nombres: deleted.nombres },
-      ip:              getIpFromRequest(req),
+      idUsuario: session.idUsuario,
+      accion:    "eliminar",
+      entidad:   deleted.tipo === "Titulado" ? "titulado" : "egresado",
+      entidadId: id,
+      datosAnteriores: {
+        id:      deleted.id,
+        ci:      deleted.ci,
+        nombres: deleted.nombres,
+        tipo:    deleted.tipo,
+      },
+      ip: getIpFromRequest(req),
     });
     
     return ok({ message: "Eliminado correctamente" });

@@ -142,10 +142,26 @@ export async function POST(req: NextRequest) {
     registrarAudit({
       idUsuario:   session.idUsuario,
       accion:      "crear",
-      entidad:     "egresado",
+      entidad:     d.tipo === "Titulado" ? "titulado" : "egresado",
       entidadId:   resultado.id,
-      datosNuevos: { ci: d.ci, nombres: d.nombres, tipo: d.tipo },
-      ip:          getIpFromRequest(req),
+      datosNuevos: {
+        id:                  resultado.id,
+        ci:                  d.ci,
+        nombres:             d.nombres,
+        apellidoPaterno:     d.apellidoPaterno ?? null,
+        apellidoMaterno:     d.apellidoMaterno ?? null,
+        tipo:                d.tipo,
+        genero:              d.genero ?? null,
+        correoElectronico:   d.correoElectronico ?? null,
+        celular:             d.celular ?? null,
+        anioIngreso:         d.anioIngreso ?? null,
+        anioEgreso:          d.anioEgreso ?? null,
+        anioTitulacion:      d.anioTitulacion ?? null,
+        modalidadTitulacion: d.modalidadTitulacion ?? null,
+        lugarResidencia:     d.lugarResidencia ?? null,
+        areaEspecializacion: d.areaEspecializacion ?? null,
+      },
+      ip: getIpFromRequest(req),
     });
 
     return ok(resultado, 201);

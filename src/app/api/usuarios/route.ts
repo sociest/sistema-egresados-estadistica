@@ -27,7 +27,6 @@ export async function GET(req: NextRequest) {
       nombres:         egresado.nombres,
       apellidoPaterno: egresado.apellidoPaterno,
       apellidoMaterno: egresado.apellidoMaterno,
-      facebook: egresado.facebook,
       
     })
     .from(usuario)

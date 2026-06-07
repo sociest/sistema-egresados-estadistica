@@ -23,17 +23,18 @@ const ACCION_STYLE: Record<string, React.CSSProperties> = {
 };
 
 const ENTIDAD_STYLE: Record<string, React.CSSProperties> = {
-  egresado:  { background: "rgba(139,92,246,0.10)", color: "#7c3aed", border: "1px solid rgba(139,92,246,0.25)" },
-  usuario:   { background: "rgba(59,130,246,0.10)",  color: "#2563eb", border: "1px solid rgba(59,130,246,0.25)" },
-  noticia:   { background: "var(--naranja-light)",    color: "var(--naranja)", border: "1px solid #fed7aa" },
+  egresado:  { background: "rgba(139,92,246,0.10)", color: "#7c3aed",               border: "1px solid rgba(139,92,246,0.25)" },
+  usuario:   { background: "rgba(59,130,246,0.10)",  color: "#2563eb",              border: "1px solid rgba(59,130,246,0.25)" },
+  noticia:   { background: "var(--naranja-light)",    color: "var(--naranja)",       border: "1px solid #fed7aa" },
   encuesta:  { background: "var(--turquesa-pale)",    color: "var(--turquesa-dark)", border: "1px solid rgba(0,165,168,0.25)" },
+  titulado:  { background: "var(--turquesa-light)",   color: "var(--turquesa-dark)", border: "1px solid #99e6e7" },
 };
 
 const ACCION_LABEL: Record<string, string> = {
   crear: "Crear", editar: "Editar", eliminar: "Eliminar",
 };
 const ENTIDAD_LABEL: Record<string, string> = {
-  egresado: "Egresado", usuario: "Usuario", noticia: "Noticia", encuesta: "Encuesta",
+  egresado: "Egresado", usuario: "Usuario", noticia: "Noticia", encuesta: "Encuesta", titulado: "Titulado",
 };
 
 async function getData(sp: SP) {
@@ -128,6 +129,7 @@ export default async function ActividadPage({ searchParams }: { searchParams: SP
               <select name="entidad" defaultValue={searchParams.entidad ?? ""} style={fieldCss}>
                 <option value="">Todas</option>
                 <option value="egresado">Egresado</option>
+                <option value="titulado">Titulado</option>
                 <option value="usuario">Usuario</option>
                 <option value="noticia">Noticia</option>
                 <option value="encuesta">Encuesta</option>
