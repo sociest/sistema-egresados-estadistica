@@ -51,8 +51,8 @@ export default function MiPerfilHistorial({
                     <Building2 className="w-4 h-4 text-slate-400" />
                   </div>
                   <div className="min-w-0">
-                    <p className="text-white font-semibold text-sm">{h.cargo}</p>
-                    <p className="text-slate-400 text-sm">{h.empresa}</p>
+                    <p className="text-[var(--turquesa-dark)] font-semibold text-sm">{h.cargo}</p>
+                    <p className="text-[var(--gris-grafito)] text-sm">{h.empresa}</p>
                     <div className="flex flex-wrap gap-x-3 gap-y-0.5 mt-1.5">
                       {h.area && (
                         <span className="text-slate-500 text-xs flex items-center gap-1">

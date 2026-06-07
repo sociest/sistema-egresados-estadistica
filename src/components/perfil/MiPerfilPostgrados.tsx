@@ -58,15 +58,15 @@ export default function MiPerfilPostgrados({ postgrados, idEgresado }: Props) {
               />
             </div>
           ) : (
-            <div className="rounded-xl p-4 border bg-slate-800/40 border-slate-700/50 group">
+            <div className="rounded-xl p-4 border bg-slate-800/10 border-slate-700/50 group">
               <div className="flex items-start justify-between gap-3">
                 <div className="flex gap-3">
                   <div className="w-9 h-9 bg-slate-700 rounded-xl flex items-center justify-center shrink-0">
                     <BookOpen className="w-4 h-4 text-slate-400" />
                   </div>
                   <div>
-                    <p className="text-white font-semibold text-sm">{p.tipo}</p>
-                    <p className="text-slate-400 text-sm">{p.institucion}</p>
+                    <p className="text-[var(--turquesa-dark)] font-semibold text-sm">{p.tipo}</p>
+                    <p className="text-[var(--gris-grafito)] text-sm">{p.institucion}</p>
                     <p className="text-slate-500 text-xs mt-0.5">
                       {p.pais} · {p.anioInicio}{p.anioFin ? `–${p.anioFin}` : ""}
                     </p>

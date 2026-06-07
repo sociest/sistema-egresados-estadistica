@@ -314,13 +314,6 @@ export default function EgresadoForm({
             <input {...register("celular")} type="tel" placeholder="7XXXXXXX"
               className={fieldStyle("celular")} />
           </div>
-          <div className="flex items-end pb-1">
-            <p className="text-xs" style={{ color: "var(--placeholder)" }}>
-              Para cambiar tu correo, usa el panel de{" "}
-              <strong style={{ color: "var(--turquesa-dark)" }}>verificación de cuenta</strong>{" "}
-              en tu perfil.
-            </p>
-          </div>
         </Section>
 
         <div style={{ borderTop: "1px solid var(--borde)" }} />
