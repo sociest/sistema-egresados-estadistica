@@ -265,11 +265,11 @@ export default function LandingLoginPage() {
               <div className="inline-flex items-center gap-2.5 px-4 py-2 rounded-full mb-8"
                 style={{ background: "rgba(0,165,168,0.15)", border: "1px solid rgba(0,165,168,0.30)", backdropFilter: "blur(8px)" }}>
                 <span className="w-2 h-2 rounded-full animate-pulse" style={{ background: "#00A5A8" }} />
-                <span className="text-xs font-bold uppercase tracking-[0.2em]" style={{ color: "#4DD4D5" }}>Sistema de Seguimiento de Egresados</span>
+                <span className="font-bold uppercase tracking-[0.2em]" style={{ fontSize: "11px", color: "#4DD4D5" }}>Sistema de Seguimiento de Egresados</span>
               </div>
 
               {/* Título principal */}
-              <h1 className="mb-6 leading-[0.95] font-black uppercase tracking-tighter" style={{ fontSize: "clamp(2.8rem, 5vw, 4.5rem)", color: "white" }}>
+              <h1 className="mb-6 leading-[0.95] font-black uppercase tracking-tighter" style={{ fontSize: "clamp(3.2rem, 6vw, 5.5rem)", color: "white" }}>
                 Conectamos<br />
                 <span className="font-serif italic lowercase tracking-normal" style={{ color: "#00A5A8", fontSize: "clamp(3rem, 5.5vw, 5rem)" }}>egresados y titulados</span>
                 <br />
@@ -277,8 +277,8 @@ export default function LandingLoginPage() {
               </h1>
 
               {/* Descripción */}
-              <p className="mb-10 text-sm font-medium leading-relaxed rounded-r-2xl border-l-4 py-4 pl-6 max-w-lg"
-                style={{ color: "rgba(255,255,255,0.72)", borderColor: "#ea580c", background: "rgba(255,255,255,0.05)" }}>
+              <p className="mb-10 font-medium leading-relaxed rounded-r-2xl border-l-4 py-4 pl-6 max-w-lg"
+                style={{ fontSize: "16px", color: "rgba(255,255,255,0.72)", borderColor: "#ea580c", background: "rgba(255,255,255,0.05)" }}>
                 La Carrera de Estadística de la UMSA mantiene un directorio actualizado de sus profesionales.
                 Mantén tu perfil al día y sé visible ante empleadores y colegas del área.
               </p>
@@ -304,38 +304,73 @@ export default function LandingLoginPage() {
             </div>
 
             {/* ── Columna derecha — KPI cards ── */}
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 gap-6 lg:pl-8 w-full max-w-[540px] justify-self-end">
               {loadingStats ? Array.from({ length: 4 }).map((_, i) => (
-                <div key={i} className="rounded-3xl p-6 animate-pulse" style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.10)", minHeight: "200px" }}>
-                  <div className="w-12 h-12 rounded-2xl mb-4" style={{ background: "rgba(255,255,255,0.08)" }} />
-                  <div className="h-8 rounded-lg mb-2 w-2/3" style={{ background: "rgba(255,255,255,0.08)" }} />
-                  <div className="h-3 rounded-lg w-full" style={{ background: "rgba(255,255,255,0.05)" }} />
-                </div>
+                <div key={i} className="rounded-[2.5rem] p-6 animate-pulse bg-white/10 border border-white/10 min-height-[240px]" />
               )) : [
-                { icon: Users, value: counters.titulados, label: "Titulados registrados", caption: "Profesionales estadísticos en Bolivia", delay: "0s", accent: "#00A5A8", bg: "rgba(0,165,168,0.12)" },
-                { icon: Briefcase, value: `${counters.empleabilidad}%`, label: "Tasa de empleabilidad", caption: "De nuestros titulados con empleo activo", delay: "0.08s", accent: "#4DD4D5", bg: "rgba(0,165,168,0.08)" },
-                { icon: TrendingUp, value: counters.meses ? `${counters.meses}m` : "—", label: "Meses inserción laboral", caption: "Promedio hasta primer empleo", delay: "0.16s", accent: "#ea580c", bg: "rgba(234,88,12,0.10)" },
-                { icon: Award, value: counters.egresados, label: "Egresados registrados", caption: "Seguimiento académico completo", delay: "0.24s", accent: "#f97316", bg: "rgba(249,115,22,0.10)" },
-              ].map(({ icon: Icon, value, label, caption, delay, accent, bg }, i) => (
+                { icon: Users, value: counters.titulados, label: "Titulados registrados", caption: "Profesionales estadísticos en Bolivia", delay: "0s", accent: "#00A5A8", bg: "rgba(0,165,168,0.12)", glow: "rgba(0,165,168,0.15)" },
+                { icon: Briefcase, value: `${counters.empleabilidad}%`, label: "Tasa de empleabilidad", caption: "De nuestros titulados con empleo activo", delay: "0.1s", accent: "#ea580c", bg: "rgba(234,88,12,0.12)", glow: "rgba(234,88,12,0.15)" },
+                { icon: TrendingUp, value: counters.meses ? `${counters.meses}m` : "—", label: "Meses inserción laboral", caption: "Promedio hasta primer empleo", delay: "0.2s", accent: "#00447e", bg: "rgba(0,68,126,0.12)", glow: "rgba(0,68,126,0.15)" },
+                { icon: Award, value: counters.egresados, label: "Egresados registrados", caption: "Seguimiento académico completo", delay: "0.3s", accent: "#16a34a", bg: "rgba(22,163,74,0.12)", glow: "rgba(22,163,74,0.15)" },
+              ].map(({ icon: Icon, value, label, caption, delay, accent, bg, glow }, i) => (
                 <div key={i}
-                  className="relative rounded-3xl p-6 flex flex-col justify-between overflow-hidden animate-fade-up transition-all duration-300 hover:-translate-y-1"
-                  style={{ background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.12)", backdropFilter: "blur(12px)", minHeight: "200px", animationDelay: delay, animationFillMode: "both" }}
-                  onMouseEnter={e => { const el = e.currentTarget as HTMLElement; el.style.background = "rgba(255,255,255,0.11)"; el.style.borderColor = `${accent}55`; }}
-                  onMouseLeave={e => { const el = e.currentTarget as HTMLElement; el.style.background = "rgba(255,255,255,0.07)"; el.style.borderColor = "rgba(255,255,255,0.12)"; }}
+                  className="relative rounded-[2.5rem] flex flex-col justify-between overflow-hidden animate-fade-up group"
+                  style={{
+                    background: "linear-gradient(135deg, #cecece 0%, #f8fafc 100%)",
+                    border: `2px solid ${accent}20`,
+                    minHeight: "245px",
+                    animationDelay: delay,
+                    animationFillMode: "both",
+                    boxShadow: "0 10px 30px -10px rgba(0,29,61,0.3), 0 1px 3px rgba(0,0,0,0.05)",
+                    transition: "all 0.4s cubic-bezier(0.16, 1, 0.3, 1)",
+                    padding: "1.75rem 1.75rem 0 1.75rem",
+                  }}
+                  onMouseEnter={e => {
+                    const el = e.currentTarget as HTMLElement;
+                    el.style.transform = "translateY(-10px) scale(1.03)";
+                    el.style.borderColor = accent;
+                    el.style.boxShadow = `0 30px 50px -15px rgba(0,29,61,0.5), 0 0 30px ${glow}`;
+                  }}
+                  onMouseLeave={e => {
+                    const el = e.currentTarget as HTMLElement;
+                    el.style.transform = "translateY(0) scale(1)";
+                    el.style.borderColor = `${accent}20`;
+                    el.style.boxShadow = "0 10px 30px -10px rgba(0,29,61,0.3), 0 1px 3px rgba(0,0,0,0.05)";
+                  }}
                 >
-                  {/* Número de fondo decorativo */}
-                  <div className="absolute -right-3 -bottom-4 text-[100px] font-black leading-none pointer-events-none select-none" style={{ color: "rgba(255,255,255,0.03)", fontFamily: "'Source Serif 4', serif" }}>
+                  {/* Número de fondo decorativo gigante */}
+                  <div className="absolute right-2 -bottom-6 font-black leading-none pointer-events-none select-none transition-all duration-500 group-hover:scale-105 opacity-[0.04]"
+                    style={{ color: accent, fontFamily: "'Source Serif 4', serif", fontSize: "140px" }}>
                     0{i + 1}
                   </div>
-                  <div>
-                    <div className="w-12 h-12 rounded-2xl flex items-center justify-center mb-5" style={{ background: bg }}>
-                      <Icon className="w-6 h-6" style={{ color: accent }} />
+
+                  {/* Contenido */}
+                  <div className="relative flex-1 z-10">
+                    {/* Ícono animado */}
+                    <div className="w-14 h-14 rounded-2xl flex items-center justify-center mb-5 transition-all duration-300 group-hover:scale-110"
+                      style={{ background: bg, border: `1px solid ${accent}30` }}>
+                      <Icon className="w-7 h-7" style={{ color: accent }} />
                     </div>
-                    <p className="text-4xl font-black leading-none mb-2 text-white" style={{ fontFamily: "'Source Serif 4', serif" }}>{value}</p>
-                    <p className="text-sm font-bold mb-1" style={{ color: "rgba(255,255,255,0.90)" }}>{label}</p>
-                    <div className="w-8 h-1 rounded-full mb-2" style={{ background: accent }} />
-                    <p className="text-xs leading-relaxed" style={{ color: "rgba(255,255,255,0.45)" }}>{caption}</p>
+
+                    {/* Número principal grande */}
+                    <p className="font-black leading-none mb-2.5"
+                      style={{ fontSize: "56px", fontFamily: "'Source Serif 4', serif", letterSpacing: "-0.03em", color: "var(--azul-pizarra)" }}>
+                      {value}
+                    </p>
+
+                    {/* Separador dinámico */}
+                    <div className="rounded-full mb-3.5 transition-all duration-300 group-hover:w-16" style={{ width: "35px", height: "4px", background: accent }} />
+
+                    {/* Etiqueta */}
+                    <p className="font-black mb-1 tracking-tight uppercase" style={{ fontSize: "12.5px", color: "var(--azul-pizarra)" }}>{label}</p>
+
+                    {/* Descripción */}
+                    <p className="leading-relaxed mb-5 font-medium" style={{ fontSize: "11.5px", color: "var(--gris-grafito)" }}>{caption}</p>
                   </div>
+
+                  {/* Línea de acento inferior completa */}
+                  <div className="transition-all duration-300" 
+                    style={{ height: "6px", background: accent, marginLeft: "-1.75rem", marginRight: "-1.75rem" }} />
                 </div>
               ))}
             </div>

@@ -39,12 +39,14 @@ export default function MiPerfilHistorial({
               />
             </div>
           ) : (
-            <div className={cn(
-              "rounded-xl p-4 border group",
-              h.fechaFin === null
-                ? "bg-emerald-500/5 border-emerald-500/20"
-                : "bg-slate-800/40 border-slate-700/50"
-            )}>
+            <div className={cn("rounded-xl p-4 border group")}
+                style={h.fechaFin === null ? {
+                  background: "rgba(26,107,26,0.06)",
+                  border: "1px solid #86efac",
+                } : {
+                  background: "var(--humo)",
+                  border: "1px solid var(--borde)",
+                }}>
               <div className="flex items-start justify-between gap-3">
                 <div className="flex gap-3 flex-1 min-w-0">
                   <div className="w-9 h-9 bg-slate-700 rounded-xl flex items-center justify-center shrink-0">
@@ -55,12 +57,12 @@ export default function MiPerfilHistorial({
                     <p className="text-[var(--gris-grafito)] text-sm">{h.empresa}</p>
                     <div className="flex flex-wrap gap-x-3 gap-y-0.5 mt-1.5">
                       {h.area && (
-                        <span className="text-slate-500 text-xs flex items-center gap-1">
+                        <span className="text-xs flex items-center gap-1" style={{ color: "var(--gris-grafito)" }}>
                           <Briefcase className="w-3 h-3" /> {h.area}
                         </span>
                       )}
                       {h.ciudadRegionTrabajo && (
-                        <span className="text-slate-500 text-xs flex items-center gap-1">
+                        <span className="text-xs flex items-center gap-1" style={{ color: "var(--gris-grafito)" }}>
                           <MapPin className="w-3 h-3" /> {h.ciudadRegionTrabajo}
                         </span>
                       )}
@@ -77,7 +79,7 @@ export default function MiPerfilHistorial({
                         </span>
                       )}
                       {h.tipoContrato && (
-                        <span className="text-slate-600 text-xs">{h.tipoContrato}</span>
+                        <span className="text-xs" style={{ color: "var(--placeholder)" }}>{h.tipoContrato}</span>
                       )}
                     </div>
                   </div>

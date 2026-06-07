@@ -86,7 +86,7 @@ function ReadonlyField({
         </div>
       ) : (
         <div className="field flex items-center"
-          style={{ opacity: 0.65, cursor: "not-allowed", userSelect: "none" }}>
+          style={{ opacity: 0.65, cursor: "not-allowed", userSelect: "none", color: "var(--azul-pizarra)" }}>
           {value || <span style={{ color: "var(--placeholder)" }}>—</span>}
         </div>
       )}

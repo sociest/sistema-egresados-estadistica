@@ -159,7 +159,7 @@ export default function AdminLayout({ children, correo }: { children: React.Reac
 
         {/* Top bar */}
         <div className="h-14 flex items-center justify-between px-4 lg:px-6 shrink-0"
-          style={{ background: "linear-gradient(135deg, #00447e 0%, #003a6b 50%, #00325a 100%)", borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
+          style={{ background: "linear-gradient(170deg, #001d3d 0%, #002a52 50%, #00325a 100%)", borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
 
           <button onClick={() => setSidebarOpen(true)}
             className="lg:hidden p-2 rounded-xl transition-colors"
@@ -183,7 +183,7 @@ export default function AdminLayout({ children, correo }: { children: React.Reac
           </div>
         </div>
 
-        <main className="flex-1 overflow-y-auto p-4 lg:p-6 xl:p-8">
+        <main className="flex-1 overflow-y-auto p-4 lg:p-6 xl:p-8" style={{ background: "var(--fondo)" }}>
           <div className="max-w-7xl mx-auto animate-fade-up">
             {children}
           </div>
