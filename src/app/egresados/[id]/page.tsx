@@ -192,11 +192,11 @@ export default async function EgresadoDetallePage({ params }: { params: { id: st
               </p>
               {eg.anioIngreso && <Row label="Ingreso">{eg.anioIngreso}</Row>}
               {eg.semestreIngreso && eg.anioIngreso && (
-                <Row label="Semestre ingreso">{eg.semestreIngreso}/{eg.anioIngreso}</Row>
+                <Row label="Semestre ingreso">{eg.semestreIngreso}</Row>
               )}
               {eg.anioEgreso  && <Row label="Egreso">{eg.anioEgreso}</Row>}
               {eg.semestreEgreso && eg.anioEgreso && (
-                <Row label="Semestre egreso">{eg.semestreEgreso}/{eg.anioEgreso}</Row>
+                <Row label="Semestre egreso">{eg.semestreEgreso}</Row>
               )}
               {eg.anioTitulacion    && <Row label="Titulación">{eg.anioTitulacion}</Row>}
               {eg.modalidadTitulacion && <Row label="Modalidad">{eg.modalidadTitulacion}</Row>}

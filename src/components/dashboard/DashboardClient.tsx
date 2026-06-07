@@ -692,7 +692,7 @@ export default function DashboardClient() {
             <h3 className="font-bold mb-1" style={{ color: "var(--azul-pizarra)", fontFamily: "'Source Serif 4', serif" }}>Sector laboral</h3>
             <p className="text-xs mb-4" style={{ color: "var(--placeholder)" }}>Distribución de empleos actuales</p>
             {g.porSector?.length > 0 ? (
-              <ResponsiveContainer width="100%" height={220}>
+              <ResponsiveContainer width="100%" height={240}>
                 <PieChart>
                   <Pie data={g.porSector} dataKey="cantidad" nameKey="sector" cx="50%" cy="50%" outerRadius={85}
                     label={({ sector: s, percent }: any) => `${s} ${(percent * 100).toFixed(0)}%`} labelLine={false}>

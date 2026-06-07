@@ -62,6 +62,7 @@ export async function GET(req: NextRequest) {
       anioTitulacion:      egresado.anioTitulacion,
       modalidadTitulacion: egresado.modalidadTitulacion,
       areaEspecializacion: egresado.areaEspecializacion, // Bloque 0
+      
       tieneEmpleo: sql<boolean>`EXISTS(
         SELECT 1 FROM historial_laboral h
         WHERE h.id_egresado = egresado.id AND h.fecha_fin IS NULL

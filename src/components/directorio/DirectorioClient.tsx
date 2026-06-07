@@ -2,13 +2,14 @@
 "use client";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { Search, MapPin, Briefcase, X, ChevronLeft, ChevronRight, GraduationCap, Users, ArrowRight, LogIn } from "lucide-react";
+import { Search, MapPin, Briefcase, X, ChevronLeft, ChevronRight, GraduationCap, Users, ArrowRight, LogIn, Facebook, Linkedin } from "lucide-react";
 
 interface Egresado {
   id: number; nombres: string; apellidoPaterno: string | null; apellidoMaterno: string | null;
   tituloAcademico: string | null; anioTitulacion: number | null;
   correoElectronico: string | null; celular: string | null;
   empleoActual: string | null; ciudadActual: string | null; sectorActual: string | null;
+  facebook: string | null; linkedin: string | null;
 }
 
 interface Props {
@@ -71,6 +72,22 @@ function EgresadoCard({ eg }: { eg: Egresado }) {
         <a href={`mailto:${eg.correoElectronico}`} className="text-xs truncate transition-colors" style={{ color: "var(--turquesa-dark)" }}>
           {eg.correoElectronico}
         </a>
+      )}
+
+      {/* Redes Sociales (Facebook y LinkedIn) */}
+      {(eg.facebook || eg.linkedin) && (
+        <div className="flex flex-col gap-1 mt-1">
+          {eg.facebook && (
+            <a href={eg.facebook} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 text-xs transition-colors hover:opacity-80" style={{ color: "var(--turquesa-dark)" }}>
+              <Facebook className="w-3.5 h-3.5" style={{ color: "var(--turquesa)" }} /> Facebook
+            </a>
+          )}
+          {eg.linkedin && (
+            <a href={eg.linkedin} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 text-xs transition-colors hover:opacity-80" style={{ color: "var(--turquesa-dark)" }}>
+              <Linkedin className="w-3.5 h-3.5" style={{ color: "var(--turquesa)" }} /> LinkedIn
+            </a>
+          )}
+        </div>
       )}
     </div>
   );

@@ -58,7 +58,14 @@ export default function MiPerfilPostgrados({ postgrados, idEgresado }: Props) {
               />
             </div>
           ) : (
-            <div className="rounded-xl p-4 border bg-slate-800/10 border-slate-700/50 group">
+            <div className={cn(
+              "rounded-xl p-4 border group",
+              p.estado === "En curso"
+                ? "bg-emerald-500/5 border-emerald-500/20"
+                : p.estado === "Finalizado"
+                ? "bg-blue-500/5 border-blue-500/20"
+                : "bg-slate-800/40 border-slate-700/50"
+            )}>
               <div className="flex items-start justify-between gap-3">
                 <div className="flex gap-3">
                   <div className="w-9 h-9 bg-slate-700 rounded-xl flex items-center justify-center shrink-0">
@@ -114,8 +121,8 @@ export default function MiPerfilPostgrados({ postgrados, idEgresado }: Props) {
         <button
           onClick={() => setAdding(true)}
           className="w-full border border-dashed border-slate-700 hover:border-primary-500/50
-                     hover:bg-primary-500/5 rounded-xl p-3 text-slate-500 hover:text-primary-400
-                     text-sm flex items-center justify-center gap-2 transition-all"
+                    hover:bg-primary-500/5 rounded-xl p-3 text-slate-500 hover:text-primary-400
+                    text-sm flex items-center justify-center gap-2 transition-all"
         >
           <Plus className="w-4 h-4" /> Agregar estudio de postgrado
         </button>

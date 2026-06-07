@@ -194,18 +194,7 @@ export default async function MiPerfilPage() {
             ) : null)}
 
             {/* RF-07 */}
-            {tiempoPrimerEmpleo && (
-              <div
-                className="mt-3 pt-3 flex items-center gap-2 rounded-xl px-3 py-2"
-                style={{ background: "var(--naranja-light)", border: "1px solid #fed7aa" }}
-              >
-                <Clock className="w-3.5 h-3.5 shrink-0" style={{ color: "var(--naranja)" }} />
-                <p className="text-xs" style={{ color: "var(--naranja)" }}>
-                  <span className="font-semibold">{tiempoPrimerEmpleo.texto}</span> hasta primer empleo
-                  {eg.anioTitulacion ? " (desde titulación)" : " (desde egreso)"}
-                </p>
-              </div>
-            )}
+            
           </div>
         </div>
       </div>
