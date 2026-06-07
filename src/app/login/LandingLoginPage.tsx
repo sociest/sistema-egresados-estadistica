@@ -266,7 +266,7 @@ export default function LandingLoginPage() {
               {/* Título principal */}
               <h1 className="mb-6 leading-[0.95] font-black uppercase tracking-tighter" style={{ fontSize: "clamp(2.8rem, 5vw, 4.5rem)", color: "white" }}>
                 Conectamos<br />
-                <span className="font-serif italic lowercase tracking-normal" style={{ color: "#00A5A8", fontSize: "clamp(3rem, 5.5vw, 5rem)" }}>egresados</span>
+                <span className="font-serif italic lowercase tracking-normal" style={{ color: "#00A5A8", fontSize: "clamp(3rem, 5.5vw, 5rem)" }}>egresados y titulados</span>
                 <br />
                 <span style={{ color: "rgba(255,255,255,0.85)" }}>de estadística</span>
               </h1>
@@ -295,19 +295,7 @@ export default function LandingLoginPage() {
                 </a>
               </div>
 
-              {/* Stats rápidas inline */}
-              <div className="flex flex-wrap gap-6 mt-12 pt-8" style={{ borderTop: "1px solid rgba(255,255,255,0.10)" }}>
-                {[
-                  { label: "Titulados", value: loadingStats ? "—" : counters.titulados },
-                  { label: "Egresados", value: loadingStats ? "—" : counters.egresados },
-                  { label: "Empleabilidad", value: loadingStats ? "—" : `${counters.empleabilidad}%` },
-                ].map(({ label, value }) => (
-                  <div key={label}>
-                    <p className="font-black text-2xl leading-none" style={{ color: "white", fontFamily: "'Source Serif 4', serif" }}>{value}</p>
-                    <p className="text-xs uppercase tracking-widest mt-1" style={{ color: "rgba(255,255,255,0.45)" }}>{label}</p>
-                  </div>
-                ))}
-              </div>
+              
             </div>
 
             {/* ── Columna derecha — KPI cards ── */}
