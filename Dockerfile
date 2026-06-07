@@ -29,6 +29,7 @@ COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static    ./.next/static
 
 RUN mkdir -p ./public/uploads/noticias && \
+    mkdir -p ./public/uploads/perfiles && \
     chown -R nextjs:nodejs ./public/uploads
 
 USER nextjs

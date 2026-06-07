@@ -5,6 +5,7 @@ import { eq } from "drizzle-orm";
 import { getSession } from "@/lib/auth";
 import { noticiaSchema } from "@/lib/validations";
 import { ok, err } from "@/lib/utils";
+import { registrarAudit, getIpFromRequest } from "@/lib/audit";
 
 export async function GET(_: NextRequest, { params }: { params: { id: string } }) {
   try {
@@ -36,6 +37,9 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
     const parsed = noticiaSchema.safeParse(await req.json());
     if (!parsed.success) return err(parsed.error.errors[0].message);
 
+    const [current] = await db.select().from(noticias).where(eq(noticias.id, id)).limit(1);
+    if (!current) return err("Noticia no encontrada", 404);
+
     const d = parsed.data;
     const [updated] = await db.update(noticias).set({
       titulo:        d.titulo,
@@ -50,6 +54,27 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
     .returning();
 
     if (!updated) return err("Noticia no encontrada", 404);
+
+    registrarAudit({
+      idUsuario: session.idUsuario,
+      accion:    "editar",
+      entidad:   "noticia",
+      entidadId: id,
+      datosAnteriores: {
+        titulo: current.titulo,
+        tipo: current.tipo,
+        fecha: current.fecha,
+        publicado: current.publicado,
+      },
+      datosNuevos: {
+        titulo: updated.titulo,
+        tipo: updated.tipo,
+        fecha: updated.fecha,
+        publicado: updated.publicado,
+      },
+      ip: getIpFromRequest(req),
+    });
+
     return ok(updated);
   } catch (e) {
     console.error("[noticia PUT id]", e);

@@ -98,6 +98,7 @@ export const egresado = pgTable("egresado", {
   // Residencia unificada
   lugarResidencia:     varchar("lugar_residencia",     { length: 200 }),
   fallecido:           boolean("fallecido").notNull().default(false),
+  fotoUrl:             varchar("foto_url", { length: 500 }),
 }, (t) => ({
   ciIdx:              uniqueIndex("egresado_ci_idx").on(t.ci),
   anioEgresoIdx:      index("idx_egresado_anio_egreso").on(t.anioEgreso),

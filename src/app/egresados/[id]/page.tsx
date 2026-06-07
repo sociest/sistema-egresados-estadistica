@@ -12,6 +12,7 @@ import AdminLayout from "@/components/shared/AdminLayout";
 import { fmtDate } from "@/lib/utils";
 import HistorialExpandible from "@/components/egresados/HistorialExpandible";
 import PostgradoExpandible from "@/components/egresados/PostgradoExpandible";
+import Avatar from "@/components/shared/Avatar";
 
 function calcularTiempoPrimerEmpleo(
   anioReferencia:    number | null | undefined,
@@ -92,15 +93,13 @@ export default async function EgresadoDetallePage({ params }: { params: { id: st
 
             {/* Avatar + badges */}
             <div className="card text-center">
-              <div
-                className="w-20 h-20 rounded-2xl flex items-center justify-center mx-auto mb-4"
-                style={{ background: "var(--turquesa-light)" }}
-              >
-                <span className="text-2xl font-bold"
-                  style={{ color: "var(--turquesa-dark)", fontFamily: "'Source Serif 4', serif" }}>
-                  {(eg.apellidoPaterno ?? eg.nombres)[0]}{eg.nombres[0]}
-                </span>
-              </div>
+              <Avatar
+                fotoUrl={eg.fotoUrl}
+                nombres={eg.nombres}
+                apellidoPaterno={eg.apellidoPaterno}
+                size="xl"
+                className="mx-auto mb-4"
+              />
               <h2 className="font-bold text-lg"
                 style={{ color: "var(--azul-pizarra)", fontFamily: "'Source Serif 4', serif" }}>
                 {[eg.apellidoPaterno, eg.apellidoMaterno].filter(Boolean).join(" ") || eg.nombres},{" "}

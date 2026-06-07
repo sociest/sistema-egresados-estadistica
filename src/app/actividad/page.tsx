@@ -194,6 +194,7 @@ export default async function ActividadPage({ searchParams }: { searchParams: SP
                           {r.creadoEn
                             ? new Date(r.creadoEn).toLocaleDateString("es-BO", {
                                 day: "2-digit", month: "2-digit", year: "numeric",
+                                timeZone: "America/La_Paz",
                               })
                             : "—"}
                         </p>
@@ -201,6 +202,7 @@ export default async function ActividadPage({ searchParams }: { searchParams: SP
                           {r.creadoEn
                             ? new Date(r.creadoEn).toLocaleTimeString("es-BO", {
                                 hour: "2-digit", minute: "2-digit", second: "2-digit",
+                                timeZone: "America/La_Paz",
                               })
                             : ""}
                         </p>

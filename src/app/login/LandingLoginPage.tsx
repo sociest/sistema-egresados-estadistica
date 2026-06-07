@@ -8,6 +8,7 @@ import {
   GraduationCap, BarChart3, Globe2, Star,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import Avatar from "@/components/shared/Avatar";
 
 /* ─────────────────────────────────────────────────────────────────────────────
    MODAL DE LOGIN
@@ -131,6 +132,7 @@ function LoginModal({ onClose }: { onClose: () => void }) {
 interface EgresadoData {
   id: number; nombres: string; apellidoPaterno: string | null; apellidoMaterno: string | null;
   tituloAcademico: string | null; empleoActual: string | null; ciudadActual: string | null;
+  fotoUrl: string | null;
 }
 
 function EgresadoCard({ eg, delay }: { eg: EgresadoData; delay: number }) {
@@ -150,10 +152,13 @@ function EgresadoCard({ eg, delay }: { eg: EgresadoData; delay: number }) {
       onMouseLeave={e => { const el = e.currentTarget as HTMLElement; el.style.borderColor = "var(--borde)"; el.style.boxShadow = "var(--shadow-sm)"; }}
     >
       <div className="flex items-start gap-3">
-        <div className="w-11 h-11 rounded-2xl flex items-center justify-center shrink-0 font-bold text-sm transition-colors duration-300 group-hover:scale-105"
-          style={{ background: "var(--turquesa-light)", color: "var(--turquesa-dark)", fontFamily: "'Source Serif 4', serif" }}>
-          {initials}
-        </div>
+        <Avatar
+          fotoUrl={eg.fotoUrl}
+          nombres={eg.nombres}
+          apellidoPaterno={eg.apellidoPaterno}
+          size="md"
+          className="transition-transform duration-300 group-hover:scale-105"
+        />
         <div className="min-w-0">
           <p className="font-bold text-sm truncate" style={{ color: "var(--azul-pizarra)", fontFamily: "'Source Serif 4', serif" }}>{nombre}</p>
           {cargo   && <p className="text-xs truncate mt-0.5" style={{ color: "var(--gris-grafito)" }}>{cargo}</p>}

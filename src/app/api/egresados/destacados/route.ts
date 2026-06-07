@@ -14,6 +14,7 @@ export async function GET(_: NextRequest) {
       apellidoPaterno:     egresado.apellidoPaterno,
       apellidoMaterno:     egresado.apellidoMaterno,
       ultimaActualizacion: egresado.ultimaActualizacion,
+      fotoUrl:             egresado.fotoUrl,
     })
     .from(egresado)
     .where(and(eq(egresado.mostrarEnDirectorio, true), eq(egresado.fallecido, false)))
@@ -51,6 +52,7 @@ export async function GET(_: NextRequest) {
       const empleo = empleoMap.get(eg.id);
       return {
         ...eg,
+        fotoUrl:      eg.fotoUrl ?? null,
         empleoActual: empleo ? `${empleo.cargo} — ${empleo.empresa}` : null,
         ciudadActual: empleo?.ciudad ?? null,
       };

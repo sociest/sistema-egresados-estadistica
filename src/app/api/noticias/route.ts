@@ -5,6 +5,7 @@ import { eq, desc, and, sql } from "drizzle-orm";
 import { getSession } from "@/lib/auth";
 import { noticiaSchema } from "@/lib/validations";
 import { ok, err } from "@/lib/utils";
+import { registrarAudit, getIpFromRequest } from "@/lib/audit";
 
 // GET — listado público (solo publicados) o completo para admin
 export async function GET(req: NextRequest) {
@@ -62,6 +63,20 @@ export async function POST(req: NextRequest) {
       imagenUrl: d.imagenUrl ?? null,
       publicado: d.publicado,
     }).returning();
+
+    registrarAudit({
+      idUsuario: session.idUsuario,
+      accion:    "crear",
+      entidad:   "noticia",
+      entidadId: row.id,
+      datosNuevos: {
+        titulo: row.titulo,
+        tipo: row.tipo,
+        fecha: row.fecha,
+        publicado: row.publicado,
+      },
+      ip: getIpFromRequest(req),
+    });
 
     return ok(row, 201);
   } catch (e) {

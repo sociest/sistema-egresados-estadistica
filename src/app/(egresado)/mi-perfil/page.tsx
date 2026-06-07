@@ -12,6 +12,7 @@ import MiPerfilPostgrados from "@/components/perfil/MiPerfilPostgrados";
 import DirectorioToggle from "@/components/perfil/DirectorioToggle";
 import SugerenciaForm from "@/components/perfil/SugerenciaForm";
 import ContactoVerificacionModal from "@/components/perfil/ContactoVerificacionModal";
+import FotoPerfilUploader from "@/components/perfil/FotoPerfilUploader";
 
 function calcularTiempoPrimerEmpleo(
   anioRef: number | null | undefined,
@@ -84,12 +85,13 @@ export default async function MiPerfilPage() {
       {/* ── Encabezado de perfil ── */}
        <div className="flex flex-col sm:flex-row items-start justify-between gap-3">
         <div className="flex items-center gap-4">
-          <div
-            className="w-14 h-14 rounded-2xl flex items-center justify-center text-xl font-bold shrink-0"
-            style={{ background: "var(--turquesa-light)", color: "var(--turquesa-dark)", fontFamily: "'Source Serif 4', serif" }}
-          >
-            {(eg.apellidoPaterno ?? eg.nombres)[0]}{eg.nombres[0]}
-          </div>
+          <FotoPerfilUploader
+            idEgresado={eg.id}
+            fotoUrl={eg.fotoUrl}
+            nombres={eg.nombres}
+            apellidoPaterno={eg.apellidoPaterno}
+            size="lg"
+          />
           <div>
             <h1 className="text-2xl font-bold" style={{ color: "var(--azul-pizarra)", fontFamily: "'Source Serif 4', serif" }}>
               {[eg.apellidoPaterno, eg.apellidoMaterno].filter(Boolean).join(" ") || eg.nombres}, {eg.nombres}

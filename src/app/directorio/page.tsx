@@ -59,6 +59,9 @@ async function getEgresados(sp: SP) {
     celular:             egresado.celular,
     ultimaActualizacion: egresado.ultimaActualizacion,
     tipo:                egresado.tipo,
+    fotoUrl:             egresado.fotoUrl,
+    facebook:            egresado.facebook,
+    linkedin:            egresado.linkedin,
   })
   .from(egresado).where(where)
   .orderBy(sql`${egresado.ultimaActualizacion} DESC NULLS LAST`)
@@ -100,6 +103,7 @@ async function getEgresados(sp: SP) {
     const empleo = empleoMap.get(eg.id);
     return {
       ...eg,
+      fotoUrl:      eg.fotoUrl ?? null,
       tituloAcademico: derivarTituloAcademico(
         (eg.tipo as "Titulado" | "Egresado") ?? "Titulado",
         [],

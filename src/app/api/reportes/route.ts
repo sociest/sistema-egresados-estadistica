@@ -4,6 +4,7 @@ import { egresado } from "@/lib/schema";
 import { and, sql, ilike } from "drizzle-orm";
 import { getSession } from "@/lib/auth";
 import { ok, err } from "@/lib/utils";
+import { registrarAudit, getIpFromRequest } from "@/lib/audit";
 import * as XLSX from "xlsx";
 
 export async function GET(req: NextRequest) {
@@ -179,6 +180,23 @@ export async function GET(req: NextRequest) {
 
       const buf   = XLSX.write(wb, { type: "buffer", bookType: "xlsx" });
       const fecha = new Date().toISOString().split("T")[0];
+
+      registrarAudit({
+        idUsuario: session.idUsuario,
+        accion:    "crear",
+        entidad:   "egresado",
+        entidadId: null,
+        datosNuevos: {
+          tipo: "reporte_excel",
+          filtros: {
+            anio, plan, empleo, genero, tipo, modalidad,
+            anioTitulacionDesde, anioTitulacionHasta, sector, ciudad, tienePostgrado,
+          },
+          total: rows.length,
+        },
+        ip: getIpFromRequest(req),
+      });
+
       return new Response(buf, {
         headers: {
           "Content-Type":        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",

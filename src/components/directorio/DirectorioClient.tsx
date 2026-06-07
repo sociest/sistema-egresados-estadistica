@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Search, MapPin, Briefcase, X, ChevronLeft, ChevronRight, GraduationCap, Users, ArrowRight, LogIn, Facebook, Linkedin } from "lucide-react";
+import Avatar from "@/components/shared/Avatar";
 
 interface Egresado {
   id: number; nombres: string; apellidoPaterno: string | null; apellidoMaterno: string | null;
@@ -10,6 +11,7 @@ interface Egresado {
   correoElectronico: string | null; celular: string | null;
   empleoActual: string | null; ciudadActual: string | null; sectorActual: string | null;
   facebook: string | null; linkedin: string | null;
+  fotoUrl: string | null;
 }
 
 interface Props {
@@ -40,10 +42,13 @@ function EgresadoCard({ eg }: { eg: Egresado }) {
       onMouseLeave={e => { const el = e.currentTarget as HTMLElement; el.style.borderColor = "var(--borde)"; el.style.boxShadow = "var(--shadow-sm)"; }}
     >
       <div className="flex items-start gap-3">
-        <div className="w-11 h-11 rounded-2xl flex items-center justify-center font-bold text-sm shrink-0 transition-transform duration-300 hover:scale-105"
-          style={{ background: "var(--turquesa-light)", color: "var(--turquesa-dark)", fontFamily: "'Source Serif 4', serif" }}>
-          {initials}
-        </div>
+        <Avatar
+          fotoUrl={eg.fotoUrl}
+          nombres={eg.nombres}
+          apellidoPaterno={eg.apellidoPaterno}
+          size="md"
+          className="transition-transform duration-300 hover:scale-105"
+        />
         <div className="min-w-0">
           <p className="font-bold text-sm leading-tight truncate" style={{ color: "var(--azul-pizarra)", fontFamily: "'Source Serif 4', serif" }}>{nombre}</p>
           {eg.tituloAcademico && <p className="text-xs mt-0.5 truncate italic" style={{ color: "var(--gris-grafito)" }}>{eg.tituloAcademico}</p>}

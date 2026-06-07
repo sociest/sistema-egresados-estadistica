@@ -7,6 +7,8 @@ next-env.d.ts
 # Imágenes subidas por usuarios
 public/uploads/noticias/*
 !public/uploads/noticias/.gitkeep
+public/uploads/perfiles/*
+!public/uploads/perfiles/.gitkeep
 data/
 backups/
 ssl/

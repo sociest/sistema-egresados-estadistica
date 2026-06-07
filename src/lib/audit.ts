@@ -1,6 +1,7 @@
 // src/lib/audit.ts
 import { db } from "@/lib/db";
 import { auditLog } from "@/lib/schema";
+import { sql } from "drizzle-orm";
 
 interface AuditOpts {
   idUsuario:        number | null | undefined;
@@ -25,6 +26,7 @@ export function registrarAudit(opts: AuditOpts): void {
       ? JSON.stringify(opts.datosNuevos)
       : null,
     ip: opts.ip ?? null,
+    creadoEn: sql`TIMEZONE('America/La_Paz', now())`,
   }).catch(e => {
     console.error("[audit] Error al registrar:", e);
   });
