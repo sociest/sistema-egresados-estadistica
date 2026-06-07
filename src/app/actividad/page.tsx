@@ -28,13 +28,14 @@ const ENTIDAD_STYLE: Record<string, React.CSSProperties> = {
   noticia:   { background: "var(--naranja-light)",    color: "var(--naranja)",       border: "1px solid #fed7aa" },
   encuesta:  { background: "var(--turquesa-pale)",    color: "var(--turquesa-dark)", border: "1px solid rgba(0,165,168,0.25)" },
   titulado:  { background: "var(--turquesa-light)",   color: "var(--turquesa-dark)", border: "1px solid #99e6e7" },
+  backup:    { background: "rgba(16,185,129,0.10)",   color: "#059669",              border: "1px solid rgba(16,185,129,0.25)" },
 };
 
 const ACCION_LABEL: Record<string, string> = {
   crear: "Crear", editar: "Editar", eliminar: "Eliminar",
 };
 const ENTIDAD_LABEL: Record<string, string> = {
-  egresado: "Egresado", usuario: "Usuario", noticia: "Noticia", encuesta: "Encuesta", titulado: "Titulado",
+  egresado: "Egresado", usuario: "Usuario", noticia: "Noticia", encuesta: "Encuesta", titulado: "Titulado", backup: "Backup",
 };
 
 async function getData(sp: SP) {
@@ -133,6 +134,7 @@ export default async function ActividadPage({ searchParams }: { searchParams: SP
                 <option value="usuario">Usuario</option>
                 <option value="noticia">Noticia</option>
                 <option value="encuesta">Encuesta</option>
+                <option value="backup">Backup</option>
               </select>
             </div>
             <div>

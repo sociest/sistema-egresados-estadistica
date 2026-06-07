@@ -2,7 +2,7 @@
 import { NextRequest } from "next/server";
 import { db } from "@/lib/db";
 import { egresado, historialLaboral, postgrado, usuario, auditLog } from "@/lib/schema";
-import { desc, eq, and } from "drizzle-orm";
+import { desc } from "drizzle-orm";
 import { getSession } from "@/lib/auth";
 import { err } from "@/lib/utils";
 import * as XLSX from "xlsx";
@@ -179,41 +179,26 @@ export async function GET(_req: NextRequest) {
     wsRes["!cols"] = [{wch:30},{wch:16}];
     XLSX.utils.book_append_sheet(wb, wsRes, "Resumen");
 
-     const buf = XLSX.write(wb, { type: "buffer", bookType: "xlsx" });
+    const buf = XLSX.write(wb, { type: "buffer", bookType: "xlsx" });
 
-    const auditPayload = {
-      tipo:    "backup_completo_excel",
-      fecha:   new Date().toISOString(),
-      registros: {
-        egresados: egresados.length,
-        historial: historial.length,
-        postgrados: postgrados.length,
-        usuarios:  usuarios.length,
-        auditLogs: auditLogs.length,
+    registrarAudit({
+      idUsuario: session.idUsuario,
+      accion:    "crear",
+      entidad:   "backup" as any,
+      entidadId: null,
+      datosNuevos: {
+        tipo: "backup_completo_excel",
+        fecha: new Date().toISOString(),
+        registros: {
+          egresados: egresados.length,
+          historial: historial.length,
+          postgrados: postgrados.length,
+          usuarios:  usuarios.length,
+          auditLogs: auditLogs.length,
+        },
       },
-    };
-
-    const [recentBackup] = await db.select({ creadoEn: auditLog.creadoEn })
-      .from(auditLog)
-      .where(and(
-        eq(auditLog.idUsuario, session.idUsuario ?? null),
-        eq(auditLog.accion, "crear"),
-        eq(auditLog.entidad, "egresado"),
-        eq(auditLog.datosNuevos, JSON.stringify(auditPayload)),
-      ))
-      .orderBy(desc(auditLog.creadoEn))
-      .limit(1);
-
-    if (!recentBackup || new Date().getTime() - new Date(recentBackup.creadoEn).getTime() > 5000) {
-      registrarAudit({
-        idUsuario: session.idUsuario,
-        accion:    "crear",
-        entidad:   "egresado",
-        entidadId: null,
-        datosNuevos: auditPayload,
-        ip: getIpFromRequest(_req),
-      });
-    }
+      ip: getIpFromRequest(_req),
+    });
 
     return new Response(buf, {
       headers: {

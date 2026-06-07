@@ -25,7 +25,7 @@ export const noticiasTipoEnum     = pgEnum("noticias_tipo_enum", [
   "noticia_institucional", "curso_evento", "noticia_social",
 ]);
 export const auditAccionEnum  = pgEnum("audit_accion_enum",  ["crear", "editar", "eliminar"]);
-export const auditEntidadEnum = pgEnum("audit_entidad_enum", ["egresado", "usuario", "noticia", "encuesta", "titulado"])
+export const auditEntidadEnum = pgEnum("audit_entidad_enum", ["egresado", "usuario", "noticia", "encuesta", "titulado", "backup"])
 
 export const MODALIDADES_TITULACION = [
   "Tesis", "Proyecto de grado", "Trabajo dirigido", "Examen de grado", "Otro",

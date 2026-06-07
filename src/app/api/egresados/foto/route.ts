@@ -7,6 +7,7 @@ import { egresado } from "@/lib/schema";
 import { eq } from "drizzle-orm";
 import { getSession } from "@/lib/auth";
 import { ok, err } from "@/lib/utils";
+import { registrarAudit, getIpFromRequest } from "@/lib/audit";
 
 const ALLOWED_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
 const MAX_SIZE_BYTES = 5 * 1024 * 1024; // 5MB
@@ -65,6 +66,15 @@ export async function POST(req: NextRequest) {
       .update(egresado)
       .set({ fotoUrl: urlPublica })
       .where(eq(egresado.id, idEgresado));
+
+    registrarAudit({
+      idUsuario: session.rol === "admin" ? session.idUsuario : session.idUsuario,
+      accion:    "editar",
+      entidad:   "egresado",
+      entidadId: idEgresado,
+      datosNuevos: { fotoUrl: urlPublica, ci: eg.ci },
+      ip: getIpFromRequest(req),
+    });
 
     return ok({ url: urlPublica });
   } catch (e) {
