@@ -30,7 +30,7 @@
 ## 🗺️ Rutas del sistema
 
 ```
-/login                    → Login (ambos roles)
+/Titulados_y_Egresados                    → Login (ambos roles)
 
 ── ADMIN ──────────────────────────────────
 /dashboard                → Panel principal con estadísticas
@@ -163,7 +163,7 @@ Abre: **http://localhost:3000**
 ## 🧭 Flujo del egresado (primera vez)
 
 1. El admin crea una cuenta con rol `egresado` en `/usuarios/nuevo`
-2. El egresado entra a `/login` con sus credenciales
+2. El egresado entra a `/Titulados_y_Egresados` con sus credenciales
 3. Si no tiene datos registrados → redirige a `/registro-inicial`
 4. Completa su perfil (nombres, apellidos, CI, fechas, plan)
 5. Queda en `/mi-perfil` donde puede editar y agregar experiencias
@@ -203,7 +203,7 @@ src/
 │   ├── registro-inicial/         # Primera vez — completar datos
 │   ├── experiencia/nueva/        # Agregar experiencia laboral
 │   └── api/
-│       ├── auth/login/
+│       ├── auth/Titulados_y_Egresados/
 │       ├── auth/logout/
 │       ├── auth/link-egresado/
 │       ├── egresados/[id]/

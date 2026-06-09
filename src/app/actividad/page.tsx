@@ -94,7 +94,7 @@ async function getData(sp: SP) {
 
 export default async function ActividadPage({ searchParams }: { searchParams: SP }) {
   const session = await getSession();
-  if (!session || session.rol !== "admin") redirect("/login");
+  if (!session || session.rol !== "admin") redirect("/Titulados_y_Egresados");
 
   const { rows, total, page, totalPages } = await getData(searchParams);
 

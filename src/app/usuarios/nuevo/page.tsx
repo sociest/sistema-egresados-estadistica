@@ -10,7 +10,7 @@ import UsuarioForm from "@/components/usuarios/UsuarioForm";
 
 export default async function NuevoUsuarioPage() {
   const session = await getSession();
-  if (!session || session.rol !== "admin") redirect("/login");
+  if (!session || session.rol !== "admin") redirect("/Titulados_y_Egresados");
 
   const egresados = await db.select({
     id: egresado.id, nombres: egresado.nombres, apellidoPaterno: egresado.apellidoPaterno,

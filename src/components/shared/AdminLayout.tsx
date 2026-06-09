@@ -34,7 +34,7 @@ function SidebarContent({
 
   const logout = async () => {
     await fetch("/api/auth/logout", { method: "POST" });
-    router.push("/login");
+    router.push("/Titulados_y_Egresados");
     router.refresh();
   };
 

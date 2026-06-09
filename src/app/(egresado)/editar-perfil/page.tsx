@@ -19,7 +19,7 @@ function calcularCamposVacios(eg: any): string[] {
 
 export default async function EditarPerfilPage() {
   const session = await getSession();
-  if (!session || session.rol !== "egresado") redirect("/login");
+  if (!session || session.rol !== "egresado") redirect("/Titulados_y_Egresados");
   if (!session.idEgresado) redirect("/registro-inicial");
 
   const [eg] = await db.select().from(egresado)

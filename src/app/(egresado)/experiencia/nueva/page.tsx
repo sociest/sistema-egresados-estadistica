@@ -7,7 +7,7 @@ import HistorialForm from "@/components/perfil/HistorialForm";
 
 export default async function NuevaExperienciaPage() {
   const session = await getSession();
-  if (!session || session.rol !== "egresado") redirect("/login");
+  if (!session || session.rol !== "egresado") redirect("/Titulados_y_Egresados");
   if (!session.idEgresado) redirect("/registro-inicial");
 
   return (

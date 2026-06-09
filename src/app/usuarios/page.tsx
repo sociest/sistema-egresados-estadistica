@@ -14,7 +14,7 @@ const ESTADO_B: Record<string, string> = { activo: "badge-green", inactivo: "bad
 
 export default async function UsuariosPage() {
   const session = await getSession();
-  if (!session || session.rol !== "admin") redirect("/login");
+  if (!session || session.rol !== "admin") redirect("/Titulados_y_Egresados");
 
   const rows = await db.select({
     id:               usuario.id,

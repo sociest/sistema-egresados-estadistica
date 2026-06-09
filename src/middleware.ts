@@ -47,7 +47,7 @@ export async function middleware(req: NextRequest) {
   // 3. Verificar sesión para todo lo demás
   const token   = req.cookies.get("eg_token")?.value;
   const session = token ? await verifyToken(token) : null;
-  if (!session) return NextResponse.redirect(new URL("/login", req.url));
+  if (!session) return NextResponse.redirect(new URL("/Titulados_y_Egresados", req.url));
 
   // 4. Rutas exclusivas de ADMIN
   const adminRoutes = ["/dashboard", "/egresados", "/usuarios", "/reportes", "/verificaciones", "/sugerencias"];

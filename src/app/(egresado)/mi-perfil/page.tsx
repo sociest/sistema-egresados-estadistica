@@ -42,7 +42,7 @@ function calcularCompletitud(eg: any): { porcentaje: number; faltantes: string[]
 
 export default async function MiPerfilPage() {
  const session = await getSession();
- if (!session || session.rol !== "egresado") redirect("/login");
+ if (!session || session.rol !== "egresado") redirect("/Titulados_y_Egresados");
  const { usuario: usuarioTable } = await import("@/lib/schema");
  const [usuarioData] = await db.select({
     correoVerificado:  usuarioTable.correoVerificado,

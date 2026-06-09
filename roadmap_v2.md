@@ -333,7 +333,7 @@ Se pidió mejorar el atractivo visual de la landing con los colores instituciona
 - Recibir `PublicHeader.tsx` actualizado y el logo de la carrera
 - Revisar qué links están hardcodeados como `#` y mapearlos a las rutas correctas:
   - "Plan de estudios", "Malla curricular", etc. → si no hay página, mantener `#` pero añadir `title="Próximamente"`
-  - Botones de login/acceso → ya funciona, revisar que haga `setModalOpen(true)` en landing o redirija a `/login`
+  - Botones de login/acceso → ya funciona, revisar que haga `setModalOpen(true)` en landing o redirija a `/Titulados_y_Egresados`
   - "Ver directorio" → `/directorio`
   - "Noticias" → `/noticias`
 - Agregar el logo de la carrera en el header (ruta `/public/iconos/logo-carrera.png` o similar)
@@ -356,7 +356,7 @@ Mejoras de atractivo visual manteniendo la paleta turquesa/marino:
 ### Archivos a modificar
 - `src/components/shared/PublicHeader.tsx`
 - `src/components/shared/PublicFooter.tsx`
-- `src/app/login/LandingLoginPage.tsx`
+- `src/app/Titulados_y_Egresados/LandingLoginPage.tsx`
 - `public/iconos/` — agregar logo
 
 ---
@@ -375,7 +375,7 @@ También la mejora de la landingpage no se está efectuando, ósea yo la veo igu
 ### Archivos a modificar
 - `src/components/shared/PublicHeader.tsx`
 - `src/components/shared/PublicFooter.tsx`
-- `src/app/login/LandingLoginPage.tsx`
+- `src/app/Titulados_y_Egresados/LandingLoginPage.tsx`
 
 
 ### 🟠 BLOQUE 9 — Audit log y backup a Google Drive

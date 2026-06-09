@@ -10,7 +10,7 @@ import UsuarioForm from "@/components/usuarios/UsuarioForm";
 
 export default async function EditarUsuarioPage({ params }: { params: { id: string } }) {
   const session = await getSession();
-  if (!session || session.rol !== "admin") redirect("/login");
+  if (!session || session.rol !== "admin") redirect("/Titulados_y_Egresados");
 
   const id = parseInt(params.id);
   if (isNaN(id)) notFound();

@@ -33,7 +33,7 @@ function LoginModal({ onClose }: { onClose: () => void }) {
     if (!password) { setError("Ingresa tu contraseña"); return; }
     setLoading(true);
     try {
-      const res = await fetch("/api/auth/login", {
+      const res = await fetch("/api/auth/Titulados_y_Egresados", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ correo: ci.trim(), password }),
