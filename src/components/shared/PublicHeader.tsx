@@ -254,14 +254,18 @@ export default function PublicHeader({ isLoggedIn, correo }: PublicHeaderProps) 
             {/* Contenedor del Video en formato tarjeta grande */}
             <div className="aspect-video w-full bg-black flex items-center justify-center">
               <video 
-                src="videos/Video_Tutorial_Administrador.mp4" 
                 controls 
                 autoPlay
-                onLoadedData={(e) => {
-                  e.currentTarget.volume = 1.0; // Máximo volumen inicial
-                }}
+                playsInline
+                crossOrigin="anonymous"
+                preload="metadata"
                 className="w-full h-full object-contain"
-              />
+                style={{ background: "black" }}
+                onError={(e) => console.error("Video error:", e)}
+              >
+                <source src="/videos/Video_Tutorial_Egresado_Titulado.mp4" type="video/mp4" />
+                Tu navegador no soporta el elemento video.
+              </video>
             </div>
           </div>
         </div>

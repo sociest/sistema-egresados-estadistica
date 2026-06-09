@@ -305,15 +305,15 @@ export default function AdminLayout({ children, correo }: { children: React.Reac
             {/* Contenedor del Video en formato tarjeta grande */}
             <div className="aspect-video w-full bg-black flex items-center justify-center">
               <video 
-                src="videos/Video_Tutorial_Administrador.mp4"
                 controls 
                 autoPlay
-                onLoadedData={(e) => {
-                  // Forzamos el volumen base del video al 100% (1.0 es el máximo nativo)
-                  e.currentTarget.volume = 1.0;
-                }}
+                muted
                 className="w-full h-full object-contain"
-              />
+                style={{ background: "black" }}
+              >
+                <source src="/videos/Video_Tutorial_Administrador.mp4" type="video/mp4" />
+                Tu navegador no soporta el elemento video.
+              </video>
             </div>
           </div>
         </div>

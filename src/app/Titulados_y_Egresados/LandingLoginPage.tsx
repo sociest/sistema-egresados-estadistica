@@ -203,6 +203,7 @@ export default function LandingLoginPage() {
   } | null>(null);
   const [loadingStats, setLoadingStats] = useState(true);
   const [counters,     setCounters]     = useState({ titulados: 0, empleabilidad: 0, meses: 0, egresados: 0 });
+  const [videoTestOpen, setVideoTestOpen] = useState(false); // Estado para prueba de video
 
   useEffect(() => {
     fetch("/api/egresados/destacados").then(r => r.json()).then(j => { if (j.data) setEgresados(j.data); }).catch(() => {}).finally(() => setLoadingEg(false));
@@ -545,6 +546,46 @@ export default function LandingLoginPage() {
           </div>
         </div>
       </section>
+
+      {/* ══════════════════════════════════════════════════════════════════
+          SECCIÓN DE PRUEBA — Video
+      ══════════════════════════════════════════════════════════════════ */}
+      <section className="py-12 text-center" style={{ background: "var(--blanco)" }}>
+        <button 
+          onClick={() => setVideoTestOpen(true)}
+          className="px-6 py-3 rounded-lg font-black text-sm uppercase tracking-widest transition-all duration-300 hover:scale-105"
+          style={{ background: "linear-gradient(135deg, #ea580c 0%, #c2410c 100%)", color: "white" }}>
+          Abrir Video de Prueba
+        </button>
+      </section>
+
+      {/* Modal de Video de Prueba */}
+      {videoTestOpen && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
+          <div className="relative w-full max-w-4xl rounded-2xl overflow-hidden shadow-2xl border border-white/10" style={{ background: "#1e293b" }}>
+            <div className="flex items-center justify-between px-5 py-3 border-b border-white/10">
+              <h3 className="font-bold text-white">Video de Prueba</h3>
+              <button 
+                onClick={() => setVideoTestOpen(false)}
+                className="p-1.5 rounded-lg transition-colors text-white/60 hover:bg-white/10">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            <div className="aspect-video w-full bg-black flex items-center justify-center">
+              <video 
+                controls 
+                autoPlay
+                muted
+                className="w-full h-full object-contain"
+                style={{ background: "black" }}
+              >
+                <source src="/videos/Video_Tutorial_Administrador.mp4" type="video/mp4" />
+                Tu navegador no soporta el elemento video.
+              </video>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ══════════════════════════════════════════════════════════════════
           SECCIÓN — Noticias recientes
