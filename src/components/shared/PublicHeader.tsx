@@ -1,8 +1,8 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
-import { Menu, X, LogOut } from "lucide-react";
+import { Menu, X, LogOut, Play } from "lucide-react";
 
 interface PublicHeaderProps {
   isLoggedIn?: boolean;
@@ -15,6 +15,7 @@ export default function PublicHeader({ isLoggedIn, correo }: PublicHeaderProps) 
 
   const [scrolled,   setScrolled]   = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [videoOpen,  setVideoOpen]  = useState(false); // Estado para controlar el modal de video
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 10);
@@ -110,7 +111,24 @@ export default function PublicHeader({ isLoggedIn, correo }: PublicHeaderProps) 
             </nav>
 
             {/* ── Acciones derecha ── */}
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-3">
+              
+              {/* Botón de Tutorial Desktop (A la izquierda de las acciones de sesión) */}
+              <button
+                onClick={() => setVideoOpen(true)}
+                className="hidden md:flex items-center gap-1.5 px-4 py-2 rounded-xl text-[13px] font-bold uppercase tracking-wider transition-all"
+                style={{ 
+                  background: "rgba(255, 255, 255, 0.08)", 
+                  color: "rgba(255, 255, 255, 0.9)", 
+                  border: "1px solid rgba(255, 255, 255, 0.15)" 
+                }}
+                onMouseEnter={e => { const el = e.currentTarget as HTMLElement; el.style.background = "rgba(255, 255, 255, 0.15)"; el.style.color = "#fff"; }}
+                onMouseLeave={e => { const el = e.currentTarget as HTMLElement; el.style.background = "rgba(255, 255, 255, 0.08)"; el.style.color = "rgba(255, 255, 255, 0.9)"; }}
+              >
+                <Play className="w-3.5 h-3.5 fill-current text-orange-500" />
+                Tutorial
+              </button>
+
               {isLoggedIn ? (
                 <>
                   {correo && (
@@ -138,6 +156,16 @@ export default function PublicHeader({ isLoggedIn, correo }: PublicHeaderProps) 
                 </button>
               )}
 
+              {/* Icono de Play directo para pantallas móviles */}
+              <button
+                onClick={() => setVideoOpen(true)}
+                className="md:hidden p-2 rounded-xl transition-colors"
+                style={{ background: "rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.85)", border: "1px solid rgba(255,255,255,0.12)" }}
+                title="Ver Tutorial"
+              >
+                <Play className="w-4 h-4 fill-current text-orange-500" />
+              </button>
+
               {/* Hamburguesa móvil */}
               <button
                 onClick={() => setMobileOpen(v => !v)}
@@ -157,7 +185,7 @@ export default function PublicHeader({ isLoggedIn, correo }: PublicHeaderProps) 
       )}
       <div
         className="fixed top-16 right-0 bottom-0 z-50 w-64 md:hidden overflow-y-auto transition-transform duration-300"
-        style={{ background: "linear-gradient(160deg, #00325a 0%, #003a6b 100%)", transform: mobileOpen ? "translateX(0)" : "translateX(100%)", borderLeft: "1px solid rgba(255,255,255,0.10)" }}
+        style={{ background: "linear-gradient(160deg, #00325a 0%, #003a6b 100%)", transform: mobileOpen ? "translateX(0)" : "translateX(-100%)", borderLeft: "1px solid rgba(255,255,255,0.10)" }}
       >
         <div className="p-4 space-y-2">
           {NAV_LINKS.map(link => (
@@ -173,6 +201,15 @@ export default function PublicHeader({ isLoggedIn, correo }: PublicHeaderProps) 
           ))}
 
           <div className="my-3" style={{ borderTop: "1px solid rgba(255,255,255,0.10)" }} />
+
+          {/* Botón Tutorial dentro del menú móvil */}
+          <button
+            onClick={() => { setMobileOpen(false); setVideoOpen(true); }}
+            className="flex items-center justify-center gap-2 w-full py-2.5 mb-2 rounded-xl text-sm font-semibold transition-all"
+            style={{ background: "rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.9)", border: "1px solid rgba(255,255,255,0.15)" }}
+          >
+            <Play className="w-4 h-4 fill-current text-orange-500" /> Tutorial
+          </button>
 
           {isLoggedIn ? (
             <button
@@ -193,6 +230,42 @@ export default function PublicHeader({ isLoggedIn, correo }: PublicHeaderProps) 
           )}
         </div>
       </div>
+
+      {/* MODAL DEL VIDEO TUTORIAL PÚBLICO */}
+      {videoOpen && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-fade-in">
+          <div className="relative w-full max-w-4xl rounded-2xl overflow-hidden shadow-2xl transition-all border border-white/10 bg-[#00325a]">
+            {/* Cabecera del Video */}
+            <div className="flex items-center justify-between px-5 py-3 border-b border-white/10">
+              <div className="flex items-center gap-2">
+                <Play className="w-4 h-4 text-orange-500 fill-current" />
+                <span className="font-bold text-sm uppercase tracking-wider text-white">
+                  Video Tutorial de la Plataforma
+                </span>
+              </div>
+              <button 
+                onClick={() => setVideoOpen(false)}
+                className="p-1.5 rounded-lg transition-colors text-white/60 bg-white/5 hover:bg-white/10"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Contenedor del Video en formato tarjeta grande */}
+            <div className="aspect-video w-full bg-black flex items-center justify-center">
+              <video 
+                src="videos/Video_Tutorial_Administrador.mp4" 
+                controls 
+                autoPlay
+                onLoadedData={(e) => {
+                  e.currentTarget.volume = 1.0; // Máximo volumen inicial
+                }}
+                className="w-full h-full object-contain"
+              />
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }

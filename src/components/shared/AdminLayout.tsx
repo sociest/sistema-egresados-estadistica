@@ -1,12 +1,12 @@
 "use client";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   LayoutDashboard, Users, FileBarChart,
   UserCog, LogOut, ChevronRight,
   Menu, X, Newspaper, Activity,
-  Sun, Moon,
+  Sun, Moon, Play
 } from "lucide-react";
 
 const NAV = [
@@ -150,6 +150,7 @@ function SidebarContent({
 export default function AdminLayout({ children, correo }: { children: React.ReactNode; correo?: string }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [darkMode, setDarkMode] = useState(false);
+  const [videoOpen, setVideoOpen] = useState(false); // Estado para controlar el modal del video
 
   // Cargar preferencia guardada al montar
   useEffect(() => {
@@ -209,14 +210,43 @@ export default function AdminLayout({ children, correo }: { children: React.Reac
             <Menu className="w-5 h-5" />
           </button>
 
-          <div className="hidden lg:flex items-center gap-2">
-            <div className="h-[2px] w-5 rounded-full" style={{ background: "#ea580c" }} />
-            <span className="text-[15px] font-black uppercase tracking-[0.3em]" style={{ color: "white" }}>
-              Panel de Administración
-            </span>
+          {/* Contenedor del título + Botón de Tutorial */}
+          <div className="hidden lg:flex items-center gap-4">
+            <div className="flex items-center gap-2">
+              <div className="h-[2px] w-5 rounded-full" style={{ background: "#ea580c" }} />
+              <span className="text-[15px] font-black uppercase tracking-[0.3em]" style={{ color: "white" }}>
+                Panel de Administración
+              </span>
+            </div>
+
+            {/* Botón de Tutorial */}
+            <button
+              onClick={() => setVideoOpen(true)}
+              className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-xl font-bold uppercase tracking-wider transition-all"
+              style={{ 
+                background: "rgba(234, 88, 12, 0.15)", 
+                color: "#ff7a33", 
+                border: "1px solid rgba(234, 88, 12, 0.3)" 
+              }}
+              onMouseEnter={e => { const el = e.currentTarget as HTMLElement; el.style.background = "rgba(234, 88, 12, 0.25)"; el.style.color = "#ff9457"; }}
+              onMouseLeave={e => { const el = e.currentTarget as HTMLElement; el.style.background = "rgba(234, 88, 12, 0.15)"; el.style.color = "#ff7a33"; }}
+            >
+              <Play className="w-3.5 h-3.5 fill-current" />
+              Tutorial
+            </button>
           </div>
 
           <div className="flex items-center gap-2">
+            {/* Botón tutorial visible en móviles */}
+            <button
+              onClick={() => setVideoOpen(true)}
+              className="lg:hidden p-2 rounded-xl transition-all"
+              style={{ background: "rgba(234, 88, 12, 0.15)", border: "1px solid rgba(234, 88, 12, 0.3)", color: "#ff7a33" }}
+              title="Ver Tutorial"
+            >
+              <Play className="w-4 h-4 fill-current" />
+            </button>
+
             {/* Toggle en topbar para móvil/visible siempre */}
             <button
               onClick={toggleDark}
@@ -244,6 +274,50 @@ export default function AdminLayout({ children, correo }: { children: React.Reac
           </div>
         </main>
       </div>
+
+      {/* MODAL DEL VIDEO TUTORIAL */}
+      {videoOpen && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-fade-in">
+          <div 
+            className="relative w-full max-w-4xl rounded-2xl overflow-hidden shadow-2xl transition-all border border-white/10"
+            style={{ background: darkMode ? "#1e293b" : "#ffffff" }}
+          >
+            {/* Cabecera del Video */}
+            <div className="flex items-center justify-between px-5 py-3 border-b" style={{ borderColor: darkMode ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.08)" }}>
+              <div className="flex items-center gap-2">
+                <Play className="w-4 h-4 text-orange-500 fill-current" />
+                <span className="font-bold text-sm uppercase tracking-wider" style={{ color: darkMode ? "#fff" : "#0f172a" }}>
+                  Video Tutorial de Uso
+                </span>
+              </div>
+              <button 
+                onClick={() => setVideoOpen(false)}
+                className="p-1.5 rounded-lg transition-colors"
+                style={{ 
+                  color: darkMode ? "rgba(255,255,255,0.6)" : "rgba(0,0,0,0.6)",
+                  background: darkMode ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.05)"
+                }}
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Contenedor del Video en formato tarjeta grande */}
+            <div className="aspect-video w-full bg-black flex items-center justify-center">
+              <video 
+                src="videos/Video_Tutorial_Administrador.mp4"
+                controls 
+                autoPlay
+                onLoadedData={(e) => {
+                  // Forzamos el volumen base del video al 100% (1.0 es el máximo nativo)
+                  e.currentTarget.volume = 1.0;
+                }}
+                className="w-full h-full object-contain"
+              />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
