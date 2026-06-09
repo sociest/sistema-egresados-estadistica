@@ -474,6 +474,8 @@ export default function DashboardClient() {
     const generoTotal = (kpis.masculino ?? 0) + (kpis.femenino ?? 0) + (kpis.otro ?? 0);
     const pctMpdf = generoTotal > 0 ? Math.round(((kpis.masculino ?? 0) / generoTotal) * 100) : 0;
     const pctFpdf = generoTotal > 0 ? Math.round(((kpis.femenino  ?? 0) / generoTotal) * 100) : 0;
+    // Calcular el porcentaje para la opción "Otro"
+    const pctOpdf = generoTotal > 0 ? Math.round(((kpis.otro      ?? 0) / generoTotal) * 100) : 0;
 
     const kpiData: [string, string][] = [
       ["Total registrados",        String(kpis.totalRegistrados ?? 0)],
@@ -486,7 +488,7 @@ export default function DashboardClient() {
       ["Masculino", `${kpis.masculino ?? 0} (${pctMpdf}%)`],
       ["Femenino",  `${kpis.femenino  ?? 0} (${pctFpdf}%)`],
       ...((kpis.otro ?? 0) > 0
-        ? [["Otro / No especif.", String(kpis.otro)] as [string, string]]
+        ? [["Otro / No especif.", `${kpis.otro} (${pctOpdf}%)`] as [string, string]] // Modificado aquí
         : []),
     ];
 

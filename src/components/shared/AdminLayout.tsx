@@ -1,11 +1,12 @@
 "use client";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   LayoutDashboard, Users, FileBarChart,
-  UserCog, LogOut, GraduationCap, ChevronRight,
+  UserCog, LogOut, ChevronRight,
   Menu, X, Newspaper, Activity,
+  Sun, Moon,
 } from "lucide-react";
 
 const NAV = [
@@ -17,7 +18,17 @@ const NAV = [
   { href: "/actividad",      label: "Actividad",  icon: Activity },
 ];
 
-function SidebarContent({ correo, onClose }: { correo?: string; onClose?: () => void }) {
+function SidebarContent({
+  correo,
+  onClose,
+  darkMode,
+  onToggleDark,
+}: {
+  correo?: string;
+  onClose?: () => void;
+  darkMode: boolean;
+  onToggleDark: () => void;
+}) {
   const pathname = usePathname();
   const router   = useRouter();
 
@@ -38,20 +49,13 @@ function SidebarContent({ correo, onClose }: { correo?: string; onClose?: () => 
       <div className="relative px-5 py-6 flex items-center justify-between"
         style={{ borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
         <div className="flex items-center gap-3">
-          
-          {/* Contenedor del Logo (se agregó overflow-hidden por si la imagen es grande) */}
-          <div className="w-10 h-10 rounded-2xl flex items-center justify-center shrink-0 overflow-hidden"
-            >
-            
-            {/* AQUÍ SE REEMPLAZÓ EL SPAN POR LA IMAGEN */}
-            <img 
-              src={"/iconos/icono_estaditica.png"} 
-              alt="Logo Estadística" 
-              className="w-8 h-8 object-contain" 
+          <div className="w-10 h-10 rounded-2xl flex items-center justify-center shrink-0 overflow-hidden">
+            <img
+              src={"/iconos/icono_estaditica.png"}
+              alt="Logo Estadística"
+              className="w-8 h-8 object-contain"
             />
-            
           </div>
-          
           <div>
             <p className="font-black text-sm leading-tight uppercase tracking-wide text-white"
               style={{ fontFamily: "'Source Serif 4', serif" }}>Estadística</p>
@@ -100,8 +104,23 @@ function SidebarContent({ correo, onClose }: { correo?: string; onClose?: () => 
 
       {/* Footer sidebar */}
       <div className="relative p-4 space-y-2" style={{ borderTop: "1px solid rgba(255,255,255,0.08)" }}>
+
+        {/* Toggle modo oscuro */}
+        <button
+          onClick={onToggleDark}
+          className="w-full flex items-center gap-2 px-3 py-2.5 rounded-2xl text-sm font-semibold transition-all"
+          style={{ color: "rgba(255,255,255,0.65)", border: "1px solid rgba(255,255,255,0.10)", background: "rgba(255,255,255,0.05)" }}
+          onMouseEnter={e => { const el = e.currentTarget as HTMLElement; el.style.background = "rgba(255,255,255,0.10)"; el.style.color = "white"; }}
+          onMouseLeave={e => { const el = e.currentTarget as HTMLElement; el.style.background = "rgba(255,255,255,0.05)"; el.style.color = "rgba(255,255,255,0.65)"; }}
+        >
+          {darkMode
+            ? <><Sun className="w-4 h-4 text-yellow-300" /> Modo claro</>
+            : <><Moon className="w-4 h-4 text-blue-300" /> Modo oscuro</>
+          }
+        </button>
+
         {correo && (
-          <div className="flex items-center gap-2.5 rounded-2xl px-3 py-2.5 mb-1"
+          <div className="flex items-center gap-2.5 rounded-2xl px-3 py-2.5"
             style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.08)" }}>
             <div className="w-6 h-6 rounded-lg flex items-center justify-center shrink-0"
               style={{ background: "rgba(0,165,168,0.20)" }}>
@@ -115,6 +134,7 @@ function SidebarContent({ correo, onClose }: { correo?: string; onClose?: () => 
             </div>
           </div>
         )}
+
         <button onClick={logout}
           className="w-full flex items-center gap-2 px-3 py-2.5 rounded-2xl text-sm font-semibold transition-all"
           style={{ color: "rgba(255,255,255,0.55)", border: "1px solid transparent" }}
@@ -129,9 +149,31 @@ function SidebarContent({ correo, onClose }: { correo?: string; onClose?: () => 
 
 export default function AdminLayout({ children, correo }: { children: React.ReactNode; correo?: string }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [darkMode, setDarkMode] = useState(false);
+
+  // Cargar preferencia guardada al montar
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem("admin_dark_mode");
+      if (saved === "true") setDarkMode(true);
+    } catch {}
+  }, []);
+
+  // Aplicar/quitar atributo en el contenedor del admin al cambiar
+  const toggleDark = () => {
+    setDarkMode(prev => {
+      const next = !prev;
+      try { localStorage.setItem("admin_dark_mode", String(next)); } catch {}
+      return next;
+    });
+  };
 
   return (
-    <div className="flex h-screen overflow-hidden" style={{ background: "#f1f5f9" }}>
+    <div
+      className="flex h-screen overflow-hidden"
+      style={{ background: darkMode ? "#0f172a" : "#f1f5f9" }}
+      data-theme-admin={darkMode ? "dark" : "light"}
+    >
 
       {/* Overlay móvil */}
       {sidebarOpen && (
@@ -142,7 +184,7 @@ export default function AdminLayout({ children, correo }: { children: React.Reac
       {/* Sidebar desktop */}
       <aside className="hidden lg:flex w-60 shrink-0 flex-col relative"
         style={{ background: "linear-gradient(170deg, #001d3d 0%, #002a52 50%, #00325a 100%)" }}>
-        <SidebarContent correo={correo} />
+        <SidebarContent correo={correo} darkMode={darkMode} onToggleDark={toggleDark} />
       </aside>
 
       {/* Sidebar móvil */}
@@ -151,7 +193,7 @@ export default function AdminLayout({ children, correo }: { children: React.Reac
           background: "linear-gradient(170deg, #001d3d 0%, #002a52 50%, #00325a 100%)",
           transform: sidebarOpen ? "translateX(0)" : "translateX(-100%)",
         }}>
-        <SidebarContent correo={correo} onClose={() => setSidebarOpen(false)} />
+        <SidebarContent correo={correo} onClose={() => setSidebarOpen(false)} darkMode={darkMode} onToggleDark={toggleDark} />
       </aside>
 
       {/* Main */}
@@ -175,6 +217,19 @@ export default function AdminLayout({ children, correo }: { children: React.Reac
           </div>
 
           <div className="flex items-center gap-2">
+            {/* Toggle en topbar para móvil/visible siempre */}
+            <button
+              onClick={toggleDark}
+              className="p-2 rounded-xl transition-all"
+              style={{ background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.12)", color: "rgba(255,255,255,0.80)" }}
+              title={darkMode ? "Cambiar a modo claro" : "Cambiar a modo oscuro"}
+            >
+              {darkMode
+                ? <Sun className="w-4 h-4 text-yellow-300" />
+                : <Moon className="w-4 h-4 text-blue-300" />
+              }
+            </button>
+
             <div className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full font-black uppercase tracking-widest"
               style={{ background: "rgba(0,165,168,0.20)", color: "#4DD4D5", border: "1px solid rgba(0,165,168,0.30)" }}>
               <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: "#4DD4D5" }} />

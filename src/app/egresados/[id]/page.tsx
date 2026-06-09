@@ -38,7 +38,7 @@ function Row({ label, children }: { label: string; children: React.ReactNode }) 
 
 export default async function EgresadoDetallePage({ params }: { params: { id: string } }) {
   const session = await getSession();
-  if (!session || session.rol !== "admin") redirect("/login");
+  if (!session || session.rol !== "admin") redirect("/Titulados_y_Egresados");
 
   const id = parseInt(params.id);
   if (isNaN(id)) notFound();

@@ -8,7 +8,7 @@ import RegistroInicialForm from "@/components/perfil/RegistroInicialForm";
 
 export default async function RegistroInicialPage() {
   const session = await getSession();
-  if (!session || session.rol !== "egresado") redirect("/login");
+  if (!session || session.rol !== "egresado") redirect("/Titulados_y_Egresados");
   
   // Solo redirigir a mi-perfil si tiene idEgresado Y existe en BD
   if (session.idEgresado) {

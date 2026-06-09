@@ -32,7 +32,7 @@ const TIPO_STYLE: Record<string, React.CSSProperties> = {
 
 export default async function NoticiasAdminPage() {
   const session = await getSession();
-  if (!session || session.rol !== "admin") redirect("/login");
+  if (!session || session.rol !== "admin") redirect("/Titulados_y_Egresados");
 
   const rows = await db.select().from(noticias).orderBy(desc(noticias.fecha));
 

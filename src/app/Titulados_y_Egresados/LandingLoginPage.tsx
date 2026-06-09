@@ -38,7 +38,7 @@ function LoginModal({ onClose }: { onClose: () => void }) {
     if (!password)  { setError("Ingresa tu contraseña"); return; }
     setLoading(true);
     try {
-      const res  = await fetch("/api/auth/login", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ correo: ci.trim(), password }) });
+      const res  = await fetch("/api/auth/Titulados_y_Egresados", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ correo: ci.trim(), password }) });
       const json = await res.json();
       if (!res.ok) { setError(json.error); return; }
       if (json.data?.primerLogin) { sessionStorage.setItem("activacion_idUsuario", String(json.data.idUsuario)); router.push("/activar-cuenta"); return; }
@@ -271,7 +271,7 @@ export default function LandingLoginPage() {
               {/* Título principal */}
               <h1 className="mb-6 leading-[0.95] font-black uppercase tracking-tighter" style={{ fontSize: "clamp(3.2rem, 6vw, 5.5rem)", color: "white" }}>
                 Conectamos<br />
-                <span className="font-serif italic lowercase tracking-normal" style={{ color: "#00A5A8", fontSize: "clamp(3rem, 5.5vw, 5rem)" }}>egresados y titulados</span>
+                <span className="font-serif italic lowercase tracking-normal" style={{ color: "#00A5A8", fontSize: "clamp(3rem, 5.5vw, 5rem)" }}>titulados y egresados</span>
                 <br />
                 <span style={{ color: "rgba(255,255,255,0.85)" }}>de estadística</span>
               </h1>
@@ -289,7 +289,7 @@ export default function LandingLoginPage() {
                   className="group flex items-center justify-center gap-3 px-8 py-4 rounded-2xl font-black text-sm uppercase tracking-widest transition-all duration-300 hover:-translate-y-1"
                   style={{ background: "linear-gradient(135deg, #ea580c 0%, #c2410c 100%)", color: "white", boxShadow: "0 8px 32px rgba(234,88,12,0.45)" }}>
                   
-                  Soy egresado  Acceder
+                  Acceder
                   
                 </button>
                 <a href="/directorio"

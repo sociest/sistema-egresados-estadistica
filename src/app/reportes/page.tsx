@@ -5,7 +5,7 @@ import ReportesClient from "@/components/reportes/ReportesClient";
 
 export default async function ReportesPage() {
   const session = await getSession();
-  if (!session || session.rol !== "admin") redirect("/login");
+  if (!session || session.rol !== "admin") redirect("/Titulados_y_Egresados");
 
   return (
     <AdminLayout correo={session.correo}>

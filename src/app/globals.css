@@ -41,6 +41,77 @@
   --shadow-turq:   0 4px 16px rgba(0,165,168,0.20);
 }
 
+[data-theme-admin="dark"] {
+  --blanco:        #1e293b;
+  --humo:          #0f172a;
+  --borde:         #334155;
+  --borde-suave:   #1e293b;
+  --azul-pizarra:  #f1f5f9;
+  --gris-grafito:  #cbd5e1;
+  --placeholder:   #64748b;
+  --turquesa:      #00A5A8;
+  --turquesa-dark: #4DD4D5;
+  --turquesa-light:#0f3a3a;
+  --turquesa-pale: #0a2424;
+  --verde:         #4ade80;
+  --verde-light:   #052e16;
+  --naranja:       #fb923c;
+  --naranja-light: #431407;
+  --fondo:         #0f172a;
+}
+
+[data-theme-admin="dark"] .card {
+  background: #1e293b;
+  border-color: #334155;
+}
+
+[data-theme-admin="dark"] .tbl {
+  background: #1e293b;
+}
+
+[data-theme-admin="dark"] .tbl thead tr {
+  background: #0f172a;
+}
+
+[data-theme-admin="dark"] .tbl tbody tr:hover {
+  background: #0a2424;
+}
+
+[data-theme-admin="dark"] .field {
+  background: #0f172a;
+  border-color: #334155;
+  color: #f1f5f9;
+}
+
+[data-theme-admin="dark"] .field:focus {
+  background: #1e293b;
+  border-color: var(--turquesa);
+}
+
+[data-theme-admin="dark"] .btn-slate {
+  background: #1e293b;
+  border-color: #334155;
+  color: #cbd5e1;
+}
+
+[data-theme-admin="dark"] .btn-ghost {
+  color: #94a3b8;
+}
+
+[data-theme-admin="dark"] .btn-ghost:hover:not(:disabled) {
+  background: #1e293b;
+  color: #f1f5f9;
+}
+
+[data-theme-admin="dark"] .tbl-wrap {
+  border-color: #334155;
+}
+
+[data-theme-admin="dark"] select.field option {
+  background: #1e293b;
+  color: #f1f5f9;
+}
+
 
 @layer base {
   *, *::before, *::after {
@@ -71,6 +142,11 @@
   ::selection {
     background: rgba(0, 68, 126, 0.18);
     color: #00233f;
+  }
+
+  [data-theme-admin="dark"] ::selection {
+    background: rgba(0, 165, 168, 0.45);
+    color: #f1f5f9;
   }
 
   /* Scrollbar personalizado */

@@ -98,7 +98,7 @@ export default function RecuperarPasswordPage() {
               <button onClick={solicitarCodigo} disabled={loading || !ci.trim()} className="btn-primary w-full py-3">
                 {loading ? <><span className="spinner" /> Enviando...</> : "Continuar"}
               </button>
-              <Link href="/login" className="btn-ghost w-full text-sm flex items-center justify-center gap-2">
+              <Link href="/Titulados_y_Egresados" className="btn-ghost w-full text-sm flex items-center justify-center gap-2">
                 <ArrowLeft className="w-4 h-4" /> Volver al login
               </Link>
             </>
@@ -208,7 +208,7 @@ export default function RecuperarPasswordPage() {
                 <p className="text-white font-semibold mb-1">¡Listo!</p>
                 <p className="text-slate-500 text-sm">Tu contraseña fue actualizada.</p>
               </div>
-              <Link href="/login" className="btn-primary w-full py-3 flex items-center justify-center gap-2">
+              <Link href="/Titulados_y_Egresados" className="btn-primary w-full py-3 flex items-center justify-center gap-2">
                 Ir al login
               </Link>
             </>

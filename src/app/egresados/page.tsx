@@ -11,6 +11,7 @@ import BuscadorEgresados from "@/components/egresados/BuscadorEgresados";
 import EliminarEgresadoBtn from "@/components/egresados/EliminarEgresadoBtn";
 import ImportarEgresadosBtn from "@/components/egresados/ImportarEgresadosBtn";
 import { cn, fmtDate } from "@/lib/utils";
+import BackupBtn from "@/components/egresados/BackupBtn";
 
 interface SP {
   busqueda?:       string;
@@ -124,7 +125,7 @@ async function getCiudades(): Promise<string[]> {
 
 export default async function EgresadosPage({ searchParams }: { searchParams: SP }) {
   const session = await getSession();
-  if (!session || session.rol !== "admin") redirect("/login");
+  if (!session || session.rol !== "admin") redirect("/Titulados_y_Egresados");
 
   const [{ rows, total, page, totalPages }, ciudades] = await Promise.all([
     getData(searchParams),
@@ -159,15 +160,7 @@ export default async function EgresadosPage({ searchParams }: { searchParams: SP
             </p>
           </div>
           <div className="flex items-center gap-2">
-            <a
-                href="/api/backup"
-                download
-                className="btn-slate btn-sm flex items-center gap-2"
-                title="Descargar backup completo en Excel"
-              >
-                <Download className="w-3.5 h-3.5" />
-                Backup
-              </a>
+            <BackupBtn />
             <ImportarEgresadosBtn />
             <Link href="/egresados/nuevo" className="btn-primary btn-sm">
               <Plus className="w-3.5 h-3.5" /> Nuevo Egresado

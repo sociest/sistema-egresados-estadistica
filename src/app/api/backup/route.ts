@@ -181,29 +181,37 @@ export async function GET(_req: NextRequest) {
 
     const buf = XLSX.write(wb, { type: "buffer", bookType: "xlsx" });
 
-    registrarAudit({
-      idUsuario: session.idUsuario,
-      accion:    "crear",
-      entidad:   "backup" as any,
-      entidadId: null,
-      datosNuevos: {
-        tipo: "backup_completo_excel",
-        fecha: new Date().toISOString(),
-        registros: {
-          egresados: egresados.length,
-          historial: historial.length,
-          postgrados: postgrados.length,
-          usuarios:  usuarios.length,
-          auditLogs: auditLogs.length,
+    // Evitar registrar prefetch/HEAD requests — solo auditar GET reales con Accept que indica descarga
+    const isPrefetch = _req.headers.get("purpose") === "prefetch"
+      || _req.headers.get("sec-purpose") === "prefetch"
+      || _req.method === "HEAD";
+
+    if (!isPrefetch) {
+      registrarAudit({
+        idUsuario: session.idUsuario,
+        accion:    "crear",
+        entidad:   "backup" as any,
+        entidadId: null,
+        datosNuevos: {
+          tipo: "backup_completo_excel",
+          fecha: new Date().toISOString(),
+          registros: {
+            egresados: egresados.length,
+            historial: historial.length,
+            postgrados: postgrados.length,
+            usuarios:  usuarios.length,
+            auditLogs: auditLogs.length,
+          },
         },
-      },
-      ip: getIpFromRequest(_req),
-    });
+        ip: getIpFromRequest(_req),
+      });
+    }
 
     return new Response(buf, {
       headers: {
         "Content-Type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         "Content-Disposition": `attachment; filename="backup_egresados_${fechaArchivo}.xlsx"`,
+        "Cache-Control": "no-store",
       },
     });
   } catch (e) {

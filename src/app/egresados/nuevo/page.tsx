@@ -7,7 +7,7 @@ import EgresadoForm from "@/components/egresados/EgresadoForm";
 
 export default async function NuevoEgresadoPage() {
   const session = await getSession();
-  if (!session || session.rol !== "admin") redirect("/login");
+  if (!session || session.rol !== "admin") redirect("/Titulados_y_Egresados");
 
   return (
     <AdminLayout correo={session.correo}>

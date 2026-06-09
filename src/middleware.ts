@@ -12,7 +12,7 @@ export async function middleware(req: NextRequest) {
     "/recuperar-password",
     "/directorio",
     "/noticias",
-    "/login",
+    "/Titulados_y_Egresados",
   ];
   if (publicRoutes.some(r => pathname.startsWith(r))) {
     return NextResponse.next();
@@ -21,7 +21,7 @@ export async function middleware(req: NextRequest) {
   // 2. API: verificar sesión
   if (pathname.startsWith("/api/")) {
     if (
-      pathname.startsWith("/api/auth/login") ||
+      pathname.startsWith("/api/auth/Titulados_y_Egresados") ||
       pathname.startsWith("/api/auth/solicitar-codigo") ||
       pathname.startsWith("/api/auth/cambiar-password") ||
       pathname.startsWith("/api/auth/agregar-contacto") ||

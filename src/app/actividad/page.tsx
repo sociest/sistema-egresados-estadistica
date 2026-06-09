@@ -79,6 +79,16 @@ async function getData(sp: SP) {
     .limit(pageSize)
     .offset((page - 1) * pageSize);
 
+  // TEMPORAL — agregar esta línea justo después del select
+  if (rows.length > 0) {
+    console.log("[DEBUG hora]", {
+      raw:       rows[0].creadoEn,
+      isoString: rows[0].creadoEn?.toISOString(),
+      utcHours:  rows[0].creadoEn?.getUTCHours(),
+      localHours: rows[0].creadoEn?.getHours(),
+    });
+  }
+
   return { rows, total, page, pageSize, totalPages: Math.ceil(total / pageSize) };
 }
 
@@ -194,17 +204,18 @@ export default async function ActividadPage({ searchParams }: { searchParams: SP
                       <td>
                         <p className="text-sm font-mono" style={{ color: "var(--azul-pizarra)" }}>
                           {r.creadoEn
-                            ? new Date(r.creadoEn).toLocaleDateString("es-BO", {
+                            ? new Date(r.creadoEn).toLocaleDateString("es-ES", {
                                 day: "2-digit", month: "2-digit", year: "numeric",
-                                timeZone: "America/La_Paz",
+                                timeZone: "UTC",
                               })
                             : "—"}
                         </p>
                         <p className="text-xs font-mono" style={{ color: "var(--placeholder)" }}>
                           {r.creadoEn
-                            ? new Date(r.creadoEn).toLocaleTimeString("es-BO", {
+                            ? new Date(r.creadoEn).toLocaleTimeString("es-ES", {
                                 hour: "2-digit", minute: "2-digit", second: "2-digit",
-                                timeZone: "America/La_Paz",
+                                hour12: false,
+                                timeZone: "UTC",
                               })
                             : ""}
                         </p>
@@ -295,7 +306,14 @@ export default async function ActividadPage({ searchParams }: { searchParams: SP
                   <div className="flex items-start justify-between gap-2 mb-2">
                     <div>
                       <p className="text-xs font-mono" style={{ color: "var(--gris-grafito)" }}>
-                        {r.creadoEn ? new Date(r.creadoEn).toLocaleString("es-BO") : "—"}
+                        {r.creadoEn
+                          ? new Date(r.creadoEn).toLocaleString("es-ES", {
+                              day: "2-digit", month: "2-digit", year: "numeric",
+                              hour: "2-digit", minute: "2-digit", second: "2-digit",
+                              hour12: false,
+                              timeZone: "UTC",
+                            })
+                          : "—"}
                       </p>
                       <p className="text-xs mt-0.5 font-mono font-semibold" style={{ color: "var(--azul-pizarra)" }}>
                         {r.usuarioCi ?? "—"}

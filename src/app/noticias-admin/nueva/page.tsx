@@ -7,7 +7,7 @@ import NoticiaForm from "@/components/noticias/NoticiaForm";
 
 export default async function NuevaNoticiaPage() {
   const session = await getSession();
-  if (!session || session.rol !== "admin") redirect("/login");
+  if (!session || session.rol !== "admin") redirect("/Titulados_y_Egresados");
 
   return (
     <AdminLayout correo={session.correo}>
