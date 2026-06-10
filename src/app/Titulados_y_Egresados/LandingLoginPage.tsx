@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import Avatar from "@/components/shared/Avatar";
+import { Turnstile } from "@marsidev/react-turnstile";
 
 /* ─────────────────────────────────────────────────────────────────────────────
    MODAL DE LOGIN
@@ -21,6 +22,7 @@ function LoginModal({ onClose }: { onClose: () => void }) {
   const [password, setPassword] = useState("");
   const [loading,  setLoading]  = useState(false);
   const [visible,  setVisible]  = useState(false);
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
   const overlayRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -36,9 +38,14 @@ function LoginModal({ onClose }: { onClose: () => void }) {
     setError(null);
     if (!ci.trim()) { setError("Ingresa tu CI"); return; }
     if (!password)  { setError("Ingresa tu contraseña"); return; }
+    
+    const bypass = process.env.NEXT_PUBLIC_TURNSTILE_BYPASS === "true";
+    if (!bypass && !turnstileToken) { setError("Por favor completa el captcha de seguridad"); return; }
+
     setLoading(true);
     try {
-      const res  = await fetch("/api/auth/Titulados_y_Egresados", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ correo: ci.trim(), password }) });
+      const payload = { correo: ci.trim(), password, turnstileToken: bypass ? "bypass" : turnstileToken };
+      const res  = await fetch("/api/auth/Titulados_y_Egresados", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
       const json = await res.json();
       if (!res.ok) { setError(json.error); return; }
       if (json.data?.primerLogin) { sessionStorage.setItem("activacion_idUsuario", String(json.data.idUsuario)); router.push("/activar-cuenta"); return; }
@@ -108,6 +115,17 @@ function LoginModal({ onClose }: { onClose: () => void }) {
                 </button>
               </div>
             </div>
+
+            {process.env.NEXT_PUBLIC_TURNSTILE_BYPASS !== "true" && (
+              <div className="flex justify-center my-3">
+                <Turnstile 
+                  siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || ""} 
+                  onSuccess={(token) => setTurnstileToken(token)}
+                  onError={() => setError("Error al cargar el captcha")}
+                  options={{ theme: "light" }}
+                />
+              </div>
+            )}
 
             {error && <p className="error-box">{error}</p>}
 

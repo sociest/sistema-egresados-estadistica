@@ -1,0 +1,50 @@
+# ── Stage 1: Builder ──────────────────────────────────────────────────────────
+FROM node:20-alpine AS builder
+
+WORKDIR /app
+
+COPY package.json package-lock.json* ./
+RUN npm config set fetch-retry-maxtimeout 600000 -g && npm ci
+
+COPY . .
+
+ENV NODE_ENV=production
+ENV NEXT_TELEMETRY_DISABLED=1
+
+RUN sed -i 's|// output: "standalone"|output: "standalone"|g' next.config.mjs && \
+    npm run build
+
+# ── Stage 2: Runner ───────────────────────────────────────────────────────────
+FROM node:20-alpine AS runner
+
+WORKDIR /app
+
+ENV NODE_ENV=production
+ENV NEXT_TELEMETRY_DISABLED=1
+
+RUN addgroup --system --gid 1001 nodejs
+RUN adduser  --system --uid 1001 nextjs
+
+COPY --from=builder /app/public          ./public
+COPY --from=builder /app/.next/standalone ./
+COPY --from=builder /app/.next/static    ./.next/static
+
+# Archivos necesarios para migraciones (drizzle) y seeds (tsx)
+COPY --from=builder /app/package.json      ./package.json
+COPY --from=builder /app/node_modules      ./node_modules
+COPY --from=builder /app/drizzle.config.ts ./
+COPY --from=builder /app/src               ./src
+COPY --from=builder /app/scripts           ./scripts
+
+RUN mkdir -p ./public/uploads/noticias && \
+    mkdir -p ./public/uploads/perfiles && \
+    chown -R nextjs:nodejs ./public/uploads
+
+USER nextjs
+
+EXPOSE 3000
+
+ENV PORT=3000
+ENV HOSTNAME="0.0.0.0"
+
+CMD ["node", "server.js"]

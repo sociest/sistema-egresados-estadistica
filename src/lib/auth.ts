@@ -2,10 +2,14 @@ import { SignJWT, jwtVerify } from "jose";
 import bcrypt from "bcryptjs";
 import { cookies } from "next/headers";
 
-const SECRET = new TextEncoder().encode(
-  process.env.JWT_SECRET ?? "dev_secret_cambia_en_produccion_32chars!!"
-);
 const COOKIE = "eg_token";
+
+const getSecret = () => {
+  const getEnv = (key: string) => process.env[key];
+  return new TextEncoder().encode(
+    getEnv("JWT_SECRET") || "dev_secret_cambia_en_produccion_32chars!!"
+  );
+};
 
 export interface Session {
   idUsuario:         number;
@@ -25,14 +29,17 @@ export async function signToken(s: Session): Promise<string> {
     .setProtectedHeader({ alg: "HS256" })
     .setIssuedAt()
     .setExpirationTime("8h")
-    .sign(SECRET);
+    .sign(getSecret());
 }
 
 export async function verifyToken(token: string): Promise<Session | null> {
   try {
-    const { payload } = await jwtVerify(token, SECRET);
+    const { payload } = await jwtVerify(token, getSecret());
     return payload as unknown as Session;
-  } catch { return null; }
+  } catch (err) { 
+    console.error("verifyToken error:", err);
+    return null; 
+  }
 }
 
 export async function getSession(): Promise<Session | null> {
@@ -42,9 +49,13 @@ export async function getSession(): Promise<Session | null> {
 }
 
 export function setSession(token: string) {
+  const getEnv = (key: string) => process.env[key];
+  const isProd = getEnv("NODE_ENV") === "production";
+  const disableSecure = getEnv("DISABLE_SECURE_COOKIES") === "true";
+
   cookies().set(COOKIE, token, {
     httpOnly: true,
-    secure:   process.env.NODE_ENV === "production",
+    secure:   isProd && !disableSecure,
     sameSite: "lax",
     maxAge:   60 * 60 * 8,
     path:     "/",
