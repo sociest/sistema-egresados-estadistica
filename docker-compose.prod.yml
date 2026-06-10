@@ -1,0 +1,99 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: egresados_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
+      POSTGRES_DB: egresados_db
+    volumes:
+      - ./data/postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - egresados-network
+
+  migrate:
+    image: sistema-egresados-app:latest
+    container_name: egresados_migrate
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://postgres:${DB_PASSWORD:-postgres}@db:5432/egresados_db
+    command: ["npx", "drizzle-kit", "push"]
+    restart: "no"
+    networks:
+      - egresados-network
+
+  seed:
+    image: sistema-egresados-app:latest
+    container_name: egresados_seed
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    environment:
+      DATABASE_URL: postgresql://postgres:${DB_PASSWORD:-postgres}@db:5432/egresados_db
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@estadistica.bo}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-Admin1234!}
+    command: ["npx", "tsx", "scripts/seed.ts"]
+    restart: "no"
+    networks:
+      - egresados-network
+
+  app:
+    image: sistema-egresados-app:latest
+    container_name: egresados_app
+    restart: unless-stopped
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    environment:
+      DATABASE_URL: postgresql://postgres:${DB_PASSWORD:-postgres}@db:5432/egresados_db
+      JWT_SECRET: ${JWT_SECRET}
+      NODE_ENV: production
+      EMAIL_USER: ${EMAIL_USER:-}
+      EMAIL_PASS: ${EMAIL_PASS:-}
+      EMAIL_FROM: ${EMAIL_FROM:-}
+      NEXT_PUBLIC_TURNSTILE_SITE_KEY: ${NEXT_PUBLIC_TURNSTILE_SITE_KEY:-}
+      TURNSTILE_SECRET: ${TURNSTILE_SECRET:-}
+      TURNSTILE_BYPASS: ${TURNSTILE_BYPASS:-false}
+      NEXT_PUBLIC_TURNSTILE_BYPASS: ${TURNSTILE_BYPASS:-false}
+      DISABLE_SECURE_COOKIES: ${DISABLE_SECURE_COOKIES:-false}
+    volumes:
+      - ./public/uploads:/app/public/uploads
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "wget -qO- http://localhost:3000/api/stats/publicos || exit 1",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - egresados-network
+
+  nginx:
+    image: nginx:alpine
+    container_name: egresados_nginx
+    restart: unless-stopped
+    depends_on:
+      - app
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./ssl:/etc/nginx/ssl:ro
+      - ./public/uploads:/var/www/uploads:ro
+    networks:
+      - egresados-network
+
+networks:
+  egresados-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
