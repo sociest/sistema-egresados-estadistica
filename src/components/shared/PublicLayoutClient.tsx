@@ -3,8 +3,17 @@
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { Eye, EyeOff, LogIn, X, GraduationCap } from "lucide-react";
+import { Turnstile } from "@marsidev/react-turnstile";
 
-function LoginModal({ onClose }: { onClose: () => void }) {
+function LoginModal({ 
+  onClose,
+  turnstileSiteKey,
+  turnstileBypass
+}: { 
+  onClose: () => void;
+  turnstileSiteKey: string;
+  turnstileBypass: boolean;
+}) {
   const router = useRouter();
   const [show, setShow] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -12,6 +21,7 @@ function LoginModal({ onClose }: { onClose: () => void }) {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [visible, setVisible] = useState(false);
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
   const overlayRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -31,12 +41,23 @@ function LoginModal({ onClose }: { onClose: () => void }) {
     setError(null);
     if (!ci.trim()) { setError("Ingresa tu CI"); return; }
     if (!password) { setError("Ingresa tu contraseña"); return; }
+
+    if (!turnstileBypass && !turnstileToken) {
+      setError("Por favor completa el captcha de seguridad");
+      return;
+    }
+
     setLoading(true);
     try {
+      const payload = { 
+        correo: ci.trim(), 
+        password,
+        turnstileToken: turnstileBypass ? "bypass" : turnstileToken
+      };
       const res = await fetch("/api/auth/Titulados_y_Egresados", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ correo: ci.trim(), password }),
+        body: JSON.stringify(payload),
       });
       const json = await res.json();
       if (!res.ok) { setError(json.error); return; }
@@ -141,6 +162,17 @@ function LoginModal({ onClose }: { onClose: () => void }) {
               </div>
             </div>
 
+            {!turnstileBypass && (
+              <div className="flex justify-center my-3">
+                <Turnstile 
+                  siteKey={turnstileSiteKey || ""} 
+                  onSuccess={(token) => setTurnstileToken(token)}
+                  onError={() => setError("Error al cargar el captcha")}
+                  options={{ theme: "light" }}
+                />
+              </div>
+            )}
+
             {error && <p className="error-box">{error}</p>}
 
             <button
@@ -167,7 +199,13 @@ function LoginModal({ onClose }: { onClose: () => void }) {
   );
 }
 
-export default function PublicLayoutClient() {
+export default function PublicLayoutClient({
+  turnstileSiteKey,
+  turnstileBypass,
+}: {
+  turnstileSiteKey: string;
+  turnstileBypass: boolean;
+}) {
   const [modalOpen, setModalOpen] = useState(false);
 
   useEffect(() => {
@@ -177,5 +215,11 @@ export default function PublicLayoutClient() {
   }, []);
 
   if (!modalOpen) return null;
-  return <LoginModal onClose={() => setModalOpen(false)} />;
+  return (
+    <LoginModal 
+      onClose={() => setModalOpen(false)} 
+      turnstileSiteKey={turnstileSiteKey} 
+      turnstileBypass={turnstileBypass} 
+    />
+  );
 }

@@ -18,7 +18,7 @@ services:
       - egresados-network
 
   migrate:
-    image: sistema-egresados-app:latest
+    image: ghcr.io/sociest/sistema-egresados-estadistica:latest
     container_name: egresados_migrate
     depends_on:
       db:
@@ -31,7 +31,7 @@ services:
       - egresados-network
 
   seed:
-    image: sistema-egresados-app:latest
+    image: ghcr.io/sociest/sistema-egresados-estadistica:latest
     container_name: egresados_seed
     depends_on:
       migrate:
@@ -46,7 +46,7 @@ services:
       - egresados-network
 
   app:
-    image: sistema-egresados-app:latest
+    image: ghcr.io/sociest/sistema-egresados-estadistica:latest
     container_name: egresados_app
     restart: unless-stopped
     depends_on:

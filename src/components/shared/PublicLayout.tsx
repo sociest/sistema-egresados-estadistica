@@ -9,6 +9,11 @@ export default async function PublicLayout({ children }: { children: React.React
   const isLoggedIn = !!session;
   const correo = session?.correo;
 
+  // Leer variables de entorno en runtime (desde el docker-compose)
+  const getEnv = (key: string) => process.env[key];
+  const turnstileSiteKey = getEnv("NEXT_PUBLIC_TURNSTILE_SITE_KEY") || getEnv("TURNSTILE_SITE_KEY") || "";
+  const turnstileBypass  = (getEnv("NEXT_PUBLIC_TURNSTILE_BYPASS") || getEnv("TURNSTILE_BYPASS")) === "true";
+
   return (
     <div className="min-h-screen flex flex-col" style={{ background: "var(--humo)" }}>
       <PublicHeader isLoggedIn={isLoggedIn} correo={correo} />
@@ -17,7 +22,10 @@ export default async function PublicLayout({ children }: { children: React.React
       </main>
       <PublicFooter />
       {/* Modal de login global — escucha "abrir-modal-login" desde cualquier página */}
-      <PublicLayoutClient />
+      <PublicLayoutClient 
+        turnstileSiteKey={turnstileSiteKey} 
+        turnstileBypass={turnstileBypass} 
+      />
     </div>
   );
 }
