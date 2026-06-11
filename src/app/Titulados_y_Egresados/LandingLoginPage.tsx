@@ -284,18 +284,18 @@ export default function LandingLoginPage() {
               <div className="inline-flex items-center gap-2.5 px-4 py-2 rounded-full mb-8"
                 style={{ background: "rgba(0,165,168,0.15)", border: "1px solid rgba(0,165,168,0.30)", backdropFilter: "blur(8px)" }}>
                 <span className="w-2 h-2 rounded-full animate-pulse" style={{ background: "#00A5A8" }} />
-                <span className="font-bold uppercase tracking-[0.2em]" style={{ fontSize: "11px", color: "#4DD4D5" }}>Sistema de Seguimiento de Egresados</span>
+                <span className="font-bold uppercase tracking-[0.2em]" style={{ fontSize: "11px", color: "#4DD4D5" }}>Sistema de Seguimiento de Titulados y Egresados</span>
               </div>
 
               {/* Título principal */}
               <h1 className="mb-6 leading-[0.95] font-black uppercase tracking-tighter" style={{ fontSize: "clamp(2.8rem, 5.5vw, 5rem)", color: "white" }}>
-                Potenciando el futuro<br />
+                Sistema de Seguimiento de<br />
                 <span className="font-serif italic lowercase tracking-normal" style={{ color: "#00A5A8", fontSize: "clamp(3rem, 5.5vw, 5rem)" }}>
-                  de la comunidad
+                  Titulados y Egresados
                 </span>
                 <br />
                 <span style={{ color: "rgba(255,255,255,0.85)" }}>
-                  de profesionales estadísticos
+                  de estadística
                 </span>
               </h1>
 
