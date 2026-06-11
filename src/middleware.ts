@@ -61,8 +61,13 @@ export async function middleware(req: NextRequest) {
 
   // 3. Verificar sesión para todo lo demás
   const token   = req.cookies.get("eg_token")?.value;
+  console.log("[Middleware] Token from cookie:", token ? "Present" : "Missing");
   const session = token ? await verifyToken(token) : null;
-  if (!session) return NextResponse.redirect(new URL("/Titulados_y_Egresados", req.url));
+  console.log("[Middleware] Session after verifyToken:", session);
+  if (!session) {
+    console.log("[Middleware] Redirecting to /Titulados_y_Egresados because session is null");
+    return NextResponse.redirect(new URL("/Titulados_y_Egresados", req.url));
+  }
 
   // 4. Rutas exclusivas de ADMIN
   const adminRoutes = ["/dashboard", "/egresados", "/usuarios", "/reportes", "/verificaciones", "/sugerencias"];

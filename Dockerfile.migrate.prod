@@ -1,0 +1,8 @@
+FROM node:20-alpine
+WORKDIR /app
+COPY package.json package-lock.json* ./
+RUN npm config set fetch-retry-maxtimeout 600000 -g && npm ci --include=dev
+COPY drizzle.config.ts ./
+COPY src/ ./src/
+COPY scripts/ ./scripts/
+CMD ["npx", "drizzle-kit", "push"]

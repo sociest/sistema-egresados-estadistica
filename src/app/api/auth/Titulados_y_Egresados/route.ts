@@ -9,6 +9,7 @@ import { z } from "zod";
 const loginSchema = z.object({
   correo:   z.string().min(1, "Correo o CI requerido"),
   password: z.string().min(1, "Contraseña requerida"),
+  turnstileToken: z.string().optional(),
 });
 
 export async function POST(req: NextRequest) {
@@ -17,7 +18,29 @@ export async function POST(req: NextRequest) {
     const parsed = loginSchema.safeParse(body);
     if (!parsed.success) return err(parsed.error.errors[0].message);
 
-    const { correo: identificador, password } = parsed.data;
+    const { correo: identificador, password, turnstileToken } = parsed.data;
+
+    // Verificar Turnstile
+    const bypass = process.env.TURNSTILE_BYPASS === "true";
+    if (!bypass) {
+      if (!turnstileToken) {
+        return err("Captcha no completado o inválido", 400);
+      }
+      
+      const turnstileRes = await fetch("https://challenges.cloudflare.com/turnstile/v0/siteverify", {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: new URLSearchParams({
+          secret: process.env.TURNSTILE_SECRET || "",
+          response: turnstileToken,
+        }),
+      });
+
+      const turnstileData = await turnstileRes.json();
+      if (!turnstileData.success) {
+        return err("Validación de seguridad fallida", 400);
+      }
+    }
 
     // Buscar por correo primero, luego por CI
     let u = null;
