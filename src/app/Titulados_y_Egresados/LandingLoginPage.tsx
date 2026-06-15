@@ -152,15 +152,19 @@ export default function LandingLoginPage() {
               <div className="inline-flex items-center gap-2.5 px-4 py-2 rounded-full mb-8"
                 style={{ background: "rgba(0,165,168,0.15)", border: "1px solid rgba(0,165,168,0.30)", backdropFilter: "blur(8px)" }}>
                 <span className="w-2 h-2 rounded-full animate-pulse" style={{ background: "#00A5A8" }} />
-                <span className="font-bold uppercase tracking-[0.2em]" style={{ fontSize: "11px", color: "#4DD4D5" }}>Sistema de Seguimiento de Egresados</span>
+                <span className="font-bold uppercase tracking-[0.2em]" style={{ fontSize: "11px", color: "#4DD4D5" }}>Sistema de Seguimiento de Titulados y Egresados</span>
               </div>
 
               {/* Título principal */}
-              <h1 className="mb-6 leading-[0.95] font-black uppercase tracking-tighter" style={{ fontSize: "clamp(3.2rem, 6vw, 5.5rem)", color: "white" }}>
-                Conectamos<br />
-                <span className="font-serif italic lowercase tracking-normal" style={{ color: "#00A5A8", fontSize: "clamp(3rem, 5.5vw, 5rem)" }}>titulados y egresados</span>
+              <h1 className="mb-6 leading-[0.95] font-black uppercase tracking-tighter" style={{ fontSize: "clamp(2.8rem, 5.5vw, 5rem)", color: "white" }}>
+                Sistema de Seguimiento de<br />
+                <span className="font-serif italic lowercase tracking-normal" style={{ color: "#00A5A8", fontSize: "clamp(3rem, 5.5vw, 5rem)" }}>
+                  Titulados y Egresados
+                </span>
                 <br />
-                <span style={{ color: "rgba(255,255,255,0.85)" }}>de estadística</span>
+                <span style={{ color: "rgba(255,255,255,0.85)" }}>
+                  de estadística
+                </span>
               </h1>
 
               {/* Descripción */}
@@ -433,45 +437,6 @@ export default function LandingLoginPage() {
         </div>
       </section>
 
-      {/* ══════════════════════════════════════════════════════════════════
-          SECCIÓN DE PRUEBA — Video
-      ══════════════════════════════════════════════════════════════════ */}
-      <section className="py-12 text-center" style={{ background: "var(--blanco)" }}>
-        <button 
-          onClick={() => setVideoTestOpen(true)}
-          className="px-6 py-3 rounded-lg font-black text-sm uppercase tracking-widest transition-all duration-300 hover:scale-105"
-          style={{ background: "linear-gradient(135deg, #ea580c 0%, #c2410c 100%)", color: "white" }}>
-          Abrir Video de Prueba
-        </button>
-      </section>
-
-      {/* Modal de Video de Prueba */}
-      {videoTestOpen && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
-          <div className="relative w-full max-w-4xl rounded-2xl overflow-hidden shadow-2xl border border-white/10" style={{ background: "#1e293b" }}>
-            <div className="flex items-center justify-between px-5 py-3 border-b border-white/10">
-              <h3 className="font-bold text-white">Video de Prueba</h3>
-              <button 
-                onClick={() => setVideoTestOpen(false)}
-                className="p-1.5 rounded-lg transition-colors text-white/60 hover:bg-white/10">
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-            <div className="aspect-video w-full bg-black flex items-center justify-center">
-              <video 
-                controls 
-                autoPlay
-                muted
-                className="w-full h-full object-contain"
-                style={{ background: "black" }}
-              >
-                <source src="/videos/Video_Tutorial_Administrador.mp4" type="video/mp4" />
-                Tu navegador no soporta el elemento video.
-              </video>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* ══════════════════════════════════════════════════════════════════
           SECCIÓN — Noticias recientes

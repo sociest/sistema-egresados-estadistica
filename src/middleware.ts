@@ -5,6 +5,21 @@ import { verifyToken } from "@/lib/auth";
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
+  // 0. Archivos estáticos — nunca interceptar
+  if (
+    pathname.startsWith("/documentos/") ||
+    pathname.startsWith("/uploads/") ||
+    pathname.endsWith(".png") ||
+    pathname.endsWith(".jpg") ||
+    pathname.endsWith(".jpeg") ||
+    pathname.endsWith(".svg") ||
+    pathname.endsWith(".webp") ||
+    pathname.endsWith(".pdf") ||
+    pathname.endsWith(".mp4")
+  ) {
+    return NextResponse.next();
+  }
+
   // 1. Rutas públicas sin autenticación (antes de cualquier verificación)
   const publicRoutes = [
     "/activar-cuenta",
@@ -82,6 +97,6 @@ export async function middleware(req: NextRequest) {
 
 export const config = {
   matcher: [
-    "/((?!_next/static|_next/image|favicon.ico|.*\\.png$|.*\\.jpg$|.*\\.svg$|.*\\.mp4$).*)",
+    "/((?!_next/static|_next/image|favicon\\.ico|[^/]*\\.png$|[^/]*\\.jpg$|[^/]*\\.jpeg$|[^/]*\\.svg$|[^/]*\\.mp4$|[^/]*\\.pdf$|[^/]*\\.webp$|documentos/|uploads/).*)",
   ],
 };

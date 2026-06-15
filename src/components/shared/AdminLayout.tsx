@@ -6,7 +6,7 @@ import {
   LayoutDashboard, Users, FileBarChart,
   UserCog, LogOut, ChevronRight,
   Menu, X, Newspaper, Activity,
-  Sun, Moon, Play
+  Sun, Moon, Play, BookOpen
 } from "lucide-react";
 
 const NAV = [
@@ -219,10 +219,10 @@ export default function AdminLayout({ children, correo }: { children: React.Reac
               </span>
             </div>
 
-            {/* Botón de Tutorial */}
+           {/* Botón de Tutorial */}
             <button
               onClick={() => setVideoOpen(true)}
-              className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-xl font-bold uppercase tracking-wider transition-all"
+              className="hidden lg:flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-xl font-bold uppercase tracking-wider transition-all"
               style={{ 
                 background: "rgba(234, 88, 12, 0.15)", 
                 color: "#ff7a33", 
@@ -234,6 +234,24 @@ export default function AdminLayout({ children, correo }: { children: React.Reac
               <Play className="w-3.5 h-3.5 fill-current" />
               Tutorial
             </button>
+
+            {/* Botón Manual Admin */}
+              <a
+              href="/documentos/Manual_Administrador_SistemaEgresados.pdf"
+              download
+              className="hidden lg:flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-xl font-bold uppercase tracking-wider transition-all"
+              style={{ 
+                background: "rgba(14, 165, 233, 0.15)", 
+                color: "#38bdf8", 
+                border: "1px solid rgba(14, 165, 233, 0.3)",
+                textDecoration: "none",
+              }}
+              onMouseEnter={e => { const el = e.currentTarget as HTMLElement; el.style.background = "rgba(14, 165, 233, 0.25)"; el.style.color = "#7dd3fc"; }}
+              onMouseLeave={e => { const el = e.currentTarget as HTMLElement; el.style.background = "rgba(14, 165, 233, 0.15)"; el.style.color = "#38bdf8"; }}
+            >
+              <BookOpen className="w-3.5 h-3.5" />
+              Manual
+            </a>
           </div>
 
           <div className="flex items-center gap-2">
@@ -246,6 +264,17 @@ export default function AdminLayout({ children, correo }: { children: React.Reac
             >
               <Play className="w-4 h-4 fill-current" />
             </button>
+
+            {/* Botón Manual visible en móviles */}
+              <a
+              href="/documentos/Manual_Administrador_SistemaEgresados.pdf"
+              download
+              className="lg:hidden p-2 rounded-xl transition-all"
+              style={{ background: "rgba(14, 165, 233, 0.15)", border: "1px solid rgba(14, 165, 233, 0.3)", color: "#38bdf8", textDecoration: "none" }}
+              title="Descargar Manual"
+            >
+              <BookOpen className="w-4 h-4" />
+            </a>
 
             {/* Toggle en topbar para móvil/visible siempre */}
             <button

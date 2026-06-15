@@ -2,7 +2,7 @@
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
-import { Menu, X, LogOut, Play } from "lucide-react";
+import { Menu, X, LogOut, Play, BookOpen } from "lucide-react";
 
 interface PublicHeaderProps {
   isLoggedIn?: boolean;
@@ -114,20 +114,39 @@ export default function PublicHeader({ isLoggedIn, correo }: PublicHeaderProps) 
             <div className="flex items-center gap-3">
               
               {/* Botón de Tutorial Desktop (A la izquierda de las acciones de sesión) */}
-              <button
-                onClick={() => setVideoOpen(true)}
-                className="hidden md:flex items-center gap-1.5 px-4 py-2 rounded-xl text-[13px] font-bold uppercase tracking-wider transition-all"
-                style={{ 
-                  background: "rgba(255, 255, 255, 0.08)", 
-                  color: "rgba(255, 255, 255, 0.9)", 
-                  border: "1px solid rgba(255, 255, 255, 0.15)" 
-                }}
-                onMouseEnter={e => { const el = e.currentTarget as HTMLElement; el.style.background = "rgba(255, 255, 255, 0.15)"; el.style.color = "#fff"; }}
-                onMouseLeave={e => { const el = e.currentTarget as HTMLElement; el.style.background = "rgba(255, 255, 255, 0.08)"; el.style.color = "rgba(255, 255, 255, 0.9)"; }}
-              >
-                <Play className="w-3.5 h-3.5 fill-current text-orange-500" />
-                Tutorial
-              </button>
+              {/* Botón Tutorial Desktop */}
+            <button
+              onClick={() => setVideoOpen(true)}
+              className="hidden md:flex items-center gap-1.5 px-4 py-2 rounded-xl text-[13px] font-bold uppercase tracking-wider transition-all"
+              style={{ 
+                background: "rgba(255, 255, 255, 0.08)", 
+                color: "rgba(255, 255, 255, 0.9)", 
+                border: "1px solid rgba(255, 255, 255, 0.15)" 
+              }}
+              onMouseEnter={e => { const el = e.currentTarget as HTMLElement; el.style.background = "rgba(255, 255, 255, 0.15)"; el.style.color = "#fff"; }}
+              onMouseLeave={e => { const el = e.currentTarget as HTMLElement; el.style.background = "rgba(255, 255, 255, 0.08)"; el.style.color = "rgba(255, 255, 255, 0.9)"; }}
+            >
+              <Play className="w-3.5 h-3.5 fill-current text-orange-500" />
+              Tutorial
+            </button>
+
+            {/* Botón Manual Desktop */}
+              <a
+              href="/documentos/Manual_Egresado_SistemaEgresados.pdf"
+              download
+              className="hidden md:flex items-center gap-1.5 px-4 py-2 rounded-xl text-[13px] font-bold uppercase tracking-wider transition-all"
+              style={{ 
+                background: "rgba(255, 255, 255, 0.08)", 
+                color: "rgba(255, 255, 255, 0.9)", 
+                border: "1px solid rgba(255, 255, 255, 0.15)",
+                textDecoration: "none",
+              }}
+              onMouseEnter={e => { const el = e.currentTarget as HTMLElement; el.style.background = "rgba(255, 255, 255, 0.15)"; el.style.color = "#fff"; }}
+              onMouseLeave={e => { const el = e.currentTarget as HTMLElement; el.style.background = "rgba(255, 255, 255, 0.08)"; el.style.color = "rgba(255, 255, 255, 0.9)"; }}
+            >
+              <BookOpen className="w-3.5 h-3.5 text-sky-400" />
+              Manual
+            </a>
 
               {isLoggedIn ? (
                 <>
@@ -184,9 +203,13 @@ export default function PublicHeader({ isLoggedIn, correo }: PublicHeaderProps) 
         <div className="fixed inset-0 z-40 md:hidden" style={{ background: "rgba(0,0,0,0.50)" }} onClick={() => setMobileOpen(false)} />
       )}
       <div
-        className="fixed top-16 right-0 bottom-0 z-50 w-64 md:hidden overflow-y-auto transition-transform duration-300"
-        style={{ background: "linear-gradient(160deg, #00325a 0%, #003a6b 100%)", transform: mobileOpen ? "translateX(0)" : "translateX(-100%)", borderLeft: "1px solid rgba(255,255,255,0.10)" }}
-      >
+        className="fixed inset-y-0 right-0 z-50 w-64 flex flex-col lg:hidden transition-transform duration-300"
+        style={{
+          background: "linear-gradient(160deg, #00325a 0%, #003a6b 100%)",
+          transform: mobileOpen ? "translateX(0)" : "translateX(100%)",
+          borderLeft: "1px solid rgba(255,255,255,0.10)",
+        }}
+>
         <div className="p-4 space-y-2">
           {NAV_LINKS.map(link => (
             <Link
@@ -210,6 +233,17 @@ export default function PublicHeader({ isLoggedIn, correo }: PublicHeaderProps) 
           >
             <Play className="w-4 h-4 fill-current text-orange-500" /> Tutorial
           </button>
+
+          {/* Botón Manual dentro del menú móvil */}
+          <a
+            href="/documentos/Manual_Egresado_SistemaEgresados.pdf"
+            download
+            onClick={() => setMobileOpen(false)}
+            className="flex items-center justify-center gap-2 w-full py-2.5 mb-2 rounded-xl text-sm font-semibold transition-all"
+            style={{ background: "rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.9)", border: "1px solid rgba(255,255,255,0.15)", textDecoration: "none" }}
+          >
+            <BookOpen className="w-4 h-4 text-sky-400" /> Manual
+          </a>
 
           {isLoggedIn ? (
             <button
